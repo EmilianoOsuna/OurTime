@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #F17720;
+  --color-primary-container: #FFA630;
+  --color-secondary: #0474BA;
+  --color-secondary-container: #00A7E1;
+  --color-surface: #EBEBEB;
+  --color-surface-low: #F5F5F5;
+  --color-surface-highest: #E0E0E0;
+  --color-surface-lowest: #FFFFFF;
+  --color-surface-variant: #D6D6D6;
+  --color-on-surface: #1a1c1c;
+  --color-outline-variant: #C0C0C0;
+
+  --font-sans: "Poppins", sans-serif;
+  --font-display: "Poppins", sans-serif;
+
+  --radius-full: 3rem;
+  --backdrop-blur-lg: 20px;
+}
+
+:root {
+  background-color: var(--color-surface);
+  color: var(--color-on-surface);
+  font-family: var(--font-sans);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@layer base {
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display text-on-surface;
+  }
+}
+
+@layer components {
+  .editorial-card {
+    background-color: var(--color-surface-lowest);
+    border: none;
+    padding: 1.5rem;
+    border-radius: 1.5rem;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08); /* Clean minimalist shadow to fix flatness */
+  }
+
+  .premium-blur {
+    backdrop-filter: blur(20px);
+    background-color: color-mix(in srgb, var(--color-surface), transparent 20%);
+  }
+
+  .glass-island {
+    backdrop-filter: blur(20px);
+    background-color: color-mix(in srgb, var(--color-surface), transparent 20%);
+    @apply rounded-full px-8 py-4 shadow-2xl border border-outline-variant/15;
+  }
+}

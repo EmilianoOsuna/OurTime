@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Background circle -->
+  <circle cx="32" cy="32" r="32" fill="#F17720"/>
+  
+  <!-- Clock face -->
+  <circle cx="32" cy="34" r="14" fill="white" opacity="0.95"/>
+  
+  <!-- Clock hands -->
+  <line x1="32" y1="34" x2="32" y2="24" stroke="#F17720" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="32" y1="34" x2="39" y2="38" stroke="#F17720" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="32" cy="34" r="1.5" fill="#F17720"/>
+  
+  <!-- Heart above clock -->
+  <path d="M32 20 C32 20 26 14 20 18 C14 22 18 30 32 38 C46 30 50 22 44 18 C38 14 32 20 32 20 Z" fill="white" opacity="0.3"/>
+  <path d="M32 18 C32 18 28 13 24 15.5 C20 18 22 23 32 29 C42 23 44 18 40 15.5 C36 13 32 18 32 18 Z" fill="white"/>
+</svg>
