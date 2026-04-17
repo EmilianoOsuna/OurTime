@@ -9,8 +9,8 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 export const supabase = createClient(
-  supabaseUrl || 'https://xxxxxxxx.supabase.co', 
-  supabaseAnonKey || 'xxxxxxxxx'
+  supabaseUrl || '', 
+  supabaseAnonKey || ''
 )
 
 // --- DYNAMIC AUTH (Until real Auth is implemented) ---
