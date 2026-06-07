@@ -125,7 +125,7 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
     setPlan(p => ({ ...p, ...updates }))
     setSaving(false)
     setEditing(false)
-    push({ icon: '✏️', eyebrow: 'Capítulo', title: 'Cambios guardados', body: null })
+    push({ icon: '✏️', eyebrow: 'Capítulo', title: 'Cambios guardados' })
     onUpdated?.()
   }
 
@@ -145,7 +145,7 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
       setPlan(p => ({ ...p, cover_url: url }))
       onUpdated?.()
     } catch {
-      push({ icon: '⚠️', eyebrow: 'Error', title: 'No se pudo subir la foto', body: null })
+      push({ icon: '⚠️', eyebrow: 'Error', title: 'No se pudo subir la foto' })
     } finally {
       setUploadingCover(false)
       e.target.value = ''
