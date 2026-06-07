@@ -1,189 +1,293 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Lock, LogIn, Loader2, UserPlus, Heart } from 'lucide-react';
-import { supabase } from '../lib/supabase';
-import EditorialCard from '../components/ui/EditorialCard';
-import PremiumButton from '../components/ui/PremiumButton';
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { supabase } from '../lib/supabase'
+import { Icon } from '../components/ui/Icon'
 
-const Auth = () => {
-  const navigate = useNavigate();
-  const [isLogin, setIsLogin] = useState(true);
-  const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
-  const [successMsg, setSuccessMsg] = useState('');
+type Flow = 'welcome' | 'register' | 'login' | 'forgot'
 
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    fullName: ''
-  });
+export default function Auth({ onAuth }: { onAuth: () => void }) {
+  const [flow, setFlow] = useState<Flow>('welcome')
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPw, setShowPw] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [forgotSent, setForgotSent] = useState(false)
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
-  };
+  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+  const pwOk = password.length >= 8
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setErrorMsg('');
-    setSuccessMsg('');
+  const resetFields = () => { setError(''); setForgotSent(false) }
+  const go = (f: Flow) => { resetFields(); setFlow(f) }
 
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!name.trim() || !emailOk || !pwOk) return
+    setLoading(true); setError('')
     try {
-      if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
-          email: formData.email,
-          password: formData.password,
-        });
-        if (error) throw error;
-        // Navigation will be handled automatically by ProtectedRoute/AuthContext firing
-        navigate('/');
-      } else {
-        const { error, data } = await supabase.auth.signUp({
-          email: formData.email,
-          password: formData.password,
-          options: {
-            data: {
-              full_name: formData.fullName,
-            }
-          }
-        });
-        if (error) throw error;
-        setSuccessMsg('Account created successfully! Welcome.');
-        setTimeout(() => {
-          if (data.session) navigate('/');
-        }, 1500)
-      }
-    } catch (error: any) {
-      setErrorMsg(error.message || 'An error occurred during authentication.');
-    } finally {
-      setLoading(false);
-    }
-  };
+      const { data, error } = await supabase.auth.signUp({
+        email, password, options: { data: { full_name: name.trim() } },
+      })
+      if (error) throw error
+      if (data.session) onAuth()
+      else setError('Revisa tu correo para confirmar tu cuenta.')
+    } catch (e: any) { setError(e.message) }
+    finally { setLoading(false) }
+  }
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!emailOk) return
+    setLoading(true); setError('')
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error) throw error
+      onAuth()
+    } catch (e: any) { setError(e.message) }
+    finally { setLoading(false) }
+  }
+
+  const handleForgot = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!emailOk) return
+    setLoading(true)
+    try {
+      await supabase.auth.resetPasswordForEmail(email)
+      setForgotSent(true)
+    } catch {}
+    finally { setLoading(false) }
+  }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-surface">
-      <motion.div 
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="w-full max-w-md"
-      >
-        <EditorialCard elevated className="p-8 border-none md:p-12 shadow-2xl relative overflow-hidden bg-white">
-          <div className="absolute top-0 right-0 p-8 text-primary/10 pointer-events-none">
-            <Heart size={100} strokeWidth={1} />
-          </div>
+    <div style={{ minHeight: '100vh', background: 'var(--paper)', position: 'relative', overflow: 'hidden' }}>
+      <AnimatePresence mode="wait">
 
-          <div className="text-center mb-8 relative z-10">
-            <img src="/logo.png" alt="Our Time" className="h-12 mx-auto mb-6 drop-shadow-sm" />
-            <h1 className="text-2xl font-bold text-on-surface">
-              {isLogin ? 'Welcome back' : 'Create an account'}
-            </h1>
-            <p className="text-sm font-medium text-on-surface/50 mt-2">
-              {isLogin ? 'Enter your details to access your shared memories.' : 'Begin tracking your journey together.'}
-            </p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4 relative z-10">
-            {!isLogin && (
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-on-surface/70 mb-2">
-                  Full Name
-                </label>
-                <div className="relative group">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <UserPlus size={18} className="text-on-surface/30 group-focus-within:text-primary transition-colors" />
-                  </div>
-                  <input
-                    type="text"
-                    name="fullName"
-                    required={!isLogin}
-                    value={formData.fullName}
-                    onChange={handleInputChange}
-                    className="w-full pl-11 pr-4 py-3 bg-surface border border-outline-variant/30 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all font-medium"
-                    placeholder="John Doe"
-                  />
-                </div>
-              </div>
-            )}
-
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-on-surface/70 mb-2">
-                Email
-              </label>
-              <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Mail size={18} className="text-on-surface/30 group-focus-within:text-primary transition-colors" />
-                </div>
-                <input
-                  type="email"
-                  name="email"
-                  required
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  className="w-full pl-11 pr-4 py-3 bg-surface border border-outline-variant/30 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all font-medium"
-                  placeholder="you@example.com"
-                />
-              </div>
+        {/* ── WELCOME ── */}
+        {flow === 'welcome' && (
+          <motion.div key="welcome"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column',
+              padding: '0 30px 40px', position: 'relative' }}>
+            <div className="ph" style={{ position: 'absolute', inset: 0, opacity: 0.5,
+              maskImage: 'linear-gradient(to bottom, black, transparent 62%)',
+              WebkitMaskImage: 'linear-gradient(to bottom, black, transparent 62%)' }}>
+              <span className="ph-label" style={{ position: 'absolute', top: 90, right: 18 }}>foto de portada</span>
             </div>
-
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-on-surface/70 mb-2">
-                Password
-              </label>
-              <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Lock size={18} className="text-on-surface/30 group-focus-within:text-primary transition-colors" />
-                </div>
-                <input
-                  type="password"
-                  name="password"
-                  required
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  className="w-full pl-11 pr-4 py-3 bg-surface border border-outline-variant/30 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all font-medium"
-                  placeholder="••••••••"
-                />
-              </div>
-            </div>
-
-            <AnimatePresence>
-              {errorMsg && (
-                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="text-xs font-bold text-red-500 bg-red-500/10 p-3 rounded-lg text-center">
-                  {errorMsg}
-                </motion.div>
-              )}
-              {successMsg && (
-                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="text-xs font-bold text-green-600 bg-green-500/10 p-3 rounded-lg text-center">
-                  {successMsg}
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            <PremiumButton type="submit" disabled={loading} variant="primary" className="w-full py-3.5 mt-6">
-              {loading ? (
-                <Loader2 className="animate-spin" size={20} />
-              ) : (
-                <span className="flex items-center gap-2">
-                  {isLogin ? 'Sign In' : 'Create Account'} <LogIn size={18} />
-                </span>
-              )}
-            </PremiumButton>
-
-            <div className="mt-6 text-center pt-6 border-t border-outline-variant/20">
-              <button
-                type="button"
-                onClick={() => { setIsLogin(!isLogin); setErrorMsg(''); setSuccessMsg(''); }}
-                className="text-sm font-bold text-on-surface/60 hover:text-primary transition-colors"
-              >
-                {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
+            <div style={{ flex: 1 }} />
+            <div className="anim-up" style={{ position: 'relative' }}>
+              <div className="eyebrow" style={{ color: 'var(--orange-deep)', marginBottom: 18 }}>· Bienvenidos a OurTime ·</div>
+              <h1 className="display" style={{ fontSize: 52, margin: 0, lineHeight: 0.98 }}>
+                Nuestra<br />historia,<br />
+                <span className="serif-i" style={{ color: 'var(--orange)' }}>un capítulo</span><br />a la vez.
+              </h1>
+              <p style={{ fontSize: 16.5, color: 'var(--ink-soft)', lineHeight: 1.55, marginTop: 22, maxWidth: 320 }}>
+                Planes, recuerdos y cuentas compartidas en un mismo lugar. Escriban juntos lo que viene.
+              </p>
+              <button className="btn btn-orange btn-block" style={{ marginTop: 28, fontSize: 17 }} onClick={() => go('register')}>
+                Crear cuenta <Icon name="arrowR" size={19} />
+              </button>
+              <button className="btn btn-ghost btn-block" style={{ marginTop: 12, fontSize: 16 }} onClick={() => go('login')}>
+                Ya tengo cuenta — Iniciar sesión
               </button>
             </div>
-          </form>
-        </EditorialCard>
-      </motion.div>
-    </div>
-  );
-};
+          </motion.div>
+        )}
 
-export default Auth;
+        {/* ── REGISTER ── */}
+        {flow === 'register' && (
+          <motion.div key="register"
+            initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.35 }}
+            style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', padding: '96px 30px 40px' }}>
+            <button onClick={() => go('welcome')} style={{
+              display: 'flex', alignItems: 'center', gap: 8, border: 'none', background: 'transparent',
+              cursor: 'pointer', color: 'var(--ink-soft)', fontSize: 14, fontWeight: 600, marginBottom: 32, padding: 0,
+            }}>
+              <Icon name="chevL" size={18} /> Volver
+            </button>
+            <div className="eyebrow" style={{ marginBottom: 8 }}>Tu cuenta</div>
+            <h1 className="display" style={{ fontSize: 38, margin: '0 0 6px', lineHeight: 1.02 }}>
+              Crea tu <span className="serif-i" style={{ color: 'var(--orange)' }}>cuenta</span>
+            </h1>
+            <p style={{ fontSize: 15, color: 'var(--ink-soft)', lineHeight: 1.5, margin: '0 0 20px' }}>
+              Solo tú y tu pareja tendrán acceso a su historia.
+            </p>
+
+            {/* Avatar preview */}
+            <div style={{ display: 'flex', justifyContent: 'center', margin: '0 0 22px' }}>
+              <div className="avatar" style={{ width: 76, height: 76, background: 'var(--blue)', fontSize: 34,
+                animation: 'pop .5s cubic-bezier(.2,.8,.2,1) both', boxShadow: 'inset 0 0 0 2px rgba(255,255,255,0.55)' }}>
+                {name.trim() ? name.trim()[0].toUpperCase() : '?'}
+              </div>
+            </div>
+
+            <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+              <label className="field-label">Tu nombre</label>
+              <input className="field" placeholder="Mateo" value={name} autoFocus
+                onChange={e => setName(e.target.value)} style={{ marginBottom: 16 }} />
+
+              <label className="field-label">Correo electrónico</label>
+              <div style={{ position: 'relative', marginBottom: 16 }}>
+                <input className="field" type="email" placeholder="mateo@correo.com"
+                  value={email} onChange={e => setEmail(e.target.value)} style={{ paddingRight: 44 }} />
+                {email && (
+                  <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)',
+                    color: emailOk ? 'var(--done)' : 'var(--orange-deep)' }}>
+                    <Icon name={emailOk ? 'checkCircle' : 'x'} size={18} />
+                  </span>
+                )}
+              </div>
+
+              <label className="field-label">Contraseña</label>
+              <div style={{ position: 'relative' }}>
+                <input className="field" placeholder="Mínimo 8 caracteres"
+                  type={showPw ? 'text' : 'password'} value={password}
+                  onChange={e => setPassword(e.target.value)} style={{ paddingRight: 44 }} />
+                <button type="button" onClick={() => setShowPw(s => !s)} style={{
+                  position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
+                  border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--ink-faint)', padding: 4,
+                }}>
+                  <Icon name={showPw ? 'x' : 'wifi'} size={17} />
+                </button>
+              </div>
+              {password && !pwOk && (
+                <div style={{ fontSize: 12, color: 'var(--orange-deep)', marginTop: 6, display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <Icon name="x" size={12} /> Mínimo 8 caracteres
+                </div>
+              )}
+
+              {error && (
+                <div style={{ fontSize: 13, color: '#c0392b', background: 'rgba(192,57,43,0.08)',
+                  padding: '10px 14px', borderRadius: 10, fontWeight: 500, marginTop: 12 }}>{error}</div>
+              )}
+
+              <div style={{ fontSize: 12, color: 'var(--ink-faint)', marginTop: 18, lineHeight: 1.5 }}>
+                Al continuar aceptas los Términos de uso y la Política de privacidad de OurTime.
+              </div>
+
+              <button type="submit" className="btn btn-primary btn-block"
+                disabled={!name.trim() || !emailOk || !pwOk || loading} style={{ marginTop: 20 }}>
+                {loading ? <span style={{ display: 'flex', gap: 4 }}>
+                  {[0,1,2].map(i => <span key={i} className="dot" style={{ background: '#FBF6EE',
+                    animation: `pulse 1s ${i*0.15}s infinite` }} />)}
+                </span> : <>Continuar <Icon name="arrowR" size={18} /></>}
+              </button>
+            </form>
+
+            <div style={{ textAlign: 'center', marginTop: 16, fontSize: 14, color: 'var(--ink-soft)' }}>
+              ¿Ya tienes cuenta?{' '}
+              <b style={{ color: 'var(--ink)', cursor: 'pointer' }} onClick={() => go('login')}>Inicia sesión</b>
+            </div>
+          </motion.div>
+        )}
+
+        {/* ── LOGIN ── */}
+        {flow === 'login' && (
+          <motion.div key="login"
+            initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.35 }}
+            style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', padding: '96px 30px 40px' }}>
+            <button onClick={() => go('welcome')} style={{
+              display: 'flex', alignItems: 'center', gap: 8, border: 'none', background: 'transparent',
+              cursor: 'pointer', color: 'var(--ink-soft)', fontSize: 14, fontWeight: 600, marginBottom: 32, padding: 0,
+            }}>
+              <Icon name="chevL" size={18} /> Volver
+            </button>
+            <div className="eyebrow" style={{ marginBottom: 8 }}>Bienvenido de nuevo</div>
+            <h1 className="display" style={{ fontSize: 38, margin: '0 0 6px', lineHeight: 1.02 }}>
+              Iniciar <span className="serif-i" style={{ color: 'var(--orange)' }}>sesión</span>
+            </h1>
+            <p style={{ fontSize: 15, color: 'var(--ink-soft)', lineHeight: 1.5, margin: '0 0 28px' }}>
+              Tu historia te está esperando.
+            </p>
+
+            <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+              <label className="field-label">Correo electrónico</label>
+              <input className="field" type="email" placeholder="mateo@correo.com" autoFocus
+                value={email} onChange={e => setEmail(e.target.value)} style={{ marginBottom: 16 }} />
+
+              <label className="field-label">Contraseña</label>
+              <div style={{ position: 'relative' }}>
+                <input className="field" placeholder="Tu contraseña"
+                  type={showPw ? 'text' : 'password'} value={password}
+                  onChange={e => setPassword(e.target.value)} style={{ paddingRight: 44 }} />
+                <button type="button" onClick={() => setShowPw(s => !s)} style={{
+                  position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
+                  border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--ink-faint)', padding: 4,
+                }}>
+                  <Icon name={showPw ? 'x' : 'wifi'} size={17} />
+                </button>
+              </div>
+
+              <button type="button" onClick={() => go('forgot')} style={{
+                border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'right',
+                fontSize: 13, color: 'var(--ink-soft)', fontWeight: 600, marginTop: 10, padding: 0,
+              }}>
+                ¿Olvidaste tu contraseña?
+              </button>
+
+              {error && (
+                <div style={{ fontSize: 13, color: '#c0392b', background: 'rgba(192,57,43,0.08)',
+                  padding: '10px 14px', borderRadius: 10, fontWeight: 500, marginTop: 8 }}>{error}</div>
+              )}
+
+              <button type="submit" className="btn btn-primary btn-block"
+                disabled={!emailOk || !password || loading} style={{ marginTop: 20 }}>
+                {loading ? <span style={{ display: 'flex', gap: 4 }}>
+                  {[0,1,2].map(i => <span key={i} className="dot" style={{ background: '#FBF6EE',
+                    animation: `pulse 1s ${i*0.15}s infinite` }} />)}
+                </span> : <>Entrar <Icon name="arrowR" size={18} /></>}
+              </button>
+            </form>
+
+            <div style={{ textAlign: 'center', marginTop: 16, fontSize: 14, color: 'var(--ink-soft)' }}>
+              ¿No tienes cuenta?{' '}
+              <b style={{ color: 'var(--ink)', cursor: 'pointer' }} onClick={() => go('register')}>Regístrate</b>
+            </div>
+          </motion.div>
+        )}
+
+        {/* ── FORGOT PASSWORD ── */}
+        {flow === 'forgot' && (
+          <motion.div key="forgot"
+            initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.35 }}
+            style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', padding: '96px 30px 40px' }}>
+            <button onClick={() => go('login')} style={{
+              display: 'flex', alignItems: 'center', gap: 8, border: 'none', background: 'transparent',
+              cursor: 'pointer', color: 'var(--ink-soft)', fontSize: 14, fontWeight: 600, marginBottom: 32, padding: 0,
+            }}>
+              <Icon name="chevL" size={18} /> Volver
+            </button>
+            <div className="eyebrow" style={{ marginBottom: 8 }}>Recuperar acceso</div>
+            <h1 className="display" style={{ fontSize: 34, margin: '0 0 10px', lineHeight: 1.05 }}>
+              ¿Olvidaste tu<br />contraseña?
+            </h1>
+            <p style={{ fontSize: 15, color: 'var(--ink-soft)', lineHeight: 1.55, margin: '0 0 28px' }}>
+              Te enviamos un enlace para recuperarla.
+            </p>
+
+            {!forgotSent ? (
+              <form onSubmit={handleForgot}>
+                <label className="field-label">Correo electrónico</label>
+                <input className="field" type="email" placeholder="mateo@correo.com" autoFocus
+                  value={email} onChange={e => setEmail(e.target.value)} />
+                <button type="submit" className="btn btn-primary btn-block"
+                  disabled={!emailOk || loading} style={{ marginTop: 24 }}>
+                  {loading ? '…' : <>Enviar enlace <Icon name="arrowR" size={18} /></>}
+                </button>
+              </form>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 600,
+                color: 'var(--done)', fontSize: 15 }}>
+                <Icon name="checkCircle" size={20} /> Correo enviado — revisa tu bandeja
+              </div>
+            )}
+          </motion.div>
+        )}
+
+      </AnimatePresence>
+    </div>
+  )
+}

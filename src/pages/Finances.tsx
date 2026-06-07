@@ -1,202 +1,179 @@
-import React, { useState, useEffect } from 'react'
-import EditorialCard from '../components/ui/EditorialCard'
-import { motion } from 'framer-motion'
-import { useNavigate, useLocation } from 'react-router-dom'
-import { TrendingUp, ArrowUpRight, ArrowDownRight, Activity, Loader2, Trash2, Pencil } from 'lucide-react'
-import { useAuth } from '../context/AuthContext'
+import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
-import type { TransactionType } from '../lib/supabase'
-import CustomModal from '../components/ui/CustomModal'
+import { Icon } from '../components/ui/Icon'
+import { Avatar } from '../components/ui/Avatar'
+import { Segmented } from '../components/ui/Segmented'
+import { fmtDateShort } from '../lib/chapterUtils'
+import { useCurrency } from '../context/CurrencyContext'
+import { useAuth } from '../context/AuthContext'
+import type { PersonDisplay } from '../lib/supabase'
 
-const Finances: React.FC = () => {
-  const navigate = useNavigate()
-  const location = useLocation()
-  const { coupleId } = useAuth()
-  
-  const [transactions, setTransactions] = useState<TransactionType[]>([])
-  const [balance, setBalance] = useState(0)
+interface Tx {
+  id: string
+  type: 'ingreso' | 'gasto'
+  amount: number
+  description: string | null
+  category: string | null
+  transaction_date: string
+  created_at: string
+  user_id?: string | null
+}
+
+const CAT_ICONS: Record<string, string> = {
+  cena: 'utensils', viaje: 'plane', cine: 'film', cafe: 'coffee',
+  regalo: 'gift', noche: 'moon', musica: 'music', ruta: 'mapRoute',
+  salida: 'coffee', otro: 'tag', hogar: 'home',
+}
+
+export default function Finances({ coupleId, me, partner }: {
+  coupleId: string | null
+  me: PersonDisplay
+  partner: PersonDisplay | null
+}) {
+  const { fmt } = useCurrency()
+  const { user } = useAuth()
+  const [txs, setTxs] = useState<Tx[]>([])
+  const [seg, setSeg] = useState(0)
   const [loading, setLoading] = useState(true)
 
-  // UI States
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
-  const [targetTrx, setTargetTrx] = useState<{id: string, amount: number, type: 'ingreso' | 'gasto'} | null>(null)
-
-  const confirmDelete = async () => {
-    if (!targetTrx) return;
-    
-    try {
-      const { error } = await supabase.from('transactions').delete().eq('id', targetTrx.id);
-      if (error) throw error;
-      
-      setTransactions(prev => prev.filter(t => t.id !== targetTrx.id));
-      setBalance(prev => targetTrx.type === 'ingreso' ? prev - Number(targetTrx.amount) : prev + Number(targetTrx.amount));
-    } catch (e: any) {
-      console.error(e);
-      alert('Error al eliminar movimiento: ' + e.message + '. Revisa las políticas RLS en Supabase.');
-    }
-  }
-
-  const handleDeleteTransaction = (id: string, amount: number, type: 'ingreso' | 'gasto') => {
-    setTargetTrx({ id, amount, type });
-    setIsDeleteModalOpen(true);
-  }
-
   useEffect(() => {
-    const fetchFinances = async () => {
-      if (!coupleId) return;
+    if (!coupleId) return
+    supabase.from('transactions').select('*').eq('couple_id', coupleId)
+      .order('created_at', { ascending: false }).then(({ data }) => {
+        if (data) setTxs(data as Tx[])
+        setLoading(false)
+      })
+  }, [coupleId])
 
-      const { data, error } = await supabase
-        .from('transactions')
-        .select('*')
-        .eq('couple_id', coupleId)
-        .order('created_at', { ascending: false });
+  const income = txs.filter(t => t.type === 'ingreso').reduce((s, t) => s + t.amount, 0)
+  const spent = txs.filter(t => t.type === 'gasto').reduce((s, t) => s + t.amount, 0)
+  const balance = income - spent
 
-      if (data) {
-        setTransactions(data as TransactionType[]);
-        
-        const netBudget = data.reduce((acc, curr) => {
-          return curr.type === 'ingreso' ? acc + Number(curr.amount) : acc - Number(curr.amount);
-        }, 0);
-        setBalance(netBudget);
-      }
-      setLoading(false);
-    }
-    fetchFinances()
-  }, [coupleId, location.key])
+  const myIn = txs.filter(t => t.type === 'ingreso' && t.user_id === user?.id).reduce((s, t) => s + t.amount, 0)
+  const partnerIn = txs.filter(t => t.type === 'ingreso' && t.user_id !== user?.id && t.user_id != null).reduce((s, t) => s + t.amount, 0)
+
+  const list = seg === 0 ? txs : seg === 1
+    ? txs.filter(t => t.type === 'ingreso')
+    : txs.filter(t => t.type === 'gasto')
 
   if (loading) {
-    return <div className="min-h-[50vh] flex items-center justify-center"><Loader2 className="animate-spin text-primary" size={32} /></div>
+    return (
+      <div style={{ minHeight: '50vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: 32, height: 32, borderRadius: '50%', border: '3px solid var(--orange)',
+          borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite' }} />
+      </div>
+    )
   }
 
   return (
-    <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="space-y-12 pb-20"
-    >
-      <header className="space-y-3">
-        <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-on-surface leading-tight">
-          Crecimiento Compartido
-        </h1>
-        <p className="text-xl text-on-surface/50 font-medium">
-          Administrando nuestros sueños, una inversión a la vez.
-        </p>
-      </header>
+    <div className="ot-scroll page-enter" style={{ paddingBottom: 130 }}>
+      {/* Header */}
+      <div style={{ padding: '8px 22px 0' }}>
+        <div className="eyebrow" style={{ marginBottom: 7 }}>Fondo común</div>
+        <h1 className="display" style={{ fontSize: 32, margin: 0 }}>Nuestras cuentas</h1>
+      </div>
 
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <EditorialCard className="md:col-span-2 bg-surface-low border-none flex flex-col justify-between p-10 space-y-10">
-          <div className="flex justify-between items-start">
-            <div>
-              <span className="text-xs font-bold uppercase tracking-widest text-secondary block mb-2">Balance Actual</span>
-              <div className="flex items-center flex-wrap gap-4">
-                <div className="text-5xl font-extrabold text-on-surface tracking-tight">
-                  {balance.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
-                </div>
-                <div className="px-3 py-1.5 bg-green-500/10 text-green-600 rounded-full flex items-center gap-1 text-sm font-bold shadow-sm">
-                  <TrendingUp size={16} /> Activo
-                </div>
+      {/* Balance hero card */}
+      <div style={{ padding: '18px 22px 0' }}>
+        <div className="card" style={{
+          padding: '22px 20px', background: 'var(--ink)', color: '#FBF6EE',
+          boxShadow: 'var(--sh-md)', position: 'relative', overflow: 'hidden',
+        }}>
+          {/* Radial orange accent */}
+          <div style={{
+            position: 'absolute', right: -30, top: -30, width: 130, height: 130,
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(241,119,32,0.4), transparent 70%)',
+          }} />
+
+          <div className="eyebrow" style={{ color: 'rgba(251,246,238,0.6)' }}>Saldo disponible</div>
+          <div className="display" style={{ fontSize: 42, margin: '6px 0 0' }}>{fmt(balance)}</div>
+
+          <div style={{ display: 'flex', gap: 20, marginTop: 18 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{
+                width: 30, height: 30, borderRadius: 9,
+                background: 'rgba(46,125,91,0.25)', color: '#7BD9A8',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <Icon name="trendUp" size={16} />
+              </span>
+              <div>
+                <div style={{ fontSize: 11, color: 'rgba(251,246,238,0.55)' }}>Aportado</div>
+                <div style={{ fontWeight: 700, fontSize: 15 }}>{fmt(income)}</div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{
+                width: 30, height: 30, borderRadius: 9,
+                background: 'rgba(241,119,32,0.25)', color: '#F9A86A',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <Icon name="trendDown" size={16} />
+              </span>
+              <div>
+                <div style={{ fontSize: 11, color: 'rgba(251,246,238,0.55)' }}>Gastado</div>
+                <div style={{ fontWeight: 700, fontSize: 15 }}>{fmt(spent)}</div>
               </div>
             </div>
           </div>
-        </EditorialCard>
-
-        <div className="flex flex-col gap-6">
-          <EditorialCard 
-            className="bg-primary hover:bg-primary-container transition-colors text-white border-none p-6 flex flex-col flex-1 justify-between shadow-[0_8px_30px_rgba(241,119,32,0.25)] cursor-pointer active:scale-95 duration-300"
-            onClick={() => navigate('/finances/income/new')}
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                <ArrowUpRight size={20} />
-              </div>
-              <h4 className="text-xl font-bold">Nuevo Ingreso</h4>
-            </div>
-            <p className="text-white/80 text-sm mt-3 font-medium">Agrega fondos a la cuenta.</p>
-          </EditorialCard>
-
-          <EditorialCard 
-            className="bg-surface hover:bg-surface-low transition-colors border border-outline-variant/30 p-6 flex flex-col flex-1 justify-between shadow-sm cursor-pointer active:scale-95 duration-300" 
-            onClick={() => navigate('/finances/expense/new')}
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-secondary/10 text-secondary rounded-full flex items-center justify-center">
-                <ArrowDownRight size={20} />
-              </div>
-              <h4 className="text-xl font-bold text-on-surface">Registrar Gasto</h4>
-            </div>
-            <p className="text-on-surface/50 text-sm mt-3 font-medium">Agrega un nuevo pago.</p>
-          </EditorialCard>
         </div>
-      </section>
+      </div>
 
-      <section className="space-y-6">
-        <div className="flex justify-between items-center px-2">
-          <h3 className="text-2xl font-bold">Movimientos Recientes</h3>
-          <span className="text-sm font-medium text-primary cursor-pointer hover:underline">Ver todos</span>
-        </div>
-        
-        <div className="space-y-3">
-          {transactions.map((t, i) => (
-            <motion.div
-              key={t.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.1 }}
-            >
-              <EditorialCard className="p-6 flex justify-between items-center border-none shadow-sm hover:shadow-md transition-shadow group relative overflow-hidden">
-                <div className="flex items-center gap-5 overflow-hidden">
-                  <div className={`shrink-0 w-12 h-12 rounded-2xl bg-surface-low flex items-center justify-center ${t.type === 'ingreso' ? 'text-green-500' : 'text-primary'}`}>
-                    <Activity size={22} />
-                  </div>
-                  <div className="truncate">
-                    <h5 className="font-bold text-on-surface truncate">{t.description || "Transacción"}</h5>
-                    <p className="text-xs font-medium text-on-surface/40 uppercase tracking-wider">{t.category || t.type}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  <div className="text-right">
-                    <p className={`font-bold ${t.type === 'ingreso' ? 'text-green-500' : 'text-on-surface'}`}>
-                      {t.type === 'ingreso' ? '+' : '-'} {t.amount.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
-                    </p>
-                    <p className="text-[10px] font-bold text-on-surface/30">
-                      {new Date(t.created_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300">
-                    <button 
-                      onClick={() => navigate(`/finances/${t.type === 'ingreso' ? 'income' : 'expense'}/edit/${t.id}`)}
-                      className="p-2 text-primary bg-primary/10 rounded-full hover:bg-primary hover:text-white transition-colors"
-                    >
-                      <Pencil size={14} />
-                    </button>
-                    <button 
-                      onClick={() => handleDeleteTransaction(t.id, t.amount, t.type)}
-                      className="p-2 text-red-500 bg-red-500/10 rounded-full hover:bg-red-500 hover:text-white transition-colors"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                </div>
-              </EditorialCard>
-            </motion.div>
-          ))}
-          {transactions.length === 0 && (
-             <div className="text-center py-12 text-on-surface/50 font-medium">No se encontraron movimientos.</div>
+      {/* Contributions */}
+      <div style={{ padding: '16px 22px 0', display: 'flex', gap: 12 }}>
+        {[{ p: me, v: myIn }, { p: partner || { name: 'Pareja', initial: 'P', color: '#F17720' }, v: partnerIn }].map(({ p, v }) => (
+          <div key={p.name} className="card" style={{
+            flex: 1, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 11,
+          }}>
+            <Avatar person={p} size={36} />
+            <div>
+              <div style={{ fontSize: 12.5, color: 'var(--ink-soft)' }}>{p.name}</div>
+              <div style={{ fontWeight: 700, fontSize: 16 }}>{fmt(v)}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Filter + list */}
+      <div style={{ padding: '22px 22px 0' }}>
+        <Segmented labels={['Todo', 'Ingresos', 'Gastos']} selected={seg} onChange={setSeg} />
+
+        <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {list.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--ink-faint)' }}>
+              <Icon name="wallet" size={40} style={{ opacity: 0.3, marginBottom: 12 }} />
+              <div style={{ fontSize: 16, fontWeight: 600 }}>Sin movimientos</div>
+            </div>
           )}
+          {list.map(tx => <TxRow key={tx.id} tx={tx} fmt={fmt} />)}
         </div>
-      </section>
-
-      <CustomModal 
-        isOpen={isDeleteModalOpen}
-        onClose={() => setIsDeleteModalOpen(false)}
-        onConfirm={confirmDelete}
-        title="¿Eliminar Movimiento?"
-        description="Esta acción ajustará tu balance de forma permanente."
-        confirmText="Sí, eliminar"
-        variant="danger"
-      />
-    </motion.div>
+      </div>
+    </div>
   )
 }
 
-export default Finances
+function TxRow({ tx, fmt }: { tx: Tx; fmt: (n: number) => string }) {
+  const inc = tx.type === 'ingreso'
+  return (
+    <div className="card" style={{ display: 'flex', alignItems: 'center', gap: 13, padding: '13px 15px' }}>
+      <div style={{
+        width: 42, height: 42, borderRadius: 12, flexShrink: 0,
+        background: inc ? 'var(--done-tint)' : 'var(--orange-tint)',
+        color: inc ? 'var(--done)' : 'var(--orange-deep)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <Icon name={CAT_ICONS[tx.category ?? ''] || 'tag'} size={20} />
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 14.5, fontWeight: 600, lineHeight: 1.2 }}>{tx.description || tx.category}</div>
+        <div style={{ fontSize: 12, color: 'var(--ink-faint)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 7 }}>
+          <span>{fmtDateShort(tx.transaction_date?.slice(0, 10) || tx.created_at?.slice(0, 10) || '')}</span>
+        </div>
+      </div>
+      <div style={{ fontWeight: 700, fontSize: 15.5, color: inc ? 'var(--done)' : 'var(--ink)' }}>
+        {inc ? '+' : '–'}{fmt(tx.amount)}
+      </div>
+    </div>
+  )
+}

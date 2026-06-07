@@ -1,40 +1,61 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import MainLayout from './components/layout/MainLayout'
-import Dashboard from './pages/Dashboard'
-import Plans from './pages/Plans'
-import Finances from './pages/Finances'
-import Gallery from './pages/Gallery'
-import AddPlan from './pages/AddPlan'
-import AddMemory from './pages/AddMemory'
-import AddExpense from './pages/AddExpense'
-import AddIncome from './pages/AddIncome'
-import PlanDetail from './pages/PlanDetail'
+import { useState, useEffect, useCallback } from 'react'
+import { AuthProvider, useAuth } from './context/AuthContext'
+import { ToastProvider } from './context/ToastContext'
+import { CurrencyProvider } from './context/CurrencyContext'
 import Auth from './pages/Auth'
-import { AuthProvider } from './context/AuthContext'
-import { ProtectedRoute } from './components/ProtectedRoute'
+import Onboarding from './pages/Onboarding'
+import AppShell from './components/AppShell'
+
+function AppInner() {
+  const { session, user, profile, isLoading, refreshProfile } = useAuth()
+  const [needsOnboarding, setNeedsOnboarding] = useState(false)
+  const [stateLoading, setStateLoading] = useState(true)
+
+  // AuthContext already fetches the profile on session init — no redundant call needed here.
+  useEffect(() => {
+    if (!isLoading) {
+      if (!session) {
+        setStateLoading(false)
+      } else if (profile) {
+        setNeedsOnboarding(!profile.couple_id)
+        setStateLoading(false)
+      } else {
+        // session activa pero sin fila en profiles (trigger pendiente o primer login)
+        setNeedsOnboarding(true)
+        setStateLoading(false)
+      }
+    }
+  }, [isLoading, session, profile])
+
+  const handleAuth = useCallback(() => setStateLoading(true), [])
+  const handleOnboarded = useCallback(async () => {
+    setNeedsOnboarding(false)
+    if (user) await refreshProfile()
+  }, [user, refreshProfile])
+
+  if (stateLoading || isLoading) {
+    return (
+      <div style={{ minHeight: '100vh', background: 'var(--paper)', display: 'flex',
+        alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: 32, height: 32, borderRadius: '50%', border: '3px solid var(--orange)',
+          borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite' }} />
+      </div>
+    )
+  }
+
+  if (!session) return <Auth onAuth={handleAuth} />
+  if (needsOnboarding) return <Onboarding onComplete={handleOnboarded} />
+  return <AppShell />
+}
 
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <Routes>
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/" element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
-            <Route index element={<Dashboard />} />
-            <Route path="plans" element={<Plans />} />
-            <Route path="plans/new" element={<AddPlan />} />
-            <Route path="plans/edit/:id" element={<AddPlan />} />
-            <Route path="plans/:id" element={<PlanDetail />} />
-            <Route path="gallery" element={<Gallery />} />
-            <Route path="gallery/new" element={<AddMemory />} />
-            <Route path="finances" element={<Finances />} />
-            <Route path="finances/expense/new" element={<AddExpense />} />
-            <Route path="finances/expense/edit/:id" element={<AddExpense />} />
-            <Route path="finances/income/new" element={<AddIncome />} />
-            <Route path="finances/income/edit/:id" element={<AddIncome />} />
-          </Route>
-        </Routes>
-      </Router>
+      <ToastProvider>
+        <CurrencyProvider>
+          <AppInner />
+        </CurrencyProvider>
+      </ToastProvider>
     </AuthProvider>
   )
 }

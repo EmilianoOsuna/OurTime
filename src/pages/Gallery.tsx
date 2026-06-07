@@ -1,193 +1,153 @@
-import React, { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { useNavigate } from 'react-router-dom'
-import { Filter, Search, Camera, Loader2, Image as ImageIcon, MoreVertical, Trash2, Maximize2 } from 'lucide-react'
-import { useAuth } from '../context/AuthContext'
-import { supabase } from '../lib/supabase'
-import CustomModal from '../components/ui/CustomModal'
-import ActionSheet from '../components/ui/ActionSheet'
-import ImageLightbox from '../components/ui/ImageLightbox'
+import { useState } from 'react'
+import { Icon } from '../components/ui/Icon'
+import { Avatar } from '../components/ui/Avatar'
+import { fmtDateShort } from '../lib/chapterUtils'
+import type { PersonDisplay } from '../lib/supabase'
 
-const Gallery: React.FC = () => {
-  const navigate = useNavigate()
-  const { coupleId } = useAuth()
-  const [memories, setMemories] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  
-  // UI States
-  const [selectedPhoto, setSelectedPhoto] = useState<any | null>(null)
-  const [actionMemory, setActionMemory] = useState<any | null>(null)
-  const [isActionSheetOpen, setIsActionSheetOpen] = useState(false)
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+interface Memory {
+  id: string
+  image_url: string
+  caption: string | null
+  created_at: string
+  plan_id?: string | null
+}
 
-  const confirmDelete = async () => {
-    if (!actionMemory) return;
-    
-    try {
-      const urlParts = actionMemory.image_url.split('/Fotos/');
-      if (urlParts.length > 1) {
-        await supabase.storage.from('Fotos').remove([urlParts[1]]);
-      }
-
-      const { error: dbError } = await supabase.from('memories').delete().eq('id', actionMemory.id);
-      if (dbError) throw dbError;
-
-      setMemories(prev => prev.filter(m => m.id !== actionMemory.id));
-      setSelectedPhoto(null);
-      setActionMemory(null);
-    } catch (error: any) {
-      console.error(error);
-      alert('No se pudo borrar: ' + error.message + '. Asegúrate de haber aplicado el script SQL en Supabase.');
-    }
-  }
-
-  const handleDeleteMemory = (memory: any) => {
-    setActionMemory(memory);
-    setIsDeleteModalOpen(true);
-  }
-
-  React.useEffect(() => {
-    const fetchMemories = async () => {
-      if (!coupleId) return;
-
-      const { data, error } = await supabase
-        .from('memories')
-        .select(`
-          id,
-          image_url,
-          caption,
-          created_at,
-          plans ( title )
-        `)
-        .eq('couple_id', coupleId)
-        .order('created_at', { ascending: false });
-
-      if (data) setMemories(data);
-      setLoading(false);
-    }
-    fetchMemories()
-  }, [coupleId])
-
-  if (loading) {
-    return <div className="min-h-[50vh] flex items-center justify-center"><Loader2 className="animate-spin text-primary" size={32} /></div>
-  }
-
+function CircBtn({ icon, onClick }: { icon: string; onClick: () => void }) {
   return (
-    <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="space-y-12 pb-24"
-    >
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-        <div className="space-y-3">
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-on-surface leading-tight">
-            Nuestra Bóveda
-          </h1>
-          <p className="text-xl text-on-surface/50 font-medium">
-            Cada foto es un susurro capturado de nuestro viaje.
-          </p>
-        </div>
-        <div className="flex gap-3">
-          <button className="p-3 bg-surface-low rounded-full text-on-surface/60 hover:text-primary transition-colors shadow-sm">
-            <Search size={20} />
-          </button>
-          <button className="p-3 bg-surface-low rounded-full text-on-surface/60 hover:text-primary transition-colors shadow-sm">
-            <Filter size={20} />
-          </button>
-        </div>
-      </header>
-
-      <section className="grid grid-cols-2 md:grid-cols-3 gap-6">
-        <AnimatePresence>
-          {memories.map((m, i) => (
-            <motion.div
-              layout
-              key={m.id}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: i * 0.1 }}
-              className="group relative cursor-pointer"
-              onClick={() => setSelectedPhoto(m)}
-            >
-              <div className="aspect-[4/5] bg-surface-highest rounded-3xl overflow-hidden shadow-sm group-hover:shadow-2xl transition-all duration-700 relative">
-                {m.image_url ? (
-                  <img src={m.image_url} alt={m.caption} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center opacity-40 group-hover:scale-110 transition-transform duration-700">
-                    <ImageIcon size={48} className="text-on-surface/20" />
-                  </div>
-                )}
-                
-                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none flex items-center justify-center">
-                   <Maximize2 className="text-white" size={24} />
-                </div>
-
-                <div className="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <p className="font-bold text-white text-lg drop-shadow-md truncate">{m.plans?.title || m.caption || 'Recuerdo'}</p>
-                  <p className="text-white/60 text-xs font-semibold drop-shadow-md">
-                    {new Date(m.created_at).toLocaleDateString()}
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </AnimatePresence>
-      </section>
-
-      {/* Action UI Overlays */}
-      <ImageLightbox 
-        isOpen={!!selectedPhoto}
-        onClose={() => setSelectedPhoto(null)}
-        imageUrl={selectedPhoto?.image_url || ''}
-        caption={selectedPhoto?.caption || selectedPhoto?.plans?.title}
-        onDelete={() => handleDeleteMemory(selectedPhoto)}
-      />
-
-      <ActionSheet 
-        isOpen={isActionSheetOpen}
-        onClose={() => setIsActionSheetOpen(false)}
-        title="Opciones de Memoria"
-        options={[
-          {
-            label: 'Ver en Detalle',
-            icon: <Maximize2 size={18} />,
-            onClick: () => setSelectedPhoto(actionMemory)
-          },
-          {
-            label: 'Eliminar Memoria',
-            icon: <Trash2 size={18} />,
-            variant: 'danger',
-            onClick: () => setIsDeleteModalOpen(true)
-          }
-        ]}
-      />
-
-      <CustomModal 
-        isOpen={isDeleteModalOpen}
-        onClose={() => setIsDeleteModalOpen(false)}
-        onConfirm={confirmDelete}
-        title="¿Borrar Recuerdo?"
-        description="Esta acción eliminará la imagen de tu bóveda para siempre. No se puede deshacer."
-        confirmText="Sí, borrar"
-        variant="danger"
-      />
-      
-      {memories.length === 0 && (
-         <div className="text-center py-12 text-on-surface/50 font-medium col-span-full">Tu bóveda está vacía. ¡Añade una memoria!</div>
-      )}
-
-      <div className="flex justify-center mt-12">
-        <motion.button 
-          onClick={() => navigate('/gallery/new')}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="px-10 py-4 bg-on-surface text-white font-bold rounded-full shadow-2xl flex items-center gap-3"
-        >
-          <Camera size={20} /> Añadir Memoria
-        </motion.button>
-      </div>
-    </motion.div>
+    <button onClick={onClick} style={{
+      width: 42, height: 42, borderRadius: '50%', border: 'none',
+      background: 'var(--card)', boxShadow: 'var(--sh-sm)', cursor: 'pointer',
+      color: 'var(--ink)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+    }}>
+      <Icon name={icon} size={19} />
+    </button>
   )
 }
 
-export default Gallery
+function MemoryCard({ m, onOpen, delay, me }: { m: Memory; onOpen: () => void; delay: number; me: PersonDisplay }) {
+  const ratio = 1.3 + (parseInt(m.id.slice(-1), 16) % 3) * 0.3
+  return (
+    <button onClick={onOpen} className="anim-up" style={{
+      border: 'none', cursor: 'pointer', padding: 0,
+      borderRadius: 16, overflow: 'hidden', background: 'var(--card)',
+      boxShadow: 'var(--sh-sm)', animationDelay: delay + 's', display: 'block', width: '100%',
+    }}>
+      <div style={{ width: '100%', aspectRatio: '1 / ' + ratio.toFixed(1), position: 'relative', overflow: 'hidden' }}>
+        <img src={m.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+      </div>
+      <div style={{ padding: '10px 12px 12px', textAlign: 'left' }}>
+        {m.caption && (
+          <div style={{ fontSize: 13.5, fontWeight: 600, lineHeight: 1.25 }}>{m.caption}</div>
+        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: m.caption ? 6 : 0 }}>
+          <Avatar person={me} size={17} />
+          <span style={{ fontSize: 11.5, color: 'var(--ink-faint)' }}>
+            {fmtDateShort(m.created_at.slice(0, 10))}
+          </span>
+        </div>
+      </div>
+    </button>
+  )
+}
+
+export default function Gallery({ coupleId, memories, setMemories, onImageClick, me }: {
+  coupleId: string | null
+  memories: Memory[]
+  setMemories: (m: Memory[]) => void
+  onImageClick: (url: string) => void
+  me: PersonDisplay
+}) {
+  const [q, setQ] = useState('')
+  const [filter, setFilter] = useState('all')
+  const [searchOpen, setSearchOpen] = useState(false)
+
+  const filtered = memories.filter(m => {
+    if (filter === 'caption' && !m.caption) return false
+    if (q.trim() && !(m.caption ?? '').toLowerCase().includes(q.trim().toLowerCase())) return false
+    return true
+  })
+
+  const cols: Memory[][] = [[], []]
+  filtered.forEach((m, i) => cols[i % 2].push(m))
+
+  return (
+    <div className="ot-scroll page-enter" style={{ paddingBottom: 130 }}>
+      <div style={{ padding: '8px 22px 0' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+          <div>
+            <div className="eyebrow" style={{ marginBottom: 7 }}>Sus momentos</div>
+            <h1 className="display" style={{ fontSize: 32, margin: 0 }}>Recuerdos</h1>
+          </div>
+          <CircBtn
+            icon={searchOpen ? 'x' : 'search'}
+            onClick={() => { setSearchOpen(s => !s); setQ('') }}
+          />
+        </div>
+
+        {searchOpen && (
+          <div className="anim-up" style={{ marginTop: 14, position: 'relative' }}>
+            <Icon name="search" size={18} style={{
+              position: 'absolute', left: 14, top: 15, color: 'var(--ink-faint)',
+            }} />
+            <input
+              className="field"
+              autoFocus
+              placeholder="Busca un recuerdo…"
+              value={q}
+              onChange={e => setQ(e.target.value)}
+              style={{ paddingLeft: 42 }}
+            />
+          </div>
+        )}
+
+        {/* Filter chips */}
+        <div style={{
+          display: 'flex', gap: 8, overflowX: 'auto',
+          padding: '16px 0 4px', margin: '0 -22px', paddingLeft: 22, paddingRight: 22,
+        }} className="ot-scroll">
+          <button
+            onClick={() => setFilter('all')}
+            className={'chip' + (filter === 'all' ? ' active' : '')}
+            style={{ flexShrink: 0 }}
+          >Todos</button>
+          <button
+            onClick={() => setFilter('caption')}
+            className={'chip' + (filter === 'caption' ? ' active' : '')}
+            style={{ flexShrink: 0 }}
+          >♥ Con pie de foto</button>
+        </div>
+      </div>
+
+      {/* Masonry grid */}
+      {filtered.length ? (
+        <div style={{ display: 'flex', gap: 10, padding: '14px 18px 0' }}>
+          {cols.map((col, ci) => (
+            <div key={ci} style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {col.map((m, i) => (
+                <MemoryCard key={m.id} m={m} onOpen={() => onImageClick(m.image_url)} delay={i * 0.04} me={me} />
+              ))}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div style={{ textAlign: 'center', padding: '60px 30px' }}>
+          <div style={{
+            width: 80, height: 80, borderRadius: 24, background: 'var(--blue-tint)',
+            color: 'var(--blue)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            margin: '0 auto 18px',
+          }}>
+            <Icon name={q ? 'search' : 'image'} size={36} />
+          </div>
+          <div className="display" style={{ fontSize: 22, marginBottom: 6 }}>
+            {q ? 'Sin coincidencias' : 'Aún no hay recuerdos'}
+          </div>
+          <div style={{ fontSize: 14, color: 'var(--ink-soft)' }}>
+            {q
+              ? `No encontramos nada para "${q}". Prueba otra palabra.`
+              : 'Cada foto que suban aparecerá aquí, ordenada por capítulos.'}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}

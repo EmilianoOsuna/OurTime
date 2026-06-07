@@ -1,0 +1,278 @@
+/* ───────────────────────────────────────────────────────────
+   OurTime — "Nuestra Historia"
+   Editorial design system. Warm paper, orange + blue, numbered chapters.
+   ─────────────────────────────────────────────────────────── */
+
+:root {
+  /* Type — swapped by Tweaks (Dirección A / B) */
+  --font-display: 'Newsreader', Georgia, serif;
+  --font-ui: 'Hanken Grotesk', system-ui, sans-serif;
+
+  /* Paper & ink — warm, low chroma */
+  --paper:      #F4EEE4;   /* app background */
+  --paper-band: #ECE3D5;   /* alternating band / section header */
+  --card:       #FFFCF7;   /* raised surface */
+  --card-2:     #FBF6EE;   /* nested surface */
+  --ink:        #211D18;   /* near-black, warm */
+  --ink-soft:   #6E655A;   /* secondary text */
+  --ink-faint:  #A99F90;   /* tertiary / captions */
+  --line:       rgba(33,29,24,0.10);
+  --line-soft:  rgba(33,29,24,0.06);
+
+  /* Brand */
+  --orange:      #F17720;
+  --orange-deep: #D75E12;
+  --orange-tint: #FBE6D2;
+  --blue:        #0474BA;
+  --blue-deep:   #045E96;
+  --blue-tint:   #D7E9F4;
+
+  /* Status */
+  --done:  #2E7D5B;
+  --done-tint: #DCEDE3;
+
+  /* Shadows — soft, warm */
+  --sh-sm: 0 1px 2px rgba(60,40,20,0.05), 0 2px 8px rgba(60,40,20,0.04);
+  --sh-md: 0 2px 6px rgba(60,40,20,0.06), 0 12px 28px rgba(60,40,20,0.08);
+  --sh-lg: 0 8px 24px rgba(60,40,20,0.10), 0 30px 60px rgba(60,40,20,0.14);
+
+  --r-lg: 30px;
+  --r-md: 22px;
+  --r-sm: 14px;
+}
+
+* { box-sizing: border-box; }
+
+.ot-root {
+  font-family: var(--font-ui);
+  color: var(--ink);
+  background: var(--paper);
+  height: 100%;
+  -webkit-font-smoothing: antialiased;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Scroll surface inside the phone */
+.ot-scroll {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.ot-scroll::-webkit-scrollbar { display: none; }
+
+/* ── Typography helpers ───────────────────────────── */
+.serif   { font-family: var(--font-display); font-weight: 400; }
+.serif-i { font-family: var(--font-display); font-style: italic; font-weight: 400; }
+.display {
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.02;
+}
+.eyebrow {
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.chapter-no {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-style: italic;
+  line-height: 0.8;
+  letter-spacing: -0.02em;
+}
+
+/* ── Buttons ──────────────────────────────────────── */
+.btn {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: 16px;
+  border: none;
+  border-radius: 999px;
+  padding: 15px 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  cursor: pointer;
+  transition: transform .15s cubic-bezier(.2,.8,.2,1), box-shadow .2s, background .2s, opacity .2s;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  white-space: nowrap;
+}
+.btn:active { transform: scale(0.965); }
+.btn-primary {
+  background: var(--ink);
+  color: #FBF6EE;
+  box-shadow: var(--sh-md);
+}
+.btn-orange {
+  background: var(--orange);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(241,119,32,0.32);
+}
+.btn-blue {
+  background: var(--blue);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(4,116,186,0.30);
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1.5px var(--line);
+}
+.btn-soft {
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: var(--sh-sm);
+}
+.btn-block { width: 100%; }
+.btn:disabled { opacity: 0.4; pointer-events: none; }
+
+/* ── Chips / pills ────────────────────────────────── */
+.chip {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: 13px;
+  border-radius: 999px;
+  padding: 8px 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all .18s;
+  background: var(--card);
+  color: var(--ink-soft);
+  box-shadow: inset 0 0 0 1px var(--line);
+  -webkit-tap-highlight-color: transparent;
+}
+.chip.active {
+  background: var(--ink);
+  color: #FBF6EE;
+  box-shadow: none;
+}
+.chip-tag {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  border-radius: 7px;
+}
+
+/* ── Cards ────────────────────────────────────────── */
+.card {
+  background: var(--card);
+  border-radius: var(--r-md);
+  box-shadow: var(--sh-sm);
+}
+
+/* ── Placeholder imagery (warm striped) ───────────── */
+.ph {
+  position: relative;
+  overflow: hidden;
+  background:
+    repeating-linear-gradient(135deg,
+      rgba(241,119,32,0.10) 0 10px,
+      rgba(241,119,32,0.04) 10px 20px),
+    var(--card-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ph.blue {
+  background:
+    repeating-linear-gradient(135deg,
+      rgba(4,116,186,0.10) 0 10px,
+      rgba(4,116,186,0.04) 10px 20px),
+    var(--card-2);
+}
+.ph-label {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  background: rgba(255,252,247,0.78);
+  padding: 4px 8px;
+  border-radius: 6px;
+  backdrop-filter: blur(2px);
+}
+
+/* ── Inputs ───────────────────────────────────────── */
+.field {
+  font-family: var(--font-ui);
+  font-size: 16px;
+  color: var(--ink);
+  background: var(--card-2);
+  border: none;
+  border-radius: var(--r-sm);
+  padding: 14px 16px;
+  width: 100%;
+  outline: none;
+  box-shadow: inset 0 0 0 1.5px var(--line);
+  transition: box-shadow .18s;
+}
+.field:focus { box-shadow: inset 0 0 0 2px var(--orange); }
+.field::placeholder { color: var(--ink-faint); }
+.field-label {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 8px;
+  display: block;
+}
+
+/* ── Dividers & misc ──────────────────────────────── */
+.hr { height: 1px; background: var(--line); border: none; }
+.dot { width: 6px; height: 6px; border-radius: 50%; }
+
+/* ── Avatars ──────────────────────────────────────── */
+.avatar {
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-style: italic;
+  color: #fff;
+  flex-shrink: 0;
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,0.5);
+}
+
+/* ── Animations ───────────────────────────────────── */
+@keyframes fadeUp { from { opacity:0; transform: translateY(14px); } to { opacity:1; transform:none; } }
+@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+@keyframes scaleIn { from { opacity:0; transform: scale(0.92); } to { opacity:1; transform:none; } }
+@keyframes pulse { 0%,100%{ opacity:1; transform:scale(1);} 50%{opacity:.4; transform:scale(.85);} }
+@keyframes pulseRing { 0%{ transform:scale(0.6); opacity:.6;} 100%{ transform:scale(2.4); opacity:0;} }
+@keyframes sheetUp { from { transform: translateY(100%); } to { transform:none; } }
+@keyframes drawLine { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes pop { 0%{transform:scale(0);} 60%{transform:scale(1.15);} 100%{transform:scale(1);} }
+@keyframes floatY { 0%,100%{ transform: translateY(0);} 50%{ transform: translateY(-7px);} }
+@keyframes shimmer { 0%{ background-position: -200% 0;} 100%{ background-position: 200% 0;} }
+@keyframes confettiFall {
+  0% { transform: translateY(-10px) rotate(0); opacity: 1; }
+  100% { transform: translateY(420px) rotate(540deg); opacity: 0; }
+}
+
+.anim-up   { animation: fadeUp .5s cubic-bezier(.2,.8,.2,1) both; }
+.anim-in   { animation: fadeIn .4s ease both; }
+.anim-scale{ animation: scaleIn .4s cubic-bezier(.2,.8,.2,1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001s !important; }
+}
+
+/* page transitions */
+.page-enter { animation: fadeUp .42s cubic-bezier(.2,.8,.2,1) both; }
