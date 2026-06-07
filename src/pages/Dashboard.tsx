@@ -196,8 +196,12 @@ function NextHero({ plan, no, onClick }: { plan: PlanType; no: number; onClick: 
       width: '100%', textAlign: 'left', border: 'none', cursor: 'pointer', overflow: 'hidden',
       padding: 0, boxShadow: 'var(--sh-md)',
     }}>
-      <div className={'ph' + (blue ? ' blue' : '')} style={{ height: 150, position: 'relative' }}>
-        <span className="ph-label" style={{ position: 'absolute', bottom: 12, right: 12 }}>foto del plan</span>
+      <div className={plan.cover_url ? '' : ('ph' + (blue ? ' blue' : ''))}
+        style={{ height: 150, position: 'relative', background: plan.cover_url ? '#111' : undefined, overflow: 'hidden' }}>
+        {plan.cover_url
+          ? <img src={plan.cover_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.9 }} />
+          : <span className="ph-label" style={{ position: 'absolute', bottom: 12, right: 12 }}>foto del plan</span>
+        }
         <div style={{ position: 'absolute', top: 14, left: 14 }}><CatTag cat={plan.type} /></div>
         <div style={{ position: 'absolute', top: 12, right: 14, display: 'flex', alignItems: 'center', gap: 6,
           background: 'rgba(255,252,247,0.9)', borderRadius: 999, padding: '6px 11px',

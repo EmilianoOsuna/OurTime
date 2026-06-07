@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Icon } from '../components/ui/Icon'
 import { Avatar } from '../components/ui/Avatar'
+import { compressToWebP } from '../lib/imageUtils'
 import { PresenceDot } from '../components/ui/PresenceDot'
 import { CatMedallion } from '../components/ui/CatMedallion'
 import { useCurrency, CURRENCIES, type CurrencyKey } from '../context/CurrencyContext'
@@ -54,17 +55,19 @@ export function ProfileScreen({ plans, transactions, memories, onClose, onGoToFi
     if (!file || !user) return
     setUploadingAvatar(true)
     try {
-      const ext = file.name.split('.').pop() || 'jpg'
-      const path = `avatars/${user.id}.${ext}`
-      const { error: upErr } = await supabase.storage.from('Fotos').upload(path, file, { upsert: true })
+      const webp = await compressToWebP(file, 400, 0.85)
+      const path = `avatars/${user.id}.webp`
+      const { error: upErr } = await supabase.storage.from('Fotos').upload(path, webp, { upsert: true, contentType: 'image/webp' })
       if (upErr) throw upErr
       const { data: { publicUrl } } = supabase.storage.from('Fotos').getPublicUrl(path)
-      await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', user.id)
+      const url = publicUrl + '?t=' + Date.now()
+      await supabase.from('profiles').update({ avatar_url: url }).eq('id', user.id)
       await refreshProfile()
     } catch (e: any) {
       alert('Error subiendo foto: ' + e.message)
     } finally {
       setUploadingAvatar(false)
+      e.target.value = ''
     }
   }
 

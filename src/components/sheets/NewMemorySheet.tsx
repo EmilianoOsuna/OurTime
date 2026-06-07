@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
 import { supabase } from '../../lib/supabase'
 import { toRoman } from '../../lib/chapterUtils'
+import { compressToWebP } from '../../lib/imageUtils'
 import { Icon } from '../ui/Icon'
 import type { PlanType } from '../../lib/supabase'
 
@@ -37,9 +38,9 @@ export const NewMemorySheet: React.FC<Props> = ({ onClose, onCreated }) => {
     if (!file || !coupleId) return
     setSaving(true)
     try {
-      const ext = file.name.split('.').pop()
-      const path = `${coupleId}/${Date.now()}.${ext}`
-      const { error: upErr } = await supabase.storage.from('Fotos').upload(path, file)
+      const webp = await compressToWebP(file, 1920, 0.82)
+      const path = `${coupleId}/${Date.now()}.webp`
+      const { error: upErr } = await supabase.storage.from('Fotos').upload(path, webp, { contentType: 'image/webp' })
       if (upErr) throw upErr
       const { data: { publicUrl } } = supabase.storage.from('Fotos').getPublicUrl(path)
       const { error: insErr } = await supabase.from('memories').insert({

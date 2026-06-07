@@ -107,7 +107,7 @@ export default function AppShell() {
 
       {partnerEditing && <LiveEditBadge />}
 
-      {overlay?.type === 'plan' && <PlanDetail plan={overlay.data} onClose={closeOverlay} chapterNo={chapterNo(overlay.data.id)} />}
+      {overlay?.type === 'plan' && <PlanDetail plan={overlay.data} onClose={closeOverlay} chapterNo={chapterNo(overlay.data.id)} onUpdated={refreshPlans} />}
       {overlay?.type === 'profile' && (
         <ProfileScreen
           plans={plans} transactions={transactions} memories={memories}
