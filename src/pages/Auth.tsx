@@ -78,7 +78,7 @@ export default function Auth({ onAuth }: { onAuth: () => void }) {
             <div className="anim-up" style={{ position: 'relative' }}>
               <div className="eyebrow" style={{ color: 'var(--orange-deep)', marginBottom: 18 }}>· Bienvenidos a OurTime ·</div>
               <h1 className="display" style={{ fontSize: 52, margin: 0, lineHeight: 0.98 }}>
-                Nuestra<br />historia,<br />
+                Su<br />historia,<br />
                 <span className="serif-i" style={{ color: 'var(--orange)' }}>un capítulo</span><br />a la vez.
               </h1>
               <p style={{ fontSize: 16.5, color: 'var(--ink-soft)', lineHeight: 1.55, marginTop: 22, maxWidth: 320 }}>
@@ -99,7 +99,7 @@ export default function Auth({ onAuth }: { onAuth: () => void }) {
           <motion.div key="register"
             initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.35 }}
-            style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', padding: '96px 30px 40px' }}>
+            style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', padding: 'max(56px, env(safe-area-inset-top) + 20px) 30px 40px' }}>
             <button onClick={() => go('welcome')} style={{
               display: 'flex', alignItems: 'center', gap: 8, border: 'none', background: 'transparent',
               cursor: 'pointer', color: 'var(--ink-soft)', fontSize: 14, fontWeight: 600, marginBottom: 32, padding: 0,
@@ -187,7 +187,7 @@ export default function Auth({ onAuth }: { onAuth: () => void }) {
           <motion.div key="login"
             initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.35 }}
-            style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', padding: '96px 30px 40px' }}>
+            style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', padding: 'max(56px, env(safe-area-inset-top) + 20px) 30px 40px' }}>
             <button onClick={() => go('welcome')} style={{
               display: 'flex', alignItems: 'center', gap: 8, border: 'none', background: 'transparent',
               cursor: 'pointer', color: 'var(--ink-soft)', fontSize: 14, fontWeight: 600, marginBottom: 32, padding: 0,
@@ -253,7 +253,7 @@ export default function Auth({ onAuth }: { onAuth: () => void }) {
           <motion.div key="forgot"
             initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.35 }}
-            style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', padding: '96px 30px 40px' }}>
+            style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', padding: 'max(56px, env(safe-area-inset-top) + 20px) 30px 40px' }}>
             <button onClick={() => go('login')} style={{
               display: 'flex', alignItems: 'center', gap: 8, border: 'none', background: 'transparent',
               cursor: 'pointer', color: 'var(--ink-soft)', fontSize: 14, fontWeight: 600, marginBottom: 32, padding: 0,

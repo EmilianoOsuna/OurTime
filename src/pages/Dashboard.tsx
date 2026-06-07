@@ -45,10 +45,10 @@ export default function Dashboard({ partnerEditing, plans, go, onBell, onPlanCli
     }
   }, [coupleId, plans])
 
-  const upcoming = allPlans.filter(p => p.status !== 'completado').sort((a, b) => a.plan_date.localeCompare(b.plan_date))
+  const upcoming = allPlans.filter(p => p.status === 'pendiente').sort((a, b) => a.plan_date.localeCompare(b.plan_date))
   const past = allPlans.filter(p => p.status === 'completado').sort((a, b) => b.plan_date.localeCompare(a.plan_date))
   const next = upcoming[0]
-  const numbered = [...allPlans].sort((a, b) => a.plan_date.localeCompare(b.plan_date))
+  const numbered = [...allPlans].filter(p => p.status !== 'cancelado').sort((a, b) => a.plan_date.localeCompare(b.plan_date))
   const chapterNo = (id: string) => numbered.findIndex(p => p.id === id) + 1
   const days = since ? daysTogether(since) : null
   const partnerName = partner?.name || 'Tu pareja'
@@ -169,7 +169,7 @@ export default function Dashboard({ partnerEditing, plans, go, onBell, onPlanCli
               <div style={{ fontSize: 12, color: 'var(--ink-soft)' }}>Su galería</div>
             </div>
           </button>
-          <button onClick={() => go('finance')} className="ot-card" style={{
+          <button onClick={() => go('calendar')} className="ot-card" style={{
             flex: 1, border: 'none', cursor: 'pointer', padding: '18px 16px',
             display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8,
           }}>

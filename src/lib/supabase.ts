@@ -27,7 +27,7 @@ export type PlanType = {
   description: string | null;
   plan_date: string;
   type: 'cine' | 'cena' | 'viaje' | 'salida' | 'otro' | 'cafe' | 'regalo' | 'noche' | 'musica' | 'ruta';
-  status: 'pendiente' | 'completado';
+  status: 'pendiente' | 'completado' | 'cancelado';
   cover_url: string | null;
   created_at: string;
 }

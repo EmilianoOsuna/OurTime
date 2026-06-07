@@ -5,6 +5,7 @@ import { useToast } from '../../context/ToastContext'
 import { supabase } from '../../lib/supabase'
 import { CAT_META } from '../../lib/chapterUtils'
 import { Icon } from '../ui/Icon'
+import { DatePicker } from '../ui/DatePicker'
 
 const CAT_ICON: Record<string, string> = {
   cena: 'utensils', viaje: 'plane', cine: 'film', cafe: 'coffee',
@@ -68,8 +69,7 @@ export const NewPlanSheet: React.FC<Props> = ({ onClose, onCreated }) => {
         </div>
 
         <div style={{ marginTop: 18 }}>
-          <label className="field-label">Fecha</label>
-          <input className="field" type="date" value={date} onChange={e => setDate(e.target.value)} />
+          <DatePicker label="Fecha" value={date} onChange={setDate} />
         </div>
 
         <label className="field-label" style={{ marginTop: 18 }}>Lugar</label>

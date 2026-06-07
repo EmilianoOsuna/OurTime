@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { CatTag } from '../components/ui/CatTag'
 import { Icon } from '../components/ui/Icon'
 import { Confetti } from '../components/ui/Confetti'
+import { DatePicker } from '../components/ui/DatePicker'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import { toRoman, fmtDate, countdown, CAT_META } from '../lib/chapterUtils'
@@ -67,15 +68,22 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
   const [editType, setEditType] = useState<PlanCategory>(initialPlan.type)
   const [editDesc, setEditDesc] = useState(initialPlan.description || '')
   const [saving, setSaving] = useState(false)
+  const [confirmCancel, setConfirmCancel] = useState(false)
 
   // Cover photo
   const [coverUrl, setCoverUrl] = useState<string | null>(initialPlan.cover_url)
   const [uploadingCover, setUploadingCover] = useState(false)
   const coverInputRef = useRef<HTMLInputElement>(null)
 
+  // Memory upload
+  const [uploadingMemory, setUploadingMemory] = useState(false)
+  const memoryInputRef = useRef<HTMLInputElement>(null)
+
   const meta = CAT_META[plan.type] || { tone: 'orange' as const }
   const blue = meta.tone === 'blue'
   const no = chapterNo ?? 1
+  const todayStr = new Date().toISOString().slice(0, 10)
+  const isFuture = plan.plan_date > todayStr
 
   useEffect(() => {
     if (!coupleId) return
@@ -87,6 +95,10 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
   }, [coupleId, plan.id])
 
   const complete = async () => {
+    if (isFuture) {
+      push({ icon: '⏰', eyebrow: 'Aún no es el día', title: `Este capítulo es el ${fmtDate(plan.plan_date)}` })
+      return
+    }
     setDone(true)
     setBurst(true)
     await supabase.from('plans').update({ status: 'completado' }).eq('id', plan.id)
@@ -100,7 +112,7 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
     setDone(false)
     await supabase.from('plans').update({ status: 'pendiente' }).eq('id', plan.id)
     setPlan(p => ({ ...p, status: 'pendiente' }))
-    push({ icon: '↩️', eyebrow: 'Capítulo', title: 'Marcado como pendiente', body: `"${plan.title}" vuelve a estar por vivir.` })
+    push({ icon: '↩️', eyebrow: 'Capítulo', title: 'Marcado como pendiente' })
     onUpdated?.()
   }
 
@@ -109,6 +121,7 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
     setEditDate(plan.plan_date)
     setEditType(plan.type)
     setEditDesc(plan.description || '')
+    setConfirmCancel(false)
     setEditing(true)
   }
 
@@ -129,6 +142,13 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
     onUpdated?.()
   }
 
+  const cancelPlan = async () => {
+    await supabase.from('plans').update({ status: 'cancelado' }).eq('id', plan.id)
+    push({ icon: '🗑️', eyebrow: 'Capítulo', title: 'Capítulo cancelado' })
+    onUpdated?.()
+    onClose()
+  }
+
   const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -136,7 +156,9 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
     try {
       const webp = await compressToWebP(file, 1920, 0.82)
       const path = `plans/${plan.id}.webp`
-      const { error } = await supabase.storage.from('Fotos').upload(path, webp, { upsert: true, contentType: 'image/webp' })
+      // Remove first to ensure re-upload always works regardless of storage policy
+      await supabase.storage.from('Fotos').remove([path])
+      const { error } = await supabase.storage.from('Fotos').upload(path, webp, { contentType: 'image/webp' })
       if (error) throw error
       const { data: { publicUrl } } = supabase.storage.from('Fotos').getPublicUrl(path)
       const url = publicUrl + '?t=' + Date.now()
@@ -152,6 +174,30 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
     }
   }
 
+  const handleMemoryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !coupleId) return
+    setUploadingMemory(true)
+    try {
+      const webp = await compressToWebP(file, 1920, 0.82)
+      const path = `${coupleId}/${Date.now()}.webp`
+      const { error: upErr } = await supabase.storage.from('Fotos').upload(path, webp, { contentType: 'image/webp' })
+      if (upErr) throw upErr
+      const { data: { publicUrl } } = supabase.storage.from('Fotos').getPublicUrl(path)
+      const { data: mem, error: insErr } = await supabase.from('memories')
+        .insert({ couple_id: coupleId, plan_id: plan.id, image_url: publicUrl, caption: null })
+        .select().single()
+      if (insErr) throw insErr
+      if (mem) setMemories(ms => [mem as Memory, ...ms])
+      push({ icon: '📷', eyebrow: 'Recuerdo', title: 'Foto añadida al capítulo' })
+    } catch {
+      push({ icon: '⚠️', eyebrow: 'Error', title: 'No se pudo subir la foto' })
+    } finally {
+      setUploadingMemory(false)
+      e.target.value = ''
+    }
+  }
+
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 95, background: 'var(--paper)',
@@ -163,28 +209,25 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
       {/* Hero */}
       <div
         className={coverUrl ? '' : ('ph' + (blue ? ' blue' : ''))}
-        style={{
-          height: 270, position: 'relative', flexShrink: 0, overflow: 'hidden',
-          background: coverUrl ? '#111' : undefined,
-        }}
+        style={{ height: 260, position: 'relative', flexShrink: 0, overflow: 'hidden',
+          background: coverUrl ? '#111' : undefined }}
       >
         {coverUrl && (
           <img src={coverUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.9 }} />
         )}
         {!coverUrl && (
-          <span className="ph-label" style={{ position: 'absolute', bottom: 52, right: 16 }}>
+          <span className="ph-label" style={{ position: 'absolute', bottom: 48, right: 16 }}>
             foto del capítulo
           </span>
         )}
 
         <input ref={coverInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleCoverUpload} />
+        <input ref={memoryInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleMemoryUpload} />
 
         {/* Upload overlay spinner */}
         {uploadingCover && (
-          <div style={{
-            position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div style={{ width: 34, height: 34, borderRadius: '50%', border: '3px solid #fff',
               borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite' }} />
           </div>
@@ -207,16 +250,16 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
         </div>
 
         {/* Category tag */}
-        <div style={{ position: 'absolute', bottom: 52, left: 18 }}>
+        <div style={{ position: 'absolute', bottom: 48, left: 18 }}>
           <CatTag cat={editing ? editType : plan.type} />
         </div>
       </div>
 
       {/* Scrollable content */}
-      <div className="ot-scroll" style={{ flex: 1, padding: '0 24px 130px' }}>
-        {/* Chapter card — overlaps hero */}
-        <div style={{ marginTop: -34, position: 'relative' }}>
-          <div className="card" style={{ padding: '20px 20px 22px', boxShadow: 'var(--sh-md)' }}>
+      <div className="ot-scroll" style={{ flex: 1, padding: '0 20px 140px' }}>
+        {/* fix 1: z-index ensures card appears over the hero border */}
+        <div style={{ marginTop: -32, position: 'relative', zIndex: 1 }}>
+          <div className="card" style={{ padding: '20px 18px 22px', boxShadow: 'var(--sh-md)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <span className="eyebrow" style={{ color: blue ? 'var(--blue-deep)' : 'var(--orange-deep)' }}>
                 · Capítulo {toRoman(no)} ·
@@ -228,13 +271,12 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
                       <Icon name="check" size={12} stroke={3} />Vivido
                     </span>
                   : <span className="chip-tag" style={{ background: 'var(--card-2)', color: 'var(--ink-soft)', boxShadow: 'inset 0 0 0 1px var(--line)' }}>
-                      {countdown(plan.plan_date)}
+                      {isFuture ? countdown(plan.plan_date) : 'Listo para vivir'}
                     </span>
               }
             </div>
 
             {editing ? (
-              /* Edit form */
               <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div>
                   <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '.07em', display: 'block', marginBottom: 6 }}>
@@ -244,13 +286,7 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
                     style={INPUT_STYLE} placeholder="Nombre del capítulo" />
                 </div>
 
-                <div>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '.07em', display: 'block', marginBottom: 6 }}>
-                    Fecha
-                  </label>
-                  <input type="date" value={editDate} onChange={e => setEditDate(e.target.value)}
-                    style={INPUT_STYLE} />
-                </div>
+                <DatePicker label="Fecha" value={editDate} onChange={setEditDate} />
 
                 <div>
                   <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '.07em', display: 'block', marginBottom: 8 }}>
@@ -279,11 +315,45 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
                   <input value={editDesc} onChange={e => setEditDesc(e.target.value)}
                     style={INPUT_STYLE} placeholder="Lugar, detalles…" />
                 </div>
+
+                {/* Cancel plan — two-step */}
+                <div style={{ marginTop: 4 }}>
+                  {!confirmCancel ? (
+                    <button onClick={() => setConfirmCancel(true)} style={{
+                      width: '100%', border: 'none', background: 'transparent', cursor: 'pointer',
+                      fontSize: 13.5, fontWeight: 600, color: 'var(--ink-faint)', padding: '8px 0',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                    }}>
+                      <Icon name="trash" size={15} /> Cancelar capítulo
+                    </button>
+                  ) : (
+                    <div style={{ borderRadius: 14, background: 'rgba(192,57,43,0.06)', padding: '14px 16px' }}>
+                      <div style={{ fontSize: 13.5, fontWeight: 600, color: '#c0392b', marginBottom: 10, textAlign: 'center' }}>
+                        ¿Confirmar cancelación?
+                      </div>
+                      <div style={{ display: 'flex', gap: 10 }}>
+                        <button onClick={() => setConfirmCancel(false)} style={{
+                          flex: 1, border: '1.5px solid var(--line)', background: 'transparent', cursor: 'pointer',
+                          borderRadius: 12, padding: '9px 0', fontSize: 13.5, fontWeight: 600, color: 'var(--ink-soft)',
+                          fontFamily: 'var(--font-ui)',
+                        }}>
+                          No, volver
+                        </button>
+                        <button onClick={cancelPlan} style={{
+                          flex: 1, border: 'none', background: '#c0392b', cursor: 'pointer',
+                          borderRadius: 12, padding: '9px 0', fontSize: 13.5, fontWeight: 700, color: '#fff',
+                          fontFamily: 'var(--font-ui)',
+                        }}>
+                          Sí, cancelar
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             ) : (
-              /* Display mode */
               <>
-                <h1 className="display" style={{ fontSize: 28, margin: '10px 0 0', lineHeight: 1.04 }}>
+                <h1 className="display" style={{ fontSize: 27, margin: '10px 0 0', lineHeight: 1.04 }}>
                   {plan.title}
                 </h1>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 16px', marginTop: 14, fontSize: 13.5, color: 'var(--ink-soft)' }}>
@@ -303,7 +373,7 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
 
         {/* Memories strip — hidden in edit mode */}
         {!editing && (
-          <div style={{ marginTop: 28 }}>
+          <div style={{ marginTop: 26 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
               <span className="eyebrow">Recuerdos de este capítulo</span>
               {memories.length > 0 && (
@@ -313,31 +383,41 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
 
             {memories.length > 0 ? (
               <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4 }} className="ot-scroll">
-                {memories.slice(0, 5).map((m, i) => (
-                  <div key={m.id} className={'ph' + (i % 2 === 1 ? ' blue' : '')}
-                    style={{ width: 108, height: 134, borderRadius: 14, flexShrink: 0, overflow: 'hidden' }}>
+                {memories.slice(0, 8).map((m, i) => (
+                  <div key={m.id} style={{ width: 108, height: 134, borderRadius: 14, flexShrink: 0, overflow: 'hidden',
+                    background: 'var(--card-2)' }}>
                     <img src={m.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   </div>
                 ))}
-                <button style={{
-                  width: 108, height: 134, borderRadius: 14, flexShrink: 0,
-                  border: '1.5px dashed var(--line)', background: 'transparent', cursor: 'pointer',
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                  gap: 6, color: 'var(--ink-soft)', fontSize: 12, fontWeight: 600,
-                }}>
-                  <Icon name="plus" size={20} />Añadir
+                <button onClick={() => memoryInputRef.current?.click()}
+                  disabled={uploadingMemory}
+                  style={{
+                    width: 108, height: 134, borderRadius: 14, flexShrink: 0,
+                    border: '1.5px dashed var(--line)', background: 'transparent', cursor: 'pointer',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                    gap: 6, color: 'var(--ink-soft)', fontSize: 12, fontWeight: 600,
+                  }}>
+                  {uploadingMemory
+                    ? <div style={{ width: 20, height: 20, borderRadius: '50%', border: '2.5px solid var(--ink-faint)', borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite' }} />
+                    : <><Icon name="plus" size={20} />Añadir</>
+                  }
                 </button>
               </div>
             ) : (
-              <button className="card" style={{
-                width: '100%', padding: '20px', border: 'none', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', gap: 13, textAlign: 'left',
-              }}>
+              <button onClick={() => memoryInputRef.current?.click()}
+                disabled={uploadingMemory}
+                className="card" style={{
+                  width: '100%', padding: '20px', border: 'none', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: 13, textAlign: 'left',
+                }}>
                 <div style={{
                   width: 44, height: 44, borderRadius: 12, background: 'var(--orange-tint)',
-                  color: 'var(--orange-deep)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: 'var(--orange-deep)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                 }}>
-                  <Icon name="camera" size={22} />
+                  {uploadingMemory
+                    ? <div style={{ width: 20, height: 20, borderRadius: '50%', border: '2.5px solid var(--orange)', borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite' }} />
+                    : <Icon name="camera" size={22} />
+                  }
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 700, fontSize: 15 }}>Aún sin recuerdos</div>
@@ -355,7 +435,7 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
       {/* Sticky CTA */}
       <div style={{
         position: 'absolute', bottom: 0, left: 0, right: 0,
-        padding: '14px 24px 30px',
+        padding: '14px 20px 30px',
         background: 'linear-gradient(transparent, var(--paper) 28%)',
       }}>
         {editing ? (
@@ -377,8 +457,10 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
             <span style={{ opacity: 0.6, fontSize: 13, fontWeight: 500 }}>· Deshacer</span>
           </button>
         ) : (
-          <button onClick={complete} className="btn btn-orange btn-block" style={{ fontSize: 17 }}>
-            <Icon name="check" size={19} stroke={2.6} /> Marcar como vivido
+          <button onClick={complete} className="btn btn-orange btn-block" style={{ fontSize: 17 }}
+            title={isFuture ? `Disponible el ${fmtDate(plan.plan_date)}` : undefined}>
+            <Icon name="check" size={19} stroke={2.6} />
+            {isFuture ? `Vivir el ${fmtDate(plan.plan_date).split(' de ')[0]} de ${fmtDate(plan.plan_date).split(' de ')[1]}` : 'Marcar como vivido'}
           </button>
         )}
       </div>
