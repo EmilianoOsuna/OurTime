@@ -26,7 +26,7 @@ export function ProfileScreen({ plans, transactions, memories, onClose, onGoToFi
   partner: PersonDisplay | null
   storyCode: string | null
 }) {
-  const { profile, user, signOut, refreshProfile } = useAuth()
+  const { profile, user, signOut, refreshProfile, refreshStories } = useAuth()
   const { currency, setCurrency, fmt } = useCurrency()
 
   const [editing, setEditing] = useState(false)
@@ -35,6 +35,10 @@ export function ProfileScreen({ plans, transactions, memories, onClose, onGoToFi
   const [saving, setSaving] = useState(false)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [codeCopied, setCodeCopied] = useState(false)
+  const [joinCode, setJoinCode] = useState('')
+  const [joining, setJoining] = useState(false)
+  const [joinError, setJoinError] = useState('')
+  const [joinSuccess, setJoinSuccess] = useState(false)
 
   const lived = plans.filter(p => p.status === 'completado').length
   const favs = plans.filter(p => p.status === 'completado').slice(0, 3)
@@ -94,6 +98,25 @@ export function ProfileScreen({ plans, transactions, memories, onClose, onGoToFi
     navigator.clipboard.writeText(storyCode)
     setCodeCopied(true)
     setTimeout(() => setCodeCopied(false), 1800)
+  }
+
+  const handleJoinStory = async () => {
+    const code = joinCode.trim().toUpperCase()
+    if (!code) return
+    setJoining(true)
+    setJoinError('')
+    try {
+      const { error } = await supabase.rpc('join_story_by_invite_code', { p_invite_code: code })
+      if (error) throw error
+      await refreshStories()
+      setJoinSuccess(true)
+      setJoinCode('')
+      setTimeout(() => setJoinSuccess(false), 2500)
+    } catch (e: any) {
+      setJoinError(e.message || 'Código inválido')
+    } finally {
+      setJoining(false)
+    }
   }
 
   return (
@@ -171,7 +194,7 @@ export function ProfileScreen({ plans, transactions, memories, onClose, onGoToFi
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 22, paddingTop: 18, borderTop: '1px solid var(--line)' }}>
                 {[
                   { value: days ?? '—', label: 'días' },
-                  { value: lived,       label: 'capítulos' },
+                  { value: lived,       label: 'momentos' },
                   { value: memories.length, label: 'recuerdos' },
                 ].map(({ value, label }) => (
                   <div key={label} style={{ flex: 1 }}>
@@ -238,7 +261,7 @@ export function ProfileScreen({ plans, transactions, memories, onClose, onGoToFi
                 <div style={{ fontSize: 11.5, color: 'var(--ink-faint)', marginBottom: 14 }}>{isMe ? 'Tú' : 'Tu pareja'}</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
                   {[
-                    { icon: 'feather', label: 'Capítulos', val: plans.length },
+                    { icon: 'feather', label: 'Momentos', val: plans.length },
                     { icon: 'image',   label: 'Recuerdos', val: memories.length },
                   ].map(r => (
                     <div key={r.label} style={{
@@ -284,7 +307,7 @@ export function ProfileScreen({ plans, transactions, memories, onClose, onGoToFi
         {/* Favourite chapters */}
         {favs.length > 0 && (
           <div style={{ padding: '18px 22px 0' }}>
-            <div className="eyebrow" style={{ marginBottom: 12 }}>Capítulos vividos</div>
+            <div className="eyebrow" style={{ marginBottom: 12 }}>Momentos vividos</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {favs.map(p => (
                 <button key={p.id} onClick={() => { onClose(); onOpenPlan(p) }} className="card" style={{
@@ -363,6 +386,40 @@ export function ProfileScreen({ plans, transactions, memories, onClose, onGoToFi
               <span style={{ flex: 1, fontSize: 14.5, fontWeight: 600 }}>Notificaciones</span>
               <span style={{ fontSize: 13, color: 'var(--ink-faint)' }}>Activadas</span>
             </div>
+          </div>
+        </div>
+
+        {/* Unirse a una Historia */}
+        <div style={{ padding: '18px 22px 0' }}>
+          <div className="eyebrow" style={{ marginBottom: 12 }}>Unirse a una Historia</div>
+          <div className="card" style={{ padding: '16px 18px' }}>
+            <div style={{ fontSize: 13.5, color: 'var(--ink-soft)', lineHeight: 1.5, marginBottom: 14 }}>
+              ¿Tienes un código de invitación? Úsalo para unirte a la historia de otra persona.
+            </div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <input
+                className="field"
+                placeholder="Código (ej. AB12CD)"
+                value={joinCode}
+                onChange={e => { setJoinCode(e.target.value.toUpperCase()); setJoinError('') }}
+                style={{ flex: 1, letterSpacing: '0.08em', fontWeight: 700, textTransform: 'uppercase' }}
+                maxLength={8}
+              />
+              <button onClick={handleJoinStory} disabled={!joinCode.trim() || joining}
+                className="btn btn-primary" style={{ flexShrink: 0, padding: '14px 18px', borderRadius: 14 }}>
+                {joining ? '…' : <Icon name="arrowR" size={18} />}
+              </button>
+            </div>
+            {joinError && (
+              <div style={{ fontSize: 12.5, color: '#c0392b', marginTop: 8, display: 'flex', alignItems: 'center', gap: 5 }}>
+                <Icon name="x" size={13} /> {joinError}
+              </div>
+            )}
+            {joinSuccess && (
+              <div style={{ fontSize: 12.5, color: 'var(--done)', marginTop: 8, display: 'flex', alignItems: 'center', gap: 5 }}>
+                <Icon name="checkCircle" size={13} /> ¡Te uniste a la historia!
+              </div>
+            )}
           </div>
         </div>
 

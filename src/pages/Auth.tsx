@@ -5,6 +5,27 @@ import { Icon } from '../components/ui/Icon'
 
 type Flow = 'welcome' | 'register' | 'login' | 'forgot'
 
+function GoogleBtn({ onClick, loading }: { onClick: () => void; loading: boolean }) {
+  return (
+    <button onClick={onClick} disabled={loading}
+      style={{
+        width: '100%', border: '1.5px solid var(--line)', background: 'var(--card)',
+        borderRadius: 999, padding: '14px 20px', fontSize: 15.5, fontWeight: 600,
+        color: 'var(--ink)', cursor: 'pointer', display: 'flex', alignItems: 'center',
+        justifyContent: 'center', gap: 12, fontFamily: 'var(--font-ui)', marginTop: 12,
+        transition: 'all .18s', boxShadow: 'var(--sh-sm)',
+      }}>
+      <svg width="20" height="20" viewBox="0 0 48 48" style={{ flexShrink: 0 }}>
+        <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.5 7.5 29.5 5.5 24 5.5 12.7 5.5 3.5 14.7 3.5 26S12.7 46.5 24 46.5 44.5 37.3 44.5 26c0-1.9-.2-3.6-.9-5.5z"/>
+        <path fill="#FF3D00" d="M6.3 15.7l6.6 4.8C14.5 16.2 18.9 13.5 24 13.5c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.5 7.5 29.5 5.5 24 5.5c-7.7 0-14.4 4.4-17.7 10.2z"/>
+        <path fill="#4CAF50" d="M24 46.5c5.4 0 10.3-1.9 14-5.1l-6.5-5.5c-2 1.5-4.7 2.4-7.5 2.4-5.1 0-9.6-3.3-11.2-8H6.2C9.4 40.9 16.2 46.5 24 46.5z"/>
+        <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.7 2.1-2 3.9-3.7 5.2l6.5 5.5C42.8 35.3 44.5 31 44.5 26c0-1.9-.2-3.6-.9-5.5z"/>
+      </svg>
+      Continuar con Google
+    </button>
+  )
+}
+
 export default function Auth({ onAuth }: { onAuth: () => void }) {
   const [flow, setFlow] = useState<Flow>('welcome')
   const [name, setName] = useState('')
@@ -59,6 +80,18 @@ export default function Auth({ onAuth }: { onAuth: () => void }) {
     finally { setLoading(false) }
   }
 
+  const handleGoogle = async () => {
+    setLoading(true)
+    setError('')
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: window.location.origin },
+      })
+      if (error) throw error
+    } catch (e: any) { setError(e.message); setLoading(false) }
+  }
+
   return (
     <div style={{ minHeight: '100vh', background: 'var(--paper)', position: 'relative', overflow: 'hidden' }}>
       <AnimatePresence mode="wait">
@@ -90,6 +123,12 @@ export default function Auth({ onAuth }: { onAuth: () => void }) {
               <button className="btn btn-ghost btn-block" style={{ marginTop: 12, fontSize: 16 }} onClick={() => go('login')}>
                 Ya tengo cuenta — Iniciar sesión
               </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 18 }}>
+                <span style={{ flex: 1, height: 1, background: 'var(--line)' }} />
+                <span style={{ fontSize: 12, color: 'var(--ink-faint)', fontWeight: 600, letterSpacing: '0.05em' }}>O</span>
+                <span style={{ flex: 1, height: 1, background: 'var(--line)' }} />
+              </div>
+              <GoogleBtn onClick={handleGoogle} loading={loading} />
             </div>
           </motion.div>
         )}
@@ -175,6 +214,13 @@ export default function Auth({ onAuth }: { onAuth: () => void }) {
               </button>
             </form>
 
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 18 }}>
+              <span style={{ flex: 1, height: 1, background: 'var(--line)' }} />
+              <span style={{ fontSize: 12, color: 'var(--ink-faint)', fontWeight: 600, letterSpacing: '0.05em' }}>O</span>
+              <span style={{ flex: 1, height: 1, background: 'var(--line)' }} />
+            </div>
+            <GoogleBtn onClick={handleGoogle} loading={loading} />
+
             <div style={{ textAlign: 'center', marginTop: 16, fontSize: 14, color: 'var(--ink-soft)' }}>
               ¿Ya tienes cuenta?{' '}
               <b style={{ color: 'var(--ink)', cursor: 'pointer' }} onClick={() => go('login')}>Inicia sesión</b>
@@ -240,6 +286,13 @@ export default function Auth({ onAuth }: { onAuth: () => void }) {
                 </span> : <>Entrar <Icon name="arrowR" size={18} /></>}
               </button>
             </form>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 18 }}>
+              <span style={{ flex: 1, height: 1, background: 'var(--line)' }} />
+              <span style={{ fontSize: 12, color: 'var(--ink-faint)', fontWeight: 600, letterSpacing: '0.05em' }}>O</span>
+              <span style={{ flex: 1, height: 1, background: 'var(--line)' }} />
+            </div>
+            <GoogleBtn onClick={handleGoogle} loading={loading} />
 
             <div style={{ textAlign: 'center', marginTop: 16, fontSize: 14, color: 'var(--ink-soft)' }}>
               ¿No tienes cuenta?{' '}

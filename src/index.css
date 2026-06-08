@@ -268,6 +268,35 @@ body {
   *, *::before, *::after { animation-duration: .001s !important; }
 }
 
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper:       #1A1611;
+    --paper-band:  #201B14;
+    --card:        #251F18;
+    --card-2:      #2E2720;
+    --ink:         #F4EEE4;
+    --ink-soft:    #B8AFA3;
+    --ink-faint:   #7A7268;
+    --line:        rgba(244,238,228,0.09);
+    --line-soft:   rgba(244,238,228,0.05);
+
+    --orange:      #F98130;
+    --orange-deep: #F07020;
+    --orange-tint: #3A2112;
+    --blue:        #3B9EDF;
+    --blue-deep:   #2D8AC9;
+    --blue-tint:   #0E2A3A;
+
+    --done:        #4DB880;
+    --done-deep:   #3DA068;
+    --done-tint:   #122B1E;
+
+    --sh-sm: 0 1px 2px rgba(0,0,0,0.25), 0 2px 8px rgba(0,0,0,0.18);
+    --sh-md: 0 2px 6px rgba(0,0,0,0.30), 0 12px 28px rgba(0,0,0,0.32);
+    --sh-lg: 0 8px 24px rgba(0,0,0,0.36), 0 30px 60px rgba(0,0,0,0.48);
+  }
+}
+
 /* ── Segmented control ──────────────────────────────── */
 .segmented {
   display: flex;

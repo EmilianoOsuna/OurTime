@@ -6,8 +6,9 @@ import { Confetti } from '../components/ui/Confetti'
 import { DatePicker } from '../components/ui/DatePicker'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
-import { toRoman, fmtDate, countdown, CAT_META } from '../lib/chapterUtils'
+import { toRoman, fmtDate, fmtDateShort, countdown, CAT_META } from '../lib/chapterUtils'
 import { compressToWebP } from '../lib/imageUtils'
+import { NewPlanSheet } from '../components/sheets/NewPlanSheet'
 import type { PlanType } from '../lib/supabase'
 
 type PlanCategory = PlanType['type']
@@ -67,8 +68,15 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
   const [editDate, setEditDate] = useState(initialPlan.plan_date)
   const [editType, setEditType] = useState<PlanCategory>(initialPlan.type)
   const [editDesc, setEditDesc] = useState(initialPlan.description || '')
+  const [editPlace, setEditPlace] = useState(initialPlan.place || '')
+  const [editBudget, setEditBudget] = useState(initialPlan.budget_amount ? String(initialPlan.budget_amount) : '')
   const [saving, setSaving] = useState(false)
   const [confirmCancel, setConfirmCancel] = useState(false)
+
+  // Sub-momentos
+  const [subPlans, setSubPlans] = useState<PlanType[]>([])
+  const [addingSubPlan, setAddingSubPlan] = useState(false)
+  const [activeSubPlan, setActiveSubPlan] = useState<PlanType | null>(null)
 
   // Cover photo
   const [coverUrl, setCoverUrl] = useState<string | null>(initialPlan.cover_url)
@@ -92,7 +100,19 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
       .eq('plan_id', plan.id)
       .order('created_at', { ascending: false })
       .then(({ data }) => { if (data) setMemories(data as Memory[]) })
+
+    supabase.from('plans').select('*')
+      .eq('parent_plan_id', plan.id)
+      .order('plan_date', { ascending: true })
+      .then(({ data }) => { if (data) setSubPlans(data as PlanType[]) })
   }, [activeStoryId, plan.id])
+
+  const refreshSubPlans = () => {
+    supabase.from('plans').select('*')
+      .eq('parent_plan_id', plan.id)
+      .order('plan_date', { ascending: true })
+      .then(({ data }) => { if (data) setSubPlans(data as PlanType[]) })
+  }
 
   const complete = async () => {
     if (isFuture) {
@@ -121,6 +141,8 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
     setEditDate(plan.plan_date)
     setEditType(plan.type)
     setEditDesc(plan.description || '')
+    setEditPlace(plan.place || '')
+    setEditBudget(plan.budget_amount ? String(plan.budget_amount) : '')
     setConfirmCancel(false)
     setEditing(true)
   }
@@ -133,6 +155,8 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
       plan_date: editDate,
       type: editType,
       description: editDesc.trim() || null,
+      place: editPlace.trim() || null,
+      budget_amount: editBudget ? +editBudget : null,
     }
     await supabase.from('plans').update(updates).eq('id', plan.id)
     setPlan(p => ({ ...p, ...updates }))
@@ -312,10 +336,26 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
 
                 <div>
                   <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '.07em', display: 'block', marginBottom: 6 }}>
-                    Descripción
+                    Lugar <span style={{ fontWeight: 400, textTransform: 'none', color: 'var(--ink-faint)' }}>(opcional)</span>
+                  </label>
+                  <input value={editPlace} onChange={e => setEditPlace(e.target.value)}
+                    style={INPUT_STYLE} placeholder="¿Dónde será?" />
+                </div>
+
+                <div>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '.07em', display: 'block', marginBottom: 6 }}>
+                    Presupuesto estimado <span style={{ fontWeight: 400, textTransform: 'none', color: 'var(--ink-faint)' }}>(opcional)</span>
+                  </label>
+                  <input value={editBudget} onChange={e => setEditBudget(e.target.value.replace(/[^0-9.]/g, ''))}
+                    style={INPUT_STYLE} placeholder="0.00" inputMode="decimal" />
+                </div>
+
+                <div>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '.07em', display: 'block', marginBottom: 6 }}>
+                    Notas <span style={{ fontWeight: 400, textTransform: 'none', color: 'var(--ink-faint)' }}>(opcional)</span>
                   </label>
                   <input value={editDesc} onChange={e => setEditDesc(e.target.value)}
-                    style={INPUT_STYLE} placeholder="Lugar, detalles…" />
+                    style={INPUT_STYLE} placeholder="Detalles adicionales…" />
                 </div>
 
                 {/* Cancel plan — two-step */}
@@ -362,16 +402,97 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
                   <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <Icon name="calendar" size={15} />{fmtDate(plan.plan_date)}
                   </span>
+                  {plan.place && (
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <Icon name="pin" size={15} />{plan.place}
+                    </span>
+                  )}
                   {plan.description && (
                     <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <Icon name="pin" size={15} />{plan.description}
+                      <Icon name="feather" size={15} />{plan.description}
                     </span>
                   )}
                 </div>
+                {plan.budget_amount && (
+                  <div style={{ marginTop: 12, display: 'inline-flex', alignItems: 'center', gap: 7,
+                    background: 'var(--done-tint)', borderRadius: 10, padding: '7px 12px',
+                    fontSize: 13.5, color: 'var(--done-deep)', fontWeight: 600 }}>
+                    <Icon name="wallet" size={15} />
+                    Presupuesto estimado: {plan.budget_amount.toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                  </div>
+                )}
               </>
             )}
           </div>
         </div>
+
+        {/* Sub-momentos — hidden in edit mode */}
+        {!editing && (
+          <div style={{ marginTop: 26 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <span className="eyebrow">Momentos dentro de este plan</span>
+              <button onClick={() => setAddingSubPlan(true)} style={{
+                border: 'none', background: 'transparent', cursor: 'pointer',
+                fontSize: 12.5, fontWeight: 700, color: 'var(--orange)', fontFamily: 'var(--font-ui)', padding: 0,
+                display: 'flex', alignItems: 'center', gap: 4,
+              }}>
+                <Icon name="plus" size={14} stroke={2.5} /> Añadir
+              </button>
+            </div>
+
+            {subPlans.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {subPlans.map(sp => {
+                  const spDone = sp.status === 'completado'
+                  return (
+                    <button key={sp.id} onClick={() => setActiveSubPlan(sp)} className="ot-card" style={{
+                      width: '100%', border: spDone ? '1.5px solid var(--done-tint)' : '1.5px solid var(--line)',
+                      cursor: 'pointer', textAlign: 'left', padding: '13px 15px',
+                      display: 'flex', alignItems: 'center', gap: 12,
+                    }}>
+                      <div style={{ width: 34, height: 34, borderRadius: 10, flexShrink: 0,
+                        background: spDone ? 'var(--done-tint)' : 'var(--card-2)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        color: spDone ? 'var(--done)' : 'var(--ink-faint)' }}>
+                        <Icon name={spDone ? 'checkCircle' : 'feather'} size={17} />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 700, fontSize: 14.5, lineHeight: 1.2,
+                          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {sp.title}
+                        </div>
+                        <div style={{ fontSize: 12, color: 'var(--ink-faint)', marginTop: 3 }}>
+                          {fmtDateShort(sp.plan_date)}
+                          {sp.place && ` · ${sp.place}`}
+                        </div>
+                      </div>
+                      <Icon name="chevR" size={16} style={{ color: 'var(--ink-faint)', flexShrink: 0 }} />
+                    </button>
+                  )
+                })}
+                <div style={{ fontSize: 12, color: 'var(--ink-faint)', textAlign: 'right', marginTop: 2 }}>
+                  {subPlans.filter(s => s.status === 'completado').length}/{subPlans.length} completados
+                </div>
+              </div>
+            ) : (
+              <button onClick={() => setAddingSubPlan(true)} className="ot-card" style={{
+                width: '100%', border: '1.5px dashed var(--line)', background: 'transparent', cursor: 'pointer',
+                padding: '16px', display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left',
+              }}>
+                <div style={{ width: 40, height: 40, borderRadius: 12, background: 'var(--orange-tint)',
+                  color: 'var(--orange-deep)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Icon name="plus" size={20} stroke={2} />
+                </div>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 14.5 }}>Añadir sub-momento</div>
+                  <div style={{ fontSize: 12.5, color: 'var(--ink-soft)' }}>
+                    Divide este plan en pasos más pequeños
+                  </div>
+                </div>
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Memories strip — hidden in edit mode */}
         {!editing && (
@@ -435,6 +556,24 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
           </div>
         )}
       </div>
+
+      {/* Sub-momento detail overlay (nested) */}
+      {activeSubPlan && (
+        <PlanDetail
+          plan={activeSubPlan}
+          onClose={() => setActiveSubPlan(null)}
+          onUpdated={() => { refreshSubPlans(); onUpdated?.() }}
+        />
+      )}
+
+      {/* New sub-momento sheet */}
+      {addingSubPlan && (
+        <NewPlanSheet
+          parentPlanId={plan.id}
+          onClose={() => setAddingSubPlan(false)}
+          onCreated={() => { setAddingSubPlan(false); refreshSubPlans() }}
+        />
+      )}
 
       {/* Sticky CTA */}
       <div style={{

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useAuth } from '../context/AuthContext'
 import type { ProfileType } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
-import { buildPerson, type PersonDisplay } from '../lib/supabase'
+import { buildPerson, type PersonDisplay, type StoryType } from '../lib/supabase'
 
 import Dashboard from '../pages/Dashboard'
 import Calendar from '../pages/Calendar'
@@ -15,11 +15,19 @@ import { GlobalActionSheet } from './sheets/GlobalActionSheet'
 import { NewPlanSheet } from './sheets/NewPlanSheet'
 import { MoneySheet } from './sheets/MoneySheet'
 import { NewMemorySheet } from './sheets/NewMemorySheet'
+import { NewStorySheet } from './sheets/NewStorySheet'
 import { Icon } from './ui/Icon'
 import { Avatar } from './ui/Avatar'
 
+const CAT_COLOR: Record<string, string> = {
+  pareja:  'var(--orange)',
+  amigos:  'var(--blue)',
+  familia: 'var(--done)',
+  otro:    'var(--ink-faint)',
+}
+
 export type Tab = 'home' | 'calendar' | 'gallery' | 'finance'
-type Overlay = { type: 'plan'; data: any } | { type: 'action' } | { type: 'newplan' } | { type: 'money' } | { type: 'memory' } | { type: 'profile' } | null
+type Overlay = { type: 'plan'; data: any } | { type: 'action' } | { type: 'newplan' } | { type: 'money' } | { type: 'memory' } | { type: 'profile' } | { type: 'newstory' } | null
 
 const NOTIFS = [
   { icon: 'sparkle', text: <><strong>Bienvenidos a OurTime</strong> 💛</>, time: 'Ahora', read: false },
@@ -32,10 +40,11 @@ function getInitialTab(): Tab {
 }
 
 export default function AppShell() {
-  const { activeStoryId, profile, user } = useAuth()
+  const { activeStoryId, stories, setActiveStoryId, profile, user } = useAuth()
   const [tab, setTab] = useState<Tab>(getInitialTab)
   const [overlay, setOverlay] = useState<Overlay>(null)
   const [notifsVisible, setNotifsVisible] = useState(false)
+  const [storySwitcherOpen, setStorySwitcherOpen] = useState(false)
   const [plans, setPlans] = useState<any[]>([])
   const [memories, setMemories] = useState<any[]>([])
   const [transactions, setTransactions] = useState<any[]>([])
@@ -155,6 +164,7 @@ export default function AppShell() {
     home: <Dashboard plans={plans} go={go}
             onBell={() => setNotifsVisible(true)} onPlanClick={openPlan}
             onProfileOpen={() => setOverlay({ type: 'profile' })}
+            onStorySwitcher={() => setStorySwitcherOpen(true)}
             me={me} partner={partnerDisplay} />,
     calendar: <Calendar onOpenPlan={openPlan} />,
     gallery: <Gallery memories={memories} setMemories={setMemories}
@@ -184,12 +194,24 @@ export default function AppShell() {
       {overlay?.type === 'newplan' && <NewPlanSheet onClose={closeOverlay} onCreated={() => { closeOverlay(); refreshPlans() }} />}
       {overlay?.type === 'money' && <MoneySheet onClose={closeOverlay} onCreated={() => closeOverlay()} />}
       {overlay?.type === 'memory' && <NewMemorySheet onClose={closeOverlay} onCreated={() => { closeOverlay(); refreshMemories() }} />}
+      {overlay?.type === 'newstory' && <NewStorySheet onClose={closeOverlay} onCreated={() => { closeOverlay(); go('home') }} />}
       {notifsVisible && <NotificationsPanel onClose={closeNotifs} items={NOTIFS} />}
       {lightbox && <Lightbox url={lightbox} onClose={() => setLightbox(null)} />}
+      {storySwitcherOpen && (
+        <StorySwitcherSheet
+          stories={stories}
+          activeStoryId={activeStoryId}
+          onSelect={id => { setActiveStoryId(id); setStorySwitcherOpen(false) }}
+          onNewStory={() => { setStorySwitcherOpen(false); setOverlay({ type: 'newstory' }) }}
+          onClose={() => setStorySwitcherOpen(false)}
+        />
+      )}
 
       <NavBar tab={tab} setTab={go} onFab={() => setOverlay({ type: 'action' })}
         me={me} onProfileOpen={() => setOverlay({ type: 'profile' })}
-        onBell={() => setNotifsVisible(true)} />
+        onBell={() => setNotifsVisible(true)}
+        stories={stories} activeStoryId={activeStoryId}
+        onStorySwitcher={() => setStorySwitcherOpen(true)} />
     </div>
   )
 }
@@ -209,14 +231,20 @@ function Lightbox({ url, onClose }: { url: string; onClose: () => void }) {
   )
 }
 
-function NavBar({ tab, setTab, onFab, me, onProfileOpen, onBell }: {
+function NavBar({ tab, setTab, onFab, me, onProfileOpen, onBell, stories, activeStoryId, onStorySwitcher }: {
   tab: Tab
   setTab: (t: Tab) => void
   onFab: () => void
   me: PersonDisplay
   onProfileOpen: () => void
   onBell: () => void
+  stories: StoryType[]
+  activeStoryId: string | null
+  onStorySwitcher: () => void
 }) {
+  const activeStory = stories.find(s => s.id === activeStoryId)
+  const catColor = activeStory ? (CAT_COLOR[activeStory.category] || 'var(--orange)') : 'var(--orange)'
+
   const items: { key: Tab; icon: string; label: string }[] = [
     { key: 'home',     icon: 'home',     label: 'Inicio'       },
     { key: 'calendar', icon: 'calendar', label: 'Agenda'       },
@@ -226,7 +254,26 @@ function NavBar({ tab, setTab, onFab, me, onProfileOpen, onBell }: {
 
   return (
     <nav style={{ position: 'fixed', bottom: 22, left: 0, right: 0, zIndex: 70,
-      display: 'flex', justifyContent: 'center', pointerEvents: 'none' }}>
+      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, pointerEvents: 'none' }}>
+
+      {/* Stories switcher pill — only shown when >1 story */}
+      {stories.length > 1 && (
+        <button onClick={onStorySwitcher} style={{
+          pointerEvents: 'auto', border: '1px solid rgba(255,255,255,0.6)', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', gap: 7,
+          background: 'rgba(255,252,247,0.9)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
+          borderRadius: 999, padding: '6px 14px 6px 8px',
+          boxShadow: '0 2px 12px rgba(0,0,0,0.12)',
+        }}>
+          <div style={{ width: 20, height: 20, borderRadius: '50%', background: catColor, flexShrink: 0 }} />
+          <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--ink)', fontFamily: 'var(--font-ui)', maxWidth: 120,
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {activeStory?.name || 'Historia'}
+          </span>
+          <Icon name="chevD" size={13} style={{ color: 'var(--ink-faint)', flexShrink: 0 }} />
+        </button>
+      )}
+
       <div style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: 2,
         background: 'rgba(255,252,247,0.88)',
         backdropFilter: 'blur(20px) saturate(180%)',
@@ -241,7 +288,7 @@ function NavBar({ tab, setTab, onFab, me, onProfileOpen, onBell }: {
           display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3,
         }}>
           <div style={{ borderRadius: '50%', padding: 2,
-            border: '2px solid var(--orange)', display: 'inline-flex' }}>
+            border: `2px solid ${catColor}`, display: 'inline-flex', transition: 'border-color .3s' }}>
             <Avatar person={me} size={26} />
           </div>
           <span style={{ fontSize: 9.5, fontWeight: 700, fontFamily: 'var(--font-ui)',
@@ -253,9 +300,10 @@ function NavBar({ tab, setTab, onFab, me, onProfileOpen, onBell }: {
 
         <button onClick={onFab} style={{
           width: 54, height: 54, borderRadius: '50%', border: 'none',
-          background: 'var(--orange)', color: '#fff', cursor: 'pointer', margin: '0 4px',
+          background: catColor, color: '#fff', cursor: 'pointer', margin: '0 4px',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 6px 18px rgba(241,119,32,0.45)', transition: 'transform .15s', flexShrink: 0,
+          boxShadow: `0 6px 18px color-mix(in srgb, ${catColor} 50%, transparent)`,
+          transition: 'background .3s, transform .15s', flexShrink: 0,
         }}
           onMouseDown={e => (e.currentTarget.style.transform = 'scale(0.9)')}
           onMouseUp={e => (e.currentTarget.style.transform = 'none')}
@@ -279,6 +327,66 @@ function NavBar({ tab, setTab, onFab, me, onProfileOpen, onBell }: {
         </button>
       </div>
     </nav>
+  )
+}
+
+function StorySwitcherSheet({ stories, activeStoryId, onSelect, onNewStory, onClose }: {
+  stories: StoryType[]
+  activeStoryId: string | null
+  onSelect: (id: string) => void
+  onNewStory: () => void
+  onClose: () => void
+}) {
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 85, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)',
+        WebkitBackdropFilter: 'blur(4px)', animation: 'fadeIn .2s both' }} onClick={onClose} />
+      <div style={{ position: 'relative', background: 'var(--card)', borderRadius: '24px 24px 0 0',
+        padding: '20px 20px 40px', animation: 'sheetUp .38s cubic-bezier(.2,.9,.2,1) both' }}>
+        <div style={{ width: 36, height: 4, borderRadius: 2, background: 'var(--line)',
+          margin: '0 auto 20px', flexShrink: 0 }} />
+        <div className="eyebrow" style={{ marginBottom: 14, color: 'var(--ink-soft)' }}>Tus Historias</div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
+          {stories.map(s => {
+            const color = CAT_COLOR[s.category] || 'var(--ink-faint)'
+            const active = s.id === activeStoryId
+            return (
+              <button key={s.id} onClick={() => onSelect(s.id)} style={{
+                border: active ? `2px solid ${color}` : '2px solid var(--line)',
+                borderRadius: 16, background: active ? 'var(--card-2)' : 'var(--card)',
+                padding: '14px 16px', cursor: 'pointer', textAlign: 'left',
+                display: 'flex', alignItems: 'center', gap: 14, transition: 'all .15s',
+              }}>
+                <div style={{ width: 38, height: 38, borderRadius: 11, background: color,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Icon name={s.category === 'pareja' ? 'heartFill' : s.category === 'amigos' ? 'users' : s.category === 'familia' ? 'home' : 'tag'} size={18} style={{ color: '#fff' }} />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 700, fontSize: 15.5, color: 'var(--ink)',
+                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name}</div>
+                  <div style={{ fontSize: 12, color: 'var(--ink-faint)', marginTop: 2, textTransform: 'capitalize' }}>{s.category}</div>
+                </div>
+                {active && <div style={{ width: 8, height: 8, borderRadius: '50%', background: color, flexShrink: 0 }} />}
+              </button>
+            )
+          })}
+        </div>
+
+        <button onClick={onNewStory} style={{
+          width: '100%', border: '2px dashed var(--line)', borderRadius: 16, background: 'transparent',
+          padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12,
+          color: 'var(--ink-soft)', fontFamily: 'var(--font-ui)', fontWeight: 600, fontSize: 14.5,
+        }}>
+          <div style={{ width: 38, height: 38, borderRadius: 11, background: 'var(--card-2)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Icon name="plus" size={18} stroke={2.2} />
+          </div>
+          Nueva Historia
+        </button>
+      </div>
+    </div>
   )
 }
 

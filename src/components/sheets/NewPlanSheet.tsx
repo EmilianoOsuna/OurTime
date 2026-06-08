@@ -13,9 +13,9 @@ const CAT_ICON: Record<string, string> = {
   salida: 'coffee', otro: 'tag',
 }
 
-interface Props { onClose: () => void; onCreated: () => void }
+interface Props { onClose: () => void; onCreated: () => void; parentPlanId?: string }
 
-export const NewPlanSheet: React.FC<Props> = ({ onClose, onCreated }) => {
+export const NewPlanSheet: React.FC<Props> = ({ onClose, onCreated, parentPlanId }) => {
   const { activeStoryId } = useAuth()
   const { push } = useToast()
   const [title, setTitle]         = useState('')
@@ -37,11 +37,12 @@ export const NewPlanSheet: React.FC<Props> = ({ onClose, onCreated }) => {
       plan_date: date,
       place: place.trim() || null,
       budget_amount: budget ? +budget : null,
+      parent_plan_id: parentPlanId || null,
       status: 'pendiente',
     })
     setSaving(false)
     if (error) { alert(error.message); return }
-    push({ icon: 'sparkle', eyebrow: 'Momento creado', title: `«${title.trim()}»`, body: 'Añadido a tu historia' })
+    push({ icon: 'sparkle', eyebrow: 'Momento creado', title: `«${title.trim()}»`, body: parentPlanId ? 'Añadido como sub-momento' : 'Añadido a tu historia' })
     onCreated()
     onClose()
   }
