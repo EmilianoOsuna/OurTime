@@ -8,20 +8,10 @@ import { Avatar, CoupleAvatars } from '../components/ui/Avatar'
 import { PresenceDot } from '../components/ui/PresenceDot'
 import { Icon } from '../components/ui/Icon'
 import { toRoman, fmtDate, fmtDateShort, countdown, CAT_META } from '../lib/chapterUtils'
-import type { PlanType, PersonDisplay, StoryType } from '../lib/supabase'
+import { useCurrency } from '../context/CurrencyContext'
+import type { PlanType, PersonDisplay } from '../lib/supabase'
 import type { Tab } from '../components/AppShell'
 
-function AnimatedNumber({ value }: { value: number }) {
-  return (
-    <motion.span
-      key={value}
-      initial={{ opacity: 0, y: 6 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: [0.2, 0.8, 0.2, 1] }}>
-      {value}
-    </motion.span>
-  )
-}
 
 function daysTogether(since: string) {
   return Math.floor((Date.now() - new Date(since + 'T00:00:00').getTime()) / 86400000)
@@ -34,8 +24,11 @@ const CAT_COLOR: Record<string, string> = {
   otro:    'var(--ink-faint)',
 }
 
-export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpen, me, partner, onStorySwitcher }: {
+interface Tx { id: string; type: 'ingreso' | 'gasto'; amount: number }
+
+export default function Dashboard({ plans, transactions, go, onBell, onPlanClick, onProfileOpen, me, partner, onStorySwitcher }: {
   plans: PlanType[]
+  transactions: Tx[]
   go: (t: Tab) => void
   onBell: () => void
   onPlanClick: (p: PlanType) => void
@@ -45,17 +38,14 @@ export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpe
   partner: PersonDisplay | null
 }) {
   const { activeStoryId, stories, setActiveStoryId, profile } = useAuth()
+  const { fmt } = useCurrency()
   const [allPlans, setAllPlans] = useState<PlanType[]>([])
-  const [memoriesCount, setMemoriesCount] = useState(0)
   const [loading, setLoading] = useState(true)
 
   const since = profile?.anniversary_date || ''
-
-  useEffect(() => {
-    if (!activeStoryId) return
-    supabase.from('memories').select('id', { count: 'exact', head: true }).eq('story_id', activeStoryId)
-      .then(({ count }) => { if (count !== null) setMemoriesCount(count) })
-  }, [activeStoryId])
+  const activeStory = stories.find(s => s.id === activeStoryId)
+  const budget = activeStory?.budget ?? null
+  const spent = transactions.filter(t => t.type === 'gasto').reduce((s, t) => s + t.amount, 0)
 
   useEffect(() => {
     if (activeStoryId && plans.length === 0) {
@@ -171,22 +161,36 @@ export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpe
         </div>
       )}
 
-      {/* Metrics strip */}
-      <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
-        {[
-          { value: days ?? 0, label: 'días juntos', color: 'var(--orange-deep)', show: !!since },
-          { value: past.length, label: past.length === 1 ? 'momento vivido' : 'momentos vividos', color: 'var(--done)', show: true },
-          { value: memoriesCount, label: memoriesCount === 1 ? 'recuerdo' : 'recuerdos', color: 'var(--blue)', show: true },
-        ].filter(m => m.show).map(m => (
-          <div key={m.label} className="ot-card" style={{ flex: 1, padding: '14px 10px', textAlign: 'center' }}>
-            <div className="display" style={{ fontSize: 26, color: m.color, lineHeight: 1 }}>
-              <AnimatedNumber value={m.value as number} />
+      {/* Finance summary strip */}
+      {(budget !== null || spent > 0) && (
+        <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
+          {budget !== null && (
+            <div className="ot-card" style={{ flex: 1, padding: '14px 12px', textAlign: 'center' }}>
+              <div className="display" style={{ fontSize: 22, color: (budget - spent) >= 0 ? 'var(--done)' : 'var(--orange-deep)', lineHeight: 1 }}>
+                {fmt(budget - spent)}
+              </div>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase',
+                color: 'var(--ink-faint)', marginTop: 5 }}>Saldo disponible</div>
             </div>
-            <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase',
-              color: 'var(--ink-faint)', marginTop: 5, lineHeight: 1.2 }}>{m.label}</div>
+          )}
+          <div className="ot-card" style={{ flex: 1, padding: '14px 12px', textAlign: 'center' }}>
+            <div className="display" style={{ fontSize: 22, color: 'var(--orange-deep)', lineHeight: 1 }}>
+              {fmt(spent)}
+            </div>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase',
+              color: 'var(--ink-faint)', marginTop: 5 }}>Total gastado</div>
           </div>
-        ))}
-      </div>
+          {budget !== null && (
+            <div className="ot-card" style={{ flex: 1, padding: '14px 12px', textAlign: 'center' }}>
+              <div className="display" style={{ fontSize: 22, color: 'var(--ink)', lineHeight: 1 }}>
+                {budget > 0 ? Math.round((spent / budget) * 100) : 0}%
+              </div>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase',
+                color: 'var(--ink-faint)', marginTop: 5 }}>Del presupuesto</div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Next chapter hero */}
       {next ? (

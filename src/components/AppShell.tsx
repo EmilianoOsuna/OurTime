@@ -225,7 +225,7 @@ export default function AppShell() {
   const unreadCount = useUnreadCount(activeStoryId, user?.id)
 
   const screen = {
-    home: <Dashboard plans={plans} go={go}
+    home: <Dashboard plans={plans} transactions={transactions} go={go}
             onBell={() => setNotifsVisible(true)} onPlanClick={openPlan}
             onProfileOpen={() => setOverlay({ type: 'profile' })}
             onStorySwitcher={() => setStorySwitcherOpen(true)}
@@ -250,6 +250,9 @@ export default function AppShell() {
           onOpenPlan={openPlan}
           partner={partnerDisplay}
           storyCode={storyCode}
+          onNewStory={() => setOverlay({ type: 'newstory' })}
+          onStorySwitcher={() => { closeOverlay(); setStorySwitcherOpen(true) }}
+          onEditStory={(s) => setOverlay({ type: 'editstory', story: s })}
         />
       )}
       {overlay?.type === 'action' && <GlobalActionSheet onClose={closeOverlay}

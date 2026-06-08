@@ -115,7 +115,7 @@ export const MoneySheet: React.FC<Props> = ({ onClose, onCreated }) => {
             return (
               <button key={c.id} onClick={() => setCat(c.id)} style={{ border: 'none', cursor: 'pointer',
                 borderRadius: 14, padding: '12px 6px', background: on ? 'var(--ink)' : 'var(--card-2)',
-                color: on ? '#FBF6EE' : 'var(--ink-soft)',
+                color: on ? 'var(--paper)' : 'var(--ink-soft)',
                 boxShadow: on ? 'none' : 'inset 0 0 0 1px var(--line)',
                 display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, transition: 'all .18s' }}>
                 <Icon name={c.icon} size={20} />

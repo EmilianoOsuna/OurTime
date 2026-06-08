@@ -20,6 +20,7 @@ export type StoryType = {
   invite_code: string
   created_by: string
   created_at: string
+  budget: number | null
 }
 
 export type StoryMemberType = {

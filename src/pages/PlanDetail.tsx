@@ -78,6 +78,9 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
   const [addingSubPlan, setAddingSubPlan] = useState(false)
   const [activeSubPlan, setActiveSubPlan] = useState<PlanType | null>(null)
 
+  // Memory lightbox
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null)
+
   // Cover photo
   const [coverUrl, setCoverUrl] = useState<string | null>(initialPlan.cover_url)
   const [uploadingCover, setUploadingCover] = useState(false)
@@ -506,13 +509,14 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
 
             {memories.length > 0 ? (
               <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4 }} className="ot-scroll">
-                {memories.slice(0, 8).map((m, i) => (
-                  <div key={m.id} style={{ width: 108, height: 134, borderRadius: 14, flexShrink: 0, overflow: 'hidden',
-                    background: 'var(--card-2)' }}>
+                {memories.slice(0, 8).map((m) => (
+                  <button key={m.id} onClick={() => setLightboxUrl(m.image_url)}
+                    style={{ width: 108, height: 134, borderRadius: 14, flexShrink: 0, overflow: 'hidden',
+                      background: 'var(--card-2)', border: 'none', padding: 0, cursor: 'pointer' }}>
                     <img src={m.image_url} alt="" loading="lazy" decoding="async"
                       onLoad={e => { (e.target as HTMLImageElement).style.opacity = '1' }}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0, transition: 'opacity 0.35s' }} />
-                  </div>
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0, transition: 'opacity 0.35s', display: 'block' }} />
+                  </button>
                 ))}
                 <button onClick={() => memoryInputRef.current?.click()}
                   disabled={uploadingMemory}
@@ -564,6 +568,29 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
           onClose={() => setActiveSubPlan(null)}
           onUpdated={() => { refreshSubPlans(); onUpdated?.() }}
         />
+      )}
+
+      {/* Memory lightbox */}
+      {lightboxUrl && (
+        <div onClick={() => setLightboxUrl(null)} style={{
+          position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.9)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)',
+          animation: 'fadeIn .18s both',
+        }}>
+          <button onClick={() => setLightboxUrl(null)} style={{
+            position: 'absolute', top: 56, right: 18, width: 40, height: 40,
+            borderRadius: '50%', border: 'none', background: 'rgba(255,255,255,0.15)',
+            cursor: 'pointer', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <Icon name="x" size={20} />
+          </button>
+          <div style={{ maxWidth: '92vw', maxHeight: '80vh', borderRadius: 16, overflow: 'hidden' }}>
+            <img src={lightboxUrl} alt="" decoding="async"
+              onLoad={e => { (e.target as HTMLImageElement).style.opacity = '1' }}
+              style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', opacity: 0, transition: 'opacity 0.3s' }} />
+          </div>
+        </div>
       )}
 
       {/* New sub-momento sheet */}

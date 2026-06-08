@@ -1,32 +1,48 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Icon } from '../components/ui/Icon'
 import { Avatar } from '../components/ui/Avatar'
 import { compressToWebP } from '../lib/imageUtils'
 import { PresenceDot } from '../components/ui/PresenceDot'
-import { CatMedallion } from '../components/ui/CatMedallion'
 import { useCurrency, CURRENCIES, type CurrencyKey } from '../context/CurrencyContext'
-import { fmtDate, fmtDateShort } from '../lib/chapterUtils'
+import { fmtDate } from '../lib/chapterUtils'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
-import type { PlanType, PersonDisplay } from '../lib/supabase'
+import type { PlanType, PersonDisplay, StoryType } from '../lib/supabase'
 
-interface Tx { id: string; type: 'ingreso' | 'gasto'; amount: number }
-
-function daysTogether(since: string) {
-  return Math.floor((Date.now() - new Date(since + 'T00:00:00').getTime()) / 86400000)
+const CAT_COLOR: Record<string, string> = {
+  pareja:  'var(--orange)',
+  amigos:  'var(--blue)',
+  familia: 'var(--done)',
+  otro:    'var(--ink-faint)',
+}
+const CAT_ICON: Record<string, string> = {
+  pareja: 'heartFill', amigos: 'users', familia: 'home', otro: 'tag',
+}
+const CAT_LABEL: Record<string, string> = {
+  pareja: 'Pareja', amigos: 'Amigos', familia: 'Familia', otro: 'Otro',
 }
 
-export function ProfileScreen({ plans, transactions, memories, onClose, onGoToFinance, onOpenPlan, partner, storyCode }: {
+interface StoryMember {
+  userId: string
+  name: string
+  avatar_url: string | null
+  isMe: boolean
+}
+
+export function ProfileScreen({ plans, transactions, memories, onClose, onGoToFinance, onOpenPlan, partner, storyCode, onNewStory, onStorySwitcher, onEditStory }: {
   plans: PlanType[]
-  transactions: Tx[]
+  transactions: { id: string; type: 'ingreso' | 'gasto'; amount: number }[]
   memories: { id: string }[]
   onClose: () => void
   onGoToFinance: () => void
   onOpenPlan: (p: PlanType) => void
   partner: PersonDisplay | null
   storyCode: string | null
+  onNewStory?: () => void
+  onStorySwitcher?: () => void
+  onEditStory?: (s: StoryType) => void
 }) {
-  const { profile, user, signOut, refreshProfile, refreshStories } = useAuth()
+  const { profile, user, signOut, refreshProfile, refreshStories, stories, activeStoryId, setActiveStoryId } = useAuth()
   const { currency, setCurrency, fmt } = useCurrency()
 
   const [editing, setEditing] = useState(false)
@@ -39,13 +55,12 @@ export function ProfileScreen({ plans, transactions, memories, onClose, onGoToFi
   const [joining, setJoining] = useState(false)
   const [joinError, setJoinError] = useState('')
   const [joinSuccess, setJoinSuccess] = useState(false)
+  const [members, setMembers] = useState<StoryMember[]>([])
 
-  const lived = plans.filter(p => p.status === 'completado').length
-  const favs = plans.filter(p => p.status === 'completado').slice(0, 3)
-  const income = transactions.filter(t => t.type === 'ingreso').reduce((s, t) => s + t.amount, 0)
+  const activeStory = stories.find(s => s.id === activeStoryId) ?? null
   const spent = transactions.filter(t => t.type === 'gasto').reduce((s, t) => s + t.amount, 0)
+  const budget = activeStory?.budget ?? null
   const since = profile?.anniversary_date || ''
-  const days = since ? daysTogether(since) : null
 
   const me: PersonDisplay = {
     name: profile?.full_name || 'Tú',
@@ -53,6 +68,23 @@ export function ProfileScreen({ plans, transactions, memories, onClose, onGoToFi
     color: '#0474BA',
     avatar_url: profile?.avatar_url,
   }
+
+  useEffect(() => {
+    if (!activeStoryId || !user) return
+    supabase.from('story_members')
+      .select('user_id, profiles(full_name, avatar_url)')
+      .eq('story_id', activeStoryId)
+      .then(({ data }) => {
+        if (!data) return
+        const list: StoryMember[] = data.map((m: any) => ({
+          userId: m.user_id,
+          name: (m.profiles?.full_name) || 'Miembro',
+          avatar_url: m.profiles?.avatar_url || null,
+          isMe: m.user_id === user.id,
+        }))
+        setMembers(list)
+      })
+  }, [activeStoryId, user])
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -119,6 +151,8 @@ export function ProfileScreen({ plans, transactions, memories, onClose, onGoToFi
     }
   }
 
+  const storyColor = activeStory ? (CAT_COLOR[activeStory.category] || 'var(--orange)') : 'var(--orange)'
+
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 95, background: 'var(--paper)',
@@ -132,8 +166,8 @@ export function ProfileScreen({ plans, transactions, memories, onClose, onGoToFi
         flexShrink: 0, borderBottom: '1px solid var(--line-soft)', background: 'var(--paper)',
       }}>
         <div>
-          <div className="eyebrow" style={{ marginBottom: 5 }}>Quiénes son</div>
-          <h1 className="display" style={{ fontSize: 28, margin: 0 }}>Su perfil</h1>
+          <div className="eyebrow" style={{ marginBottom: 5 }}>Configuración</div>
+          <h1 className="display" style={{ fontSize: 28, margin: 0 }}>Perfil</h1>
         </div>
         <button onClick={onClose} style={{
           width: 42, height: 42, borderRadius: '50%', border: 'none',
@@ -147,254 +181,226 @@ export function ProfileScreen({ plans, transactions, memories, onClose, onGoToFi
 
       <div className="ot-scroll" style={{ flex: 1, paddingBottom: 40 }}>
 
-        {/* Couple hero */}
-        <div style={{ padding: '20px 22px 0' }}>
-          <div className="card" style={{ padding: '26px 20px 20px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
-            <div style={{
-              position: 'absolute', top: -50, left: '50%', transform: 'translateX(-50%)',
-              width: 260, height: 180, borderRadius: '50%',
-              background: 'radial-gradient(ellipse, var(--orange-tint) 0%, transparent 70%)',
-              pointerEvents: 'none',
-            }} />
-            <div style={{ position: 'relative' }}>
-              {/* Avatars */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
-                {partner && (
-                  <div style={{ position: 'relative' }}>
-                    <Avatar person={partner} size={68} />
-                    <span style={{ position: 'absolute', bottom: 1, right: 1 }}><PresenceDot size={13} /></span>
-                  </div>
-                )}
-                {/* My avatar — tappable */}
-                <div style={{ marginLeft: partner ? -18 : 0, zIndex: 1 }}>
-                  <input id="avatar-file" type="file" accept="image/*" style={{ display: 'none' }} onChange={handleAvatarUpload} />
-                  <button onClick={() => document.getElementById('avatar-file')?.click()}
-                    style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer', position: 'relative', display: 'block' }}>
-                    <Avatar person={me} size={68} />
-                    <div style={{
-                      position: 'absolute', inset: 0, borderRadius: '50%',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      background: uploadingAvatar ? 'rgba(0,0,0,0.45)' : 'rgba(0,0,0,0.18)',
-                      transition: 'background .2s',
-                    }}>
-                      {uploadingAvatar
-                        ? <div style={{ width: 20, height: 20, borderRadius: '50%', border: '2.5px solid #fff', borderTopColor: 'transparent', animation: 'spin 0.7s linear infinite' }} />
-                        : <Icon name="camera" size={15} style={{ color: '#fff' }} />
-                      }
-                    </div>
+        {/* ── SECCIÓN: ESTA HISTORIA ── */}
+        {activeStory && (
+          <div style={{ padding: '20px 22px 0' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+              <span className="eyebrow">Esta Historia</span>
+              <div style={{ display: 'flex', gap: 8 }}>
+                {onEditStory && (
+                  <button onClick={() => onEditStory(activeStory)} style={{
+                    border: 'none', background: 'transparent', cursor: 'pointer',
+                    fontSize: 13, fontWeight: 600, color: 'var(--orange)', fontFamily: 'var(--font-ui)',
+                    padding: 0, display: 'flex', alignItems: 'center', gap: 4,
+                  }}>
+                    <Icon name="edit" size={13} /> Editar
                   </button>
+                )}
+              </div>
+            </div>
+
+            <div className="card" style={{ padding: '18px 18px 16px' }}>
+              {/* Story name + category */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                <div style={{ width: 46, height: 46, borderRadius: 14, background: storyColor,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Icon name={CAT_ICON[activeStory.category] || 'tag'} size={22} style={{ color: '#fff' }} />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 700, fontSize: 17, lineHeight: 1.2, overflow: 'hidden',
+                    textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{activeStory.name}</div>
+                  <div style={{ fontSize: 12.5, color: 'var(--ink-faint)', marginTop: 2 }}>
+                    {CAT_LABEL[activeStory.category] || activeStory.category}
+                  </div>
                 </div>
               </div>
 
-              <h2 className="display" style={{ fontSize: 24, margin: '0 0 4px' }}>
-                {me.name}{partner ? ` & ${partner.name}` : ''}
-              </h2>
-              {since && <div style={{ fontSize: 13.5, color: 'var(--ink-soft)' }}>Juntos desde {fmtDate(since)}</div>}
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 22, paddingTop: 18, borderTop: '1px solid var(--line)' }}>
-                {[
-                  { value: days ?? '—', label: 'días' },
-                  { value: lived,       label: 'momentos' },
-                  { value: memories.length, label: 'recuerdos' },
-                ].map(({ value, label }) => (
-                  <div key={label} style={{ flex: 1 }}>
-                    <div className="display" style={{ fontSize: 30, color: 'var(--orange-deep)', lineHeight: 1 }}>{value}</div>
-                    <div className="eyebrow" style={{ fontSize: 9.5, marginTop: 5 }}>{label}</div>
+              {/* Members */}
+              {members.length > 0 && (
+                <div style={{ borderTop: '1px solid var(--line-soft)', paddingTop: 14, marginBottom: 14 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-faint)', fontFamily: 'var(--font-ui)',
+                    textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>
+                    Miembros · {members.length}
                   </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
+                  <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                    {members.map(m => (
+                      <div key={m.userId} style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                        <div style={{ position: 'relative' }}>
+                          <Avatar
+                            person={{ name: m.name, initial: m.name[0]?.toUpperCase() || '?', color: m.isMe ? '#0474BA' : '#F17720', avatar_url: m.avatar_url }}
+                            size={40}
+                          />
+                          {!m.isMe && (
+                            <span style={{ position: 'absolute', bottom: 0, right: 0 }}>
+                              <PresenceDot size={10} />
+                            </span>
+                          )}
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 13.5, fontWeight: 700 }}>{m.name}</div>
+                          <div style={{ fontSize: 11.5, color: 'var(--ink-faint)' }}>{m.isMe ? 'Tú' : 'Miembro'}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-        {/* Edit profile */}
-        <div style={{ padding: '18px 22px 0' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <div className="eyebrow">Tu información</div>
-            {!editing && (
-              <button onClick={() => { setEditName(profile?.full_name || ''); setEditAnniversary(profile?.anniversary_date || ''); setEditing(true) }}
-                style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13.5, fontWeight: 600, color: 'var(--orange)', padding: 0 }}>
-                Editar
+              {/* Invite code */}
+              {since && (
+                <div style={{ borderTop: '1px solid var(--line-soft)', paddingTop: 12, marginBottom: 12 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-faint)', fontFamily: 'var(--font-ui)',
+                    textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
+                    Desde
+                  </div>
+                  <div style={{ fontSize: 14, color: 'var(--ink-soft)' }}>{fmtDate(since)}</div>
+                </div>
+              )}
+
+              {/* Invite code */}
+              <button onClick={copyCode} style={{
+                width: '100%', border: 'none', cursor: 'pointer', textAlign: 'left',
+                background: 'var(--card-2)', borderRadius: 12, padding: '11px 14px',
+                display: 'flex', alignItems: 'center', gap: 10,
+              }}>
+                <Icon name="share" size={16} style={{ color: 'var(--ink-faint)', flexShrink: 0 }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--ink-faint)', fontFamily: 'var(--font-ui)',
+                    textTransform: 'uppercase', letterSpacing: '0.05em' }}>Código de invitación</div>
+                  <div style={{ fontFamily: 'monospace', fontSize: 15, fontWeight: 700, letterSpacing: '0.12em',
+                    color: codeCopied ? 'var(--done)' : storyColor, marginTop: 1 }}>
+                    {codeCopied ? '¡Copiado!' : (storyCode || activeStory.invite_code).toUpperCase()}
+                  </div>
+                </div>
+                <Icon name={codeCopied ? 'check' : 'copy'} size={15} style={{ color: 'var(--ink-faint)' }} />
               </button>
-            )}
-          </div>
-          {editing ? (
-            <div className="card" style={{ padding: 18 }}>
-              <label className="field-label">Tu nombre</label>
-              <input className="field" value={editName} onChange={e => setEditName(e.target.value)}
-                placeholder="Tu nombre" style={{ marginBottom: 16 }} autoFocus />
-              <label className="field-label">Aniversario</label>
-              <input className="field" type="date" value={editAnniversary} onChange={e => setEditAnniversary(e.target.value)} />
-              <div style={{ display: 'flex', gap: 10, marginTop: 18 }}>
-                <button onClick={() => setEditing(false)} className="btn btn-ghost" style={{ flex: 1 }}>Cancelar</button>
-                <button onClick={saveProfile} className="btn btn-primary" style={{ flex: 1 }} disabled={saving}>
-                  {saving ? '…' : 'Guardar'}
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="card" style={{ padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <Row label="Nombre" value={me.name} />
-              {since
-                ? <Row label="Aniversario" value={fmtDate(since)} />
-                : <div style={{ fontSize: 13.5, color: 'var(--ink-faint)', fontStyle: 'italic' }}>
-                    Añade la fecha de vuestro aniversario
-                  </div>
-              }
-            </div>
-          )}
-        </div>
-
-        {/* Per-person cards */}
-        <div style={{ padding: '18px 22px 0' }}>
-          <div className="eyebrow" style={{ marginBottom: 12 }}>Cada uno de ustedes</div>
-          <div style={{ display: 'flex', gap: 12 }}>
-            {([{ person: me, isMe: true }, ...(partner ? [{ person: partner, isMe: false }] : [])] as const).map(({ person, isMe }) => (
-              <div key={String(isMe)} className="card" style={{ flex: 1, padding: '18px 14px', textAlign: 'center' }}>
-                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 11 }}>
-                  <div style={{ position: 'relative' }}>
-                    <Avatar person={person} size={54} />
-                    {!isMe && <span style={{ position: 'absolute', bottom: 0, right: 0 }}><PresenceDot size={10} /></span>}
-                  </div>
-                </div>
-                <div style={{ fontWeight: 700, fontSize: 15.5, marginBottom: 2 }}>{person.name}</div>
-                <div style={{ fontSize: 11.5, color: 'var(--ink-faint)', marginBottom: 14 }}>{isMe ? 'Tú' : 'Tu pareja'}</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-                  {[
-                    { icon: 'feather', label: 'Momentos', val: plans.length },
-                    { icon: 'image',   label: 'Recuerdos', val: memories.length },
-                  ].map(r => (
-                    <div key={r.label} style={{
-                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                      fontSize: 13, padding: '8px 10px', background: 'var(--card-2)', borderRadius: 10,
-                    }}>
-                      <span style={{ color: 'var(--ink-soft)', display: 'flex', alignItems: 'center', gap: 5 }}>
-                        <Icon name={r.icon} size={13} />{r.label}
-                      </span>
-                      <span style={{ fontWeight: 700 }}>{r.val}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Finance summary */}
-        <div style={{ padding: '18px 22px 0' }}>
-          <div className="eyebrow" style={{ marginBottom: 12 }}>Fondo común</div>
-          <button onClick={() => { onClose(); onGoToFinance() }} className="card" style={{
-            width: '100%', border: 'none', cursor: 'pointer', textAlign: 'left',
-            padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 14,
-          }}>
-            <div style={{ width: 46, height: 46, borderRadius: 14, background: 'var(--ink)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FBF6EE', flexShrink: 0 }}>
-              <Icon name="wallet" size={21} />
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontWeight: 700, fontSize: 15 }}>Nuestras cuentas</div>
-              <div style={{ fontSize: 13, color: 'var(--ink-soft)', marginTop: 2 }}>
-                Saldo:{' '}
-                <span style={{ fontWeight: 700, color: (income - spent) >= 0 ? 'var(--done)' : 'var(--orange-deep)' }}>
-                  {fmt(income - spent)}
-                </span>
-              </div>
-            </div>
-            <Icon name="chevR" size={18} style={{ color: 'var(--ink-faint)', flexShrink: 0 }} />
-          </button>
-        </div>
-
-        {/* Favourite chapters */}
-        {favs.length > 0 && (
-          <div style={{ padding: '18px 22px 0' }}>
-            <div className="eyebrow" style={{ marginBottom: 12 }}>Momentos vividos</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {favs.map(p => (
-                <button key={p.id} onClick={() => { onClose(); onOpenPlan(p) }} className="card" style={{
-                  width: '100%', border: 'none', cursor: 'pointer', textAlign: 'left',
-                  display: 'flex', alignItems: 'center', gap: 13, padding: '13px 15px',
-                }}>
-                  <CatMedallion cat={p.type} size={40} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14.5, fontWeight: 600, lineHeight: 1.2 }}>{p.title}</div>
-                    <div style={{ fontSize: 12, color: 'var(--ink-faint)', marginTop: 3 }}>
-                      {fmtDateShort(p.plan_date)} · {new Date(p.plan_date + 'T00:00:00').getFullYear()}
-                    </div>
-                  </div>
-                  <Icon name="checkCircle" size={16} style={{ color: 'var(--done)', flexShrink: 0 }} />
-                </button>
-              ))}
             </div>
           </div>
         )}
 
-        {/* Currency */}
+        {/* ── SECCIÓN: TU PERFIL ── */}
         <div style={{ padding: '18px 22px 0' }}>
-          <div className="eyebrow" style={{ marginBottom: 12 }}>Divisa</div>
-          <div className="card" style={{ overflow: 'hidden' }}>
-            {(Object.entries(CURRENCIES) as [CurrencyKey, { symbol: string; name: string }][]).map(([k, c], i, arr) => (
-              <button key={k} onClick={() => setCurrency(k)} style={{
-                width: '100%', border: 'none', background: 'transparent', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', gap: 14, padding: '13px 18px', textAlign: 'left', color: 'var(--ink)',
-                borderBottom: i < arr.length - 1 ? '1px solid var(--line-soft)' : 'none',
-              }}>
-                <div style={{
-                  width: 34, height: 34, borderRadius: 10, flexShrink: 0, fontSize: 15, fontWeight: 700,
-                  background: currency === k ? 'var(--ink)' : 'var(--card-2)',
-                  color: currency === k ? '#FBF6EE' : 'var(--ink-soft)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .18s',
-                }}>{c.symbol}</div>
-                <span style={{ flex: 1, fontSize: 14.5, fontWeight: 600 }}>{c.name}</span>
-                {currency === k && <Icon name="check" size={16} stroke={2.5} style={{ color: 'var(--done)' }} />}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+            <span className="eyebrow">Tu perfil</span>
+            {!editing && (
+              <button onClick={() => { setEditName(profile?.full_name || ''); setEditAnniversary(profile?.anniversary_date || ''); setEditing(true) }}
+                style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, fontWeight: 600,
+                  color: 'var(--orange)', padding: 0, fontFamily: 'var(--font-ui)' }}>
+                Editar
               </button>
-            ))}
+            )}
           </div>
-        </div>
 
-        {/* App settings */}
-        <div style={{ padding: '18px 22px 0' }}>
-          <div className="eyebrow" style={{ marginBottom: 12 }}>App</div>
-          <div className="card" style={{ overflow: 'hidden' }}>
-            {/* Código de pareja */}
-            <button onClick={copyCode} style={{
-              width: '100%', border: 'none', background: 'transparent', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', gap: 14, padding: '14px 18px', textAlign: 'left', color: 'var(--ink)',
-              borderBottom: '1px solid var(--line-soft)',
-            }}>
-              <div style={{ width: 34, height: 34, borderRadius: 10, background: 'var(--card-2)', flexShrink: 0,
-                display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--ink-soft)' }}>
-                <Icon name="users" size={17} />
+          <div className="card" style={{ padding: '18px 18px 16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: editing ? 16 : 0 }}>
+              {/* Avatar */}
+              <div style={{ flexShrink: 0 }}>
+                <input id="avatar-file" type="file" accept="image/*" style={{ display: 'none' }} onChange={handleAvatarUpload} />
+                <button onClick={() => document.getElementById('avatar-file')?.click()}
+                  style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer', position: 'relative', display: 'block' }}>
+                  <Avatar person={me} size={60} />
+                  <div style={{
+                    position: 'absolute', inset: 0, borderRadius: '50%',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: uploadingAvatar ? 'rgba(0,0,0,0.45)' : 'rgba(0,0,0,0.18)',
+                  }}>
+                    {uploadingAvatar
+                      ? <div style={{ width: 16, height: 16, borderRadius: '50%', border: '2px solid #fff', borderTopColor: 'transparent', animation: 'spin 0.7s linear infinite' }} />
+                      : <Icon name="camera" size={13} style={{ color: '#fff' }} />
+                    }
+                  </div>
+                </button>
               </div>
-              <span style={{ flex: 1, fontSize: 14.5, fontWeight: 600 }}>Código de pareja</span>
-              <span style={{
-                fontSize: 13, fontWeight: 700, letterSpacing: '0.05em',
-                fontFamily: 'var(--font-display)',
-                color: codeCopied ? 'var(--done)' : 'var(--orange-deep)',
-              }}>
-                {codeCopied ? '¡Copiado!' : (storyCode || '—')}
-              </span>
-              <Icon name={codeCopied ? 'check' : 'copy'} size={15} style={{ color: 'var(--ink-faint)' }} />
-            </button>
-            {/* Notificaciones */}
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: 14, padding: '14px 18px', color: 'var(--ink)',
-            }}>
-              <div style={{ width: 34, height: 34, borderRadius: 10, background: 'var(--card-2)', flexShrink: 0,
-                display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--ink-soft)' }}>
-                <Icon name="bell" size={17} />
-              </div>
-              <span style={{ flex: 1, fontSize: 14.5, fontWeight: 600 }}>Notificaciones</span>
-              <span style={{ fontSize: 13, color: 'var(--ink-faint)' }}>Activadas</span>
+
+              {!editing && (
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 17 }}>{me.name}</div>
+                  {since
+                    ? <div style={{ fontSize: 13, color: 'var(--ink-soft)', marginTop: 3 }}>Aniversario: {fmtDate(since)}</div>
+                    : <div style={{ fontSize: 13, color: 'var(--ink-faint)', fontStyle: 'italic', marginTop: 3 }}>Sin aniversario</div>
+                  }
+                </div>
+              )}
             </div>
+
+            {editing && (
+              <>
+                <label className="field-label">Tu nombre</label>
+                <input className="field" value={editName} onChange={e => setEditName(e.target.value)}
+                  placeholder="Tu nombre" style={{ marginBottom: 14 }} autoFocus />
+                <label className="field-label">Aniversario</label>
+                <input className="field" type="date" value={editAnniversary} onChange={e => setEditAnniversary(e.target.value)} />
+                <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+                  <button onClick={() => setEditing(false)} className="btn btn-ghost" style={{ flex: 1 }}>Cancelar</button>
+                  <button onClick={saveProfile} className="btn btn-primary" style={{ flex: 1 }} disabled={saving}>
+                    {saving ? '…' : 'Guardar'}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
-        {/* Unirse a una Historia */}
+        {/* ── SECCIÓN: MIS HISTORIAS ── */}
         <div style={{ padding: '18px 22px 0' }}>
-          <div className="eyebrow" style={{ marginBottom: 12 }}>Unirse a una Historia</div>
-          <div className="card" style={{ padding: '16px 18px' }}>
-            <div style={{ fontSize: 13.5, color: 'var(--ink-soft)', lineHeight: 1.5, marginBottom: 14 }}>
-              ¿Tienes un código de invitación? Úsalo para unirte a la historia de otra persona.
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+            <span className="eyebrow">Mis Historias</span>
+            {onStorySwitcher && stories.length > 1 && (
+              <button onClick={onStorySwitcher} style={{ border: 'none', background: 'transparent', cursor: 'pointer',
+                fontSize: 13, fontWeight: 600, color: 'var(--orange)', padding: 0, fontFamily: 'var(--font-ui)' }}>
+                Ver todas
+              </button>
+            )}
+          </div>
+
+          <div className="card" style={{ overflow: 'hidden' }}>
+            {stories.map((s, i) => {
+              const color = CAT_COLOR[s.category] || 'var(--ink-faint)'
+              const active = s.id === activeStoryId
+              return (
+                <button key={s.id} onClick={() => setActiveStoryId(s.id)} style={{
+                  width: '100%', border: 'none', background: 'transparent', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: 13, padding: '13px 18px', textAlign: 'left',
+                  borderBottom: i < stories.length - 1 ? '1px solid var(--line-soft)' : 'none',
+                  color: 'var(--ink)',
+                }}>
+                  <div style={{ width: 34, height: 34, borderRadius: 10, background: color, flexShrink: 0,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Icon name={CAT_ICON[s.category] || 'tag'} size={17} style={{ color: '#fff' }} />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: active ? 700 : 600, fontSize: 14.5,
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name}</div>
+                    <div style={{ fontSize: 12, color: 'var(--ink-faint)', marginTop: 1 }}>{CAT_LABEL[s.category]}</div>
+                  </div>
+                  {active && <div style={{ width: 8, height: 8, borderRadius: '50%', background: color, flexShrink: 0 }} />}
+                </button>
+              )
+            })}
+
+            {/* Crear nueva Historia */}
+            {onNewStory && (
+              <button onClick={onNewStory} style={{
+                width: '100%', border: 'none', background: 'transparent', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: 13, padding: '13px 18px', textAlign: 'left',
+                borderTop: '1px solid var(--line-soft)', color: 'var(--orange)',
+              }}>
+                <div style={{ width: 34, height: 34, borderRadius: 10, background: 'var(--orange-tint)', flexShrink: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Icon name="plus" size={17} stroke={2.2} style={{ color: 'var(--orange-deep)' }} />
+                </div>
+                <span style={{ fontWeight: 600, fontSize: 14.5, fontFamily: 'var(--font-ui)' }}>Nueva Historia</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* ── SECCIÓN: UNIRSE A HISTORIA ── */}
+        <div style={{ padding: '18px 22px 0' }}>
+          <div className="eyebrow" style={{ marginBottom: 10 }}>Unirse a una Historia</div>
+          <div className="card" style={{ padding: '14px 16px' }}>
+            <div style={{ fontSize: 13, color: 'var(--ink-soft)', lineHeight: 1.5, marginBottom: 12 }}>
+              ¿Tienes un código de invitación? Úsalo para unirte.
             </div>
             <div style={{ display: 'flex', gap: 10 }}>
               <input
@@ -406,8 +412,8 @@ export function ProfileScreen({ plans, transactions, memories, onClose, onGoToFi
                 maxLength={8}
               />
               <button onClick={handleJoinStory} disabled={!joinCode.trim() || joining}
-                className="btn btn-primary" style={{ flexShrink: 0, padding: '14px 18px', borderRadius: 14 }}>
-                {joining ? '…' : <Icon name="arrowR" size={18} />}
+                className="btn btn-primary" style={{ flexShrink: 0, padding: '12px 16px', borderRadius: 12 }}>
+                {joining ? '…' : <Icon name="arrowR" size={17} />}
               </button>
             </div>
             {joinError && (
@@ -423,9 +429,56 @@ export function ProfileScreen({ plans, transactions, memories, onClose, onGoToFi
           </div>
         </div>
 
-        {/* Google Calendar sync */}
+        {/* ── SECCIÓN: RESUMEN FINANCIERO ── */}
         <div style={{ padding: '18px 22px 0' }}>
-          <div className="eyebrow" style={{ marginBottom: 12 }}>Integraciones</div>
+          <div className="eyebrow" style={{ marginBottom: 10 }}>Fondo común</div>
+          <button onClick={() => { onClose(); onGoToFinance() }} className="card" style={{
+            width: '100%', border: 'none', cursor: 'pointer', textAlign: 'left',
+            padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 14,
+          }}>
+            <div style={{ width: 46, height: 46, borderRadius: 14, background: 'var(--ink)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--paper)', flexShrink: 0 }}>
+              <Icon name="wallet" size={21} />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontWeight: 700, fontSize: 15 }}>Presupuesto</div>
+              <div style={{ fontSize: 13, color: 'var(--ink-soft)', marginTop: 2 }}>
+                {budget !== null
+                  ? <>Saldo: <span style={{ fontWeight: 700, color: (budget - spent) >= 0 ? 'var(--done)' : 'var(--orange-deep)' }}>{fmt(budget - spent)}</span></>
+                  : <>Gastado: <span style={{ fontWeight: 700 }}>{fmt(spent)}</span></>
+                }
+              </div>
+            </div>
+            <Icon name="chevR" size={18} style={{ color: 'var(--ink-faint)', flexShrink: 0 }} />
+          </button>
+        </div>
+
+        {/* ── SECCIÓN: DIVISA ── */}
+        <div style={{ padding: '18px 22px 0' }}>
+          <div className="eyebrow" style={{ marginBottom: 10 }}>Divisa</div>
+          <div className="card" style={{ overflow: 'hidden' }}>
+            {(Object.entries(CURRENCIES) as [CurrencyKey, { symbol: string; name: string }][]).map(([k, c], i, arr) => (
+              <button key={k} onClick={() => setCurrency(k)} style={{
+                width: '100%', border: 'none', background: 'transparent', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: 14, padding: '13px 18px', textAlign: 'left', color: 'var(--ink)',
+                borderBottom: i < arr.length - 1 ? '1px solid var(--line-soft)' : 'none',
+              }}>
+                <div style={{
+                  width: 34, height: 34, borderRadius: 10, flexShrink: 0, fontSize: 15, fontWeight: 700,
+                  background: currency === k ? 'var(--ink)' : 'var(--card-2)',
+                  color: currency === k ? 'var(--paper)' : 'var(--ink-soft)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .18s',
+                }}>{c.symbol}</div>
+                <span style={{ flex: 1, fontSize: 14.5, fontWeight: 600 }}>{c.name}</span>
+                {currency === k && <Icon name="check" size={16} stroke={2.5} style={{ color: 'var(--done)' }} />}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* ── SECCIÓN: APP ── */}
+        <div style={{ padding: '18px 22px 0' }}>
+          <div className="eyebrow" style={{ marginBottom: 10 }}>Integraciones</div>
           <GoogleCalendarSection />
         </div>
 
@@ -441,7 +494,6 @@ export function ProfileScreen({ plans, transactions, memories, onClose, onGoToFi
           </button>
         </div>
 
-        {/* Footer */}
         <div style={{ padding: '24px 22px 0', textAlign: 'center' }}>
           <div className="serif-i" style={{ fontSize: 18, color: 'var(--ink-faint)', marginBottom: 4 }}>OurTime</div>
           <div style={{ fontSize: 11.5, color: 'var(--ink-faint)' }}>Su historia, siempre</div>
@@ -458,7 +510,6 @@ function GoogleCalendarSection() {
   const [connected, setConnected] = useState(false)
   const [syncing, setSyncing] = useState(false)
 
-  // Check if user has Google Calendar token stored
   useState(() => {
     if (!user) return
     supabase.from('profiles').select('google_calendar_enabled').eq('id', user.id).single()
@@ -493,7 +544,7 @@ function GoogleCalendarSection() {
       <div style={{ flex: 1 }}>
         <div style={{ fontWeight: 700, fontSize: 14.5, color: 'var(--ink)' }}>Google Calendar</div>
         <div style={{ fontSize: 12, color: 'var(--ink-faint)', marginTop: 2 }}>
-          {connected ? 'Conectado — los nuevos momentos se añadirán a tu calendario' : 'Sincroniza tus momentos con Google Calendar'}
+          {connected ? 'Conectado — los nuevos momentos se añadirán' : 'Sincroniza tus momentos con Google Calendar'}
         </div>
       </div>
       {connected ? (
@@ -514,15 +565,6 @@ function GoogleCalendarSection() {
           {syncing ? '…' : 'Conectar'}
         </button>
       )}
-    </div>
-  )
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
-      <span style={{ color: 'var(--ink-soft)' }}>{label}</span>
-      <span style={{ fontWeight: 600 }}>{value}</span>
     </div>
   )
 }

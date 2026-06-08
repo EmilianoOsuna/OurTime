@@ -30,11 +30,17 @@ export default function Finances({ me, partner }: {
   partner: PersonDisplay | null
 }) {
   const { fmt } = useCurrency()
-  const { user, activeStoryId } = useAuth()
+  const { user, activeStoryId, stories, refreshStories } = useAuth()
   const [txs, setTxs] = useState<Tx[]>([])
   const [budgetPlans, setBudgetPlans] = useState<PlanType[]>([])
   const [seg, setSeg] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [editingBudget, setEditingBudget] = useState(false)
+  const [budgetInput, setBudgetInput] = useState('')
+  const [savingBudget, setSavingBudget] = useState(false)
+
+  const activeStory = stories.find(s => s.id === activeStoryId)
+  const totalBudget = activeStory?.budget ?? null
 
   useEffect(() => {
     if (!activeStoryId) return
@@ -49,16 +55,24 @@ export default function Finances({ me, partner }: {
       .then(({ data }) => { if (data) setBudgetPlans(data as PlanType[]) })
   }, [activeStoryId])
 
-  const income = txs.filter(t => t.type === 'ingreso').reduce((s, t) => s + t.amount, 0)
   const spent = txs.filter(t => t.type === 'gasto').reduce((s, t) => s + t.amount, 0)
-  const balance = income - spent
+  const balance = totalBudget !== null ? totalBudget - spent : -spent
 
-  const myIn = txs.filter(t => t.type === 'ingreso' && t.user_id === user?.id).reduce((s, t) => s + t.amount, 0)
-  const partnerIn = txs.filter(t => t.type === 'ingreso' && t.user_id !== user?.id && t.user_id != null).reduce((s, t) => s + t.amount, 0)
+  const mySpent = txs.filter(t => t.type === 'gasto' && t.user_id === user?.id).reduce((s, t) => s + t.amount, 0)
+  const partnerSpent = txs.filter(t => t.type === 'gasto' && t.user_id !== user?.id && t.user_id != null).reduce((s, t) => s + t.amount, 0)
 
-  const list = seg === 0 ? txs : seg === 1
-    ? txs.filter(t => t.type === 'ingreso')
-    : txs.filter(t => t.type === 'gasto')
+  const saveBudget = async () => {
+    if (!activeStoryId) return
+    const val = +budgetInput
+    if (isNaN(val) || val < 0) return
+    setSavingBudget(true)
+    await supabase.from('stories').update({ budget: val || null }).eq('id', activeStoryId)
+    await refreshStories()
+    setSavingBudget(false)
+    setEditingBudget(false)
+  }
+
+  const list = seg === 0 ? txs : txs.filter(t => t.type === (seg === 1 ? 'gasto' : 'ingreso'))
 
   if (loading) {
     return (
@@ -83,36 +97,66 @@ export default function Finances({ me, partner }: {
           padding: '22px 20px',
           boxShadow: 'var(--sh-md)', position: 'relative', overflow: 'hidden',
         }}>
-          {/* Radial orange accent */}
           <div style={{
             position: 'absolute', right: -30, top: -30, width: 130, height: 130,
             borderRadius: '50%',
             background: 'radial-gradient(circle, rgba(241,119,32,0.35), transparent 70%)',
           }} />
 
-          <div className="eyebrow" style={{ color: 'var(--hero-soft)' }}>Saldo disponible</div>
-          <div className="display" style={{ fontSize: 42, margin: '6px 0 0', color: 'var(--hero-text)' }}>{fmt(balance)}</div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div className="eyebrow" style={{ color: 'var(--hero-soft)' }}>
+              {totalBudget !== null ? 'Saldo disponible' : 'Total gastado'}
+            </div>
+            <button onClick={() => { setBudgetInput(String(totalBudget ?? '')); setEditingBudget(true) }}
+              style={{ border: 'none', background: 'transparent', cursor: 'pointer',
+                fontSize: 12, fontWeight: 600, color: 'var(--hero-soft)', fontFamily: 'var(--font-ui)',
+                display: 'flex', alignItems: 'center', gap: 4, padding: 0 }}>
+              <Icon name="edit" size={13} style={{ color: 'var(--hero-soft)' }} />
+              {totalBudget !== null ? 'Cambiar' : 'Añadir presupuesto'}
+            </button>
+          </div>
+
+          {editingBudget ? (
+            <div style={{ marginTop: 12, display: 'flex', gap: 8, alignItems: 'center' }}>
+              <input value={budgetInput} onChange={e => setBudgetInput(e.target.value.replace(/[^0-9.]/g, ''))}
+                placeholder="Presupuesto total…" inputMode="decimal"
+                style={{ flex: 1, padding: '9px 12px', borderRadius: 10, border: '1.5px solid rgba(244,238,228,0.3)',
+                  background: 'rgba(255,255,255,0.1)', color: 'var(--hero-text)', fontSize: 16,
+                  fontFamily: 'var(--font-ui)', outline: 'none' }} autoFocus />
+              <button onClick={saveBudget} disabled={savingBudget} style={{
+                border: 'none', background: 'rgba(255,255,255,0.2)', color: 'var(--hero-text)',
+                borderRadius: 10, padding: '9px 14px', fontWeight: 700, cursor: 'pointer',
+                fontFamily: 'var(--font-ui)', fontSize: 13,
+              }}>{savingBudget ? '…' : 'OK'}</button>
+              <button onClick={() => setEditingBudget(false)} style={{
+                border: 'none', background: 'transparent', color: 'var(--hero-soft)',
+                borderRadius: 10, padding: '9px 10px', cursor: 'pointer', fontFamily: 'var(--font-ui)', fontSize: 13,
+              }}>✕</button>
+            </div>
+          ) : (
+            <div className="display" style={{ fontSize: 42, margin: '6px 0 0', color: 'var(--hero-text)' }}>
+              {fmt(totalBudget !== null ? balance : spent)}
+            </div>
+          )}
 
           <div style={{ display: 'flex', gap: 20, marginTop: 18 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{
-                width: 30, height: 30, borderRadius: 9,
-                background: 'rgba(46,125,91,0.25)', color: '#7BD9A8',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
-                <Icon name="trendUp" size={16} />
-              </span>
-              <div>
-                <div style={{ fontSize: 11, color: 'var(--hero-soft)' }}>Aportado</div>
-                <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--hero-text)' }}>{fmt(income)}</div>
+            {totalBudget !== null && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ width: 30, height: 30, borderRadius: 9,
+                  background: 'rgba(46,125,91,0.25)', color: '#7BD9A8',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Icon name="wallet" size={16} />
+                </span>
+                <div>
+                  <div style={{ fontSize: 11, color: 'var(--hero-soft)' }}>Presupuesto</div>
+                  <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--hero-text)' }}>{fmt(totalBudget)}</div>
+                </div>
               </div>
-            </div>
+            )}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{
-                width: 30, height: 30, borderRadius: 9,
+              <span style={{ width: 30, height: 30, borderRadius: 9,
                 background: 'rgba(241,119,32,0.25)', color: '#F9A86A',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
+                display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Icon name="trendDown" size={16} />
               </span>
               <div>
@@ -121,12 +165,29 @@ export default function Finances({ me, partner }: {
               </div>
             </div>
           </div>
+
+          {/* Budget progress bar */}
+          {totalBudget !== null && totalBudget > 0 && (
+            <div style={{ marginTop: 16 }}>
+              <div style={{ height: 4, borderRadius: 99, background: 'rgba(255,255,255,0.12)', overflow: 'hidden' }}>
+                <div style={{
+                  height: '100%', borderRadius: 99,
+                  width: Math.min((spent / totalBudget) * 100, 100) + '%',
+                  background: spent > totalBudget ? '#F9A86A' : '#7BD9A8',
+                  transition: 'width .5s cubic-bezier(.2,.8,.2,1)',
+                }} />
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--hero-soft)', marginTop: 6, textAlign: 'right' }}>
+                {Math.round((spent / totalBudget) * 100)}% utilizado
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Contributions */}
+      {/* Per-person spending */}
       <div style={{ padding: '16px 22px 0', display: 'flex', gap: 12 }}>
-        {[{ p: me, v: myIn }, { p: partner || { name: 'Pareja', initial: 'P', color: '#F17720' }, v: partnerIn }].map(({ p, v }) => (
+        {[{ p: me, v: mySpent }, { p: partner || { name: 'Pareja', initial: 'P', color: '#F17720' }, v: partnerSpent }].map(({ p, v }) => (
           <div key={p.name} className="card" style={{
             flex: 1, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 11,
           }}>
@@ -141,7 +202,7 @@ export default function Finances({ me, partner }: {
 
       {/* Filter + list */}
       <div style={{ padding: '22px 22px 0' }}>
-        <Segmented labels={['Todo', 'Ingresos', 'Gastos']} selected={seg} onChange={setSeg} />
+        <Segmented labels={['Todo', 'Gastos', 'Ingresos']} selected={seg} onChange={setSeg} />
 
         <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
           {list.length === 0 && (
