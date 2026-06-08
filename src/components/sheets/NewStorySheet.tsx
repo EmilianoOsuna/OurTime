@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
 import { supabase } from '../../lib/supabase'
 import { Icon } from '../ui/Icon'
+import { DatePicker } from '../ui/DatePicker'
 
 const CATEGORIES = [
   { key: 'pareja',  label: 'Pareja',  icon: 'heartFill', color: 'var(--orange)',   bg: 'var(--orange-tint)' },
@@ -136,8 +137,7 @@ export const NewStorySheet: React.FC<Props> = ({ onClose, onCreated }) => {
               Cuéntanos un poco sobre su historia de amor
             </div>
             <div>
-              <label className="field-label">Fecha de aniversario</label>
-              <input className="field" type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
+              <DatePicker label="Fecha de aniversario" value={startDate} onChange={setStartDate} />
             </div>
             <div>
               <label className="field-label">¿Dónde se conocieron? <span style={{ color: 'var(--ink-faint)', fontWeight: 400 }}>(opcional)</span></label>
@@ -156,8 +156,7 @@ export const NewStorySheet: React.FC<Props> = ({ onClose, onCreated }) => {
               Cuéntanos cómo inició esta amistad
             </div>
             <div>
-              <label className="field-label">¿Desde cuándo se conocen?</label>
-              <input className="field" type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
+              <DatePicker label="¿Desde cuándo se conocen?" value={startDate} onChange={setStartDate} />
             </div>
             <div>
               <label className="field-label">Apodo del grupo <span style={{ color: 'var(--ink-faint)', fontWeight: 400 }}>(opcional)</span></label>
@@ -192,8 +191,7 @@ export const NewStorySheet: React.FC<Props> = ({ onClose, onCreated }) => {
               </div>
             </div>
             <div>
-              <label className="field-label">Tu fecha de cumpleaños <span style={{ color: 'var(--ink-faint)', fontWeight: 400 }}>(opcional)</span></label>
-              <input className="field" type="date" value={userBirthday} onChange={e => setUserBirthday(e.target.value)} />
+              <DatePicker label="Tu fecha de cumpleaños" value={userBirthday} onChange={setUserBirthday} />
             </div>
           </div>
         )}

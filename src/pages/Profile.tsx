@@ -5,6 +5,7 @@ import { compressToWebP } from '../lib/imageUtils'
 import { PresenceDot } from '../components/ui/PresenceDot'
 import { useCurrency, CURRENCIES, type CurrencyKey } from '../context/CurrencyContext'
 import { fmtDate } from '../lib/chapterUtils'
+import { DatePicker } from '../components/ui/DatePicker'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import type { PlanType, PersonDisplay, StoryType } from '../lib/supabase'
@@ -334,8 +335,7 @@ export function ProfileScreen({ plans, memories, onClose, onGoToFinance, onOpenP
                 <label className="field-label">Apodo (opcional)</label>
                 <input className="field" value={editNickname} onChange={e => setEditNickname(e.target.value)}
                   placeholder="Tu apodo" style={{ marginBottom: 14 }} />
-                <label className="field-label">Cumpleaños</label>
-                <input className="field" type="date" value={editBirthday} onChange={e => setEditBirthday(e.target.value)} />
+                <DatePicker label="Cumpleaños" value={editBirthday} onChange={setEditBirthday} />
                 <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
                   <button onClick={() => setEditing(false)} className="btn btn-ghost" style={{ flex: 1 }}>Cancelar</button>
                   <button onClick={saveProfile} className="btn btn-primary" style={{ flex: 1 }} disabled={saving}>

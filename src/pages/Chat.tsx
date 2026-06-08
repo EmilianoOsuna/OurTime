@@ -116,7 +116,8 @@ export default function Chat({ me, partner }: Props) {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', background: 'var(--paper)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', background: 'var(--paper)',
+      paddingBottom: 'calc(100px + env(safe-area-inset-bottom, 0px))' }}>
       {/* Header */}
       <div style={{ padding: '52px 22px 14px', flexShrink: 0, borderBottom: '1px solid var(--line)' }}>
         <div className="eyebrow" style={{ marginBottom: 4 }}>Su espacio</div>
@@ -191,7 +192,7 @@ export default function Chat({ me, partner }: Props) {
       </div>
 
       {/* Input */}
-      <div style={{ flexShrink: 0, padding: '10px 12px 34px', borderTop: '1px solid var(--line)',
+      <div style={{ flexShrink: 0, padding: '10px 12px 14px', borderTop: '1px solid var(--line)',
         background: 'var(--card)', display: 'flex', alignItems: 'flex-end', gap: 10 }}>
         <textarea
           ref={inputRef}

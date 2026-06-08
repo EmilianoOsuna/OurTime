@@ -16,28 +16,22 @@ function daysTogether(since: string) {
   return Math.floor((Date.now() - new Date(since + 'T00:00:00').getTime()) / 86400000)
 }
 
-const CAT_COLOR: Record<string, string> = {
-  pareja:  'var(--orange)',
-  amigos:  'var(--blue)',
-  familia: 'var(--done)',
-  otro:    'var(--ink-faint)',
-}
 
-export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpen, me, partner, onStorySwitcher }: {
+export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpen, me, partner }: {
   plans: PlanType[]
   go: (t: Tab) => void
   onBell: () => void
   onPlanClick: (p: PlanType) => void
   onProfileOpen?: () => void
-  onStorySwitcher?: () => void
   me: PersonDisplay
   partner: PersonDisplay | null
 }) {
-  const { activeStoryId, stories, setActiveStoryId, profile } = useAuth()
+  const { activeStoryId, stories, profile } = useAuth()
+  const activeStory = stories.find(s => s.id === activeStoryId) ?? null
   const [allPlans, setAllPlans] = useState<PlanType[]>([])
   const [loading, setLoading] = useState(true)
 
-  const since = profile?.anniversary_date || ''
+  const since = (activeStory?.start_date || profile?.anniversary_date) || ''
 
   useEffect(() => {
     if (activeStoryId && plans.length === 0) {
@@ -58,7 +52,8 @@ export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpe
   const next = upcoming[0]
   const numbered = [...allPlans].filter(p => p.status !== 'cancelado').sort((a, b) => a.plan_date.localeCompare(b.plan_date))
   const chapterNo = (id: string) => numbered.findIndex(p => p.id === id) + 1
-  const days = since ? daysTogether(since) : null
+  const isPareja = activeStory?.category === 'pareja'
+  const days = (isPareja && since) ? daysTogether(since) : null
   const partnerName = partner?.name || 'Tu pareja'
 
   if (loading) {
@@ -90,8 +85,8 @@ export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpe
           </button>
         </div>
 
-        {/* Presence + stats — tappable to open Profile */}
-        {since && (
+        {/* Presence card — only for pareja stories */}
+        {isPareja && since && (
           <button onClick={onProfileOpen} className="ot-card" style={{
             marginTop: 16, padding: '12px 15px', display: 'flex', alignItems: 'center', gap: 13,
             border: 'none', cursor: 'pointer', textAlign: 'left', width: '100%',
@@ -101,9 +96,7 @@ export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpe
               <span style={{ position: 'absolute', bottom: -2, right: -2 }}><PresenceDot size={9} /></span>
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
-                {partnerName} está aquí
-              </div>
+              <div style={{ fontSize: 14, fontWeight: 600 }}>{partnerName} está aquí</div>
               <div style={{ fontSize: 12.5, color: 'var(--ink-soft)' }}>Juntos desde {fmtDate(since)}</div>
             </div>
             {days !== null && (
@@ -115,43 +108,6 @@ export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpe
           </button>
         )}
       </div>
-
-      {/* Stories switcher — only when multiple stories */}
-      {stories.length > 1 && (
-        <div style={{ marginTop: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-            <span className="eyebrow">Tus Historias</span>
-            <button onClick={onStorySwitcher} style={{ border: 'none', background: 'transparent', cursor: 'pointer',
-              fontSize: 12.5, fontWeight: 600, color: 'var(--orange)', fontFamily: 'var(--font-ui)', padding: 0 }}>
-              Ver todas
-            </button>
-          </div>
-          <div className="ot-scroll" style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4 }}>
-            {stories.map(s => {
-              const color = CAT_COLOR[s.category] || 'var(--ink-faint)'
-              const active = s.id === activeStoryId
-              return (
-                <button key={s.id} onClick={() => setActiveStoryId(s.id)} style={{
-                  flexShrink: 0, border: active ? `2px solid ${color}` : '2px solid var(--line)',
-                  borderRadius: 16, background: active ? 'var(--card)' : 'var(--card-2)',
-                  padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 9,
-                  transition: 'all .18s', boxShadow: active ? 'var(--sh-sm)' : 'none',
-                }}>
-                  <div style={{ width: 28, height: 28, borderRadius: 8, background: color, flexShrink: 0,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Icon name={s.category === 'pareja' ? 'heartFill' : s.category === 'amigos' ? 'users' : s.category === 'familia' ? 'home' : 'tag'} size={14} style={{ color: '#fff' }} />
-                  </div>
-                  <span style={{ fontSize: 13.5, fontWeight: active ? 700 : 600, color: active ? 'var(--ink)' : 'var(--ink-soft)',
-                    maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {s.name}
-                  </span>
-                  {active && <div style={{ width: 6, height: 6, borderRadius: '50%', background: color, flexShrink: 0 }} />}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-      )}
 
 
       {/* Next chapter hero */}

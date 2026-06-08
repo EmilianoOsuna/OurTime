@@ -174,6 +174,41 @@ export default function AppShell() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [])
 
+  // Accent color — override --orange* based on active story category
+  useEffect(() => {
+    const story = stories.find(s => s.id === activeStoryId)
+    const cat = story?.category ?? 'pareja'
+    const dark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    type Triad = { o: string; od: string; ot: string }
+    const OVERRIDES: Record<string, { light: Triad; dark: Triad } | null> = {
+      pareja: null,
+      amigos: {
+        light: { o: '#0474BA', od: '#045E96', ot: '#D7E9F4' },
+        dark:  { o: '#3B9EDF', od: '#2D8AC9', ot: '#0E2A3A' },
+      },
+      familia: {
+        light: { o: '#2E7D5B', od: '#1E5C42', ot: '#DCEDE3' },
+        dark:  { o: '#4DB880', od: '#3DA068', ot: '#122B1E' },
+      },
+      otro: {
+        light: { o: '#6B7280', od: '#4B5563', ot: '#F3F4F6' },
+        dark:  { o: '#9CA3AF', od: '#6B7280', ot: '#1F2937' },
+      },
+    }
+    const override = OVERRIDES[cat]
+    const root = document.documentElement
+    if (override) {
+      const c = dark ? override.dark : override.light
+      root.style.setProperty('--orange', c.o)
+      root.style.setProperty('--orange-deep', c.od)
+      root.style.setProperty('--orange-tint', c.ot)
+    } else {
+      root.style.removeProperty('--orange')
+      root.style.removeProperty('--orange-deep')
+      root.style.removeProperty('--orange-tint')
+    }
+  }, [activeStoryId, stories])
+
   const sortedPlans = [...plans].sort((a, b) => a.plan_date.localeCompare(b.plan_date))
   const chapterNo = (id: string) => sortedPlans.findIndex(p => p.id === id) + 1
 
@@ -228,7 +263,6 @@ export default function AppShell() {
     home: <Dashboard plans={plans} go={go}
             onBell={() => setNotifsVisible(true)} onPlanClick={openPlan}
             onProfileOpen={() => setOverlay({ type: 'profile' })}
-            onStorySwitcher={() => setStorySwitcherOpen(true)}
             me={me} partner={partnerDisplay} />,
     calendar: <Calendar onOpenPlan={openPlan} />,
     gallery: <Gallery memories={memories} setMemories={setMemories}
