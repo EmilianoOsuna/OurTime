@@ -62,17 +62,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         setSession(session)
         setUser(session?.user ?? null)
         if (session?.user) {
           fetchProfileAndStories(session.user.id)
           // Save Google provider_token if this was a Calendar OAuth redirect
           if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session.provider_token) {
-            supabase.from('profiles').update({
+            const updates: Record<string, unknown> = {
               google_calendar_token: session.provider_token,
               google_calendar_enabled: true,
-            }).eq('id', session.user.id)
+            }
+            // If Google provides an avatar and user has none, use Google's (never overwrite custom)
+            const googleAvatar = session.user.user_metadata?.avatar_url as string | undefined
+                               ?? session.user.user_metadata?.picture as string | undefined
+            if (googleAvatar) {
+              const { data: existing } = await supabase
+                .from('profiles').select('avatar_url').eq('id', session.user.id).single()
+              if (!existing?.avatar_url) updates.avatar_url = googleAvatar
+            }
+            supabase.from('profiles').update(updates).eq('id', session.user.id)
           }
         } else {
           _setActiveStoryId(null)

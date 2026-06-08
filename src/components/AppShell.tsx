@@ -93,6 +93,8 @@ export default function AppShell() {
   const [storyCode, setStoryCode] = useState<string | null>(null)
   const [unreadRefreshKey, setUnreadRefreshKey] = useState(0)
   const [notifications, setNotifications] = useState<(NotifItem & { id: string })[]>([])
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [adminStoryIds, setAdminStoryIds] = useState<Set<string>>(new Set())
   const prevTabRef = useRef<Tab>(tab)
 
   // Native back button/gesture
@@ -125,7 +127,21 @@ export default function AppShell() {
     setMemories([])
     setTransactions([])
     setStoryCode(null)
+    setIsAdmin(false)
   }, [activeStoryId])
+
+  // Track which stories the user is admin of (for StorySwitcher edit buttons)
+  useEffect(() => {
+    if (!user || stories.length === 0) return
+    supabase.from('story_members')
+      .select('story_id, permission_level')
+      .eq('user_id', user.id)
+      .then(({ data }) => {
+        if (data) setAdminStoryIds(new Set(
+          data.filter((m: any) => m.permission_level === 'admin').map((m: any) => m.story_id as string)
+        ))
+      })
+  }, [user?.id, stories.length])
 
   useEffect(() => {
     if (!activeStoryId || !user) return
@@ -160,11 +176,19 @@ export default function AppShell() {
 
     supabase.from('stories').select('invite_code').eq('id', activeStoryId).single()
       .then(({ data }) => { if (data?.invite_code) setStoryCode(data.invite_code) })
+
+    // Fetch current user's permission level for this story
+    supabase.from('story_members')
+      .select('permission_level')
+      .eq('story_id', activeStoryId)
+      .eq('user_id', user.id)
+      .single()
+      .then(({ data }) => setIsAdmin(data?.permission_level === 'admin'))
   }, [activeStoryId, user])
 
-  // Mark chat messages as read whenever the user leaves the chat tab (regardless of back method)
+  // Mark chat messages as read when ENTERING chat — so badge is already 0 when NavBar reappears on exit
   useEffect(() => {
-    if (prevTabRef.current === 'chat' && tab !== 'chat') {
+    if (tab === 'chat' && prevTabRef.current !== 'chat') {
       if (activeStoryId && user) {
         supabase.from('messages')
           .update({ read_at: new Date().toISOString() })
@@ -175,6 +199,9 @@ export default function AppShell() {
       } else {
         setUnreadRefreshKey(k => k + 1)
       }
+    } else if (prevTabRef.current === 'chat' && tab !== 'chat') {
+      // Leaving chat — force refresh to confirm count is 0
+      setUnreadRefreshKey(k => k + 1)
     }
     prevTabRef.current = tab
   }, [tab, activeStoryId, user])
@@ -439,6 +466,7 @@ export default function AppShell() {
           onOpenPlan={openPlan}
           partner={partnerDisplay}
           storyCode={storyCode}
+          isAdmin={isAdmin}
           onNewStory={() => setOverlay({ type: 'newstory' })}
           onStorySwitcher={() => { closeOverlay(); setStorySwitcherOpen(true) }}
           onEditStory={(s) => setOverlay({ type: 'editstory', story: s })}
@@ -453,13 +481,14 @@ export default function AppShell() {
       {overlay?.type === 'money' && <MoneySheet onClose={closeOverlay} onCreated={() => { closeOverlay(); refreshTransactions() }} />}
       {overlay?.type === 'memory' && <NewMemorySheet onClose={closeOverlay} onCreated={() => { closeOverlay(); refreshMemories() }} />}
       {overlay?.type === 'newstory' && <NewStorySheet onClose={closeOverlay} onCreated={() => { closeOverlay(); go('home') }} />}
-      {overlay?.type === 'editstory' && <EditStorySheet story={overlay.story} onClose={closeOverlay} onUpdated={() => {}} />}
+      {overlay?.type === 'editstory' && <EditStorySheet story={overlay.story} onClose={closeOverlay} onUpdated={() => {}} isAdmin={adminStoryIds.has(overlay.story.id)} />}
       {notifsVisible && <NotificationsPanel onClose={closeNotifs} items={notifications} />}
       {lightbox && <Lightbox url={lightbox} onClose={() => setLightbox(null)} />}
       {storySwitcherOpen && (
         <StorySwitcherSheet
           stories={stories}
           activeStoryId={activeStoryId}
+          adminStoryIds={adminStoryIds}
           onSelect={id => { setActiveStoryId(id); setStorySwitcherOpen(false) }}
           onNewStory={() => { setStorySwitcherOpen(false); setOverlay({ type: 'newstory' }) }}
           onEditStory={s => { setStorySwitcherOpen(false); setOverlay({ type: 'editstory', story: s }) }}
@@ -566,9 +595,10 @@ function NavBar({ tab, setTab, onFab, me, onProfileOpen, stories, activeStoryId,
   )
 }
 
-function StorySwitcherSheet({ stories, activeStoryId, onSelect, onNewStory, onEditStory, onClose }: {
+function StorySwitcherSheet({ stories, activeStoryId, adminStoryIds, onSelect, onNewStory, onEditStory, onClose }: {
   stories: StoryType[]
   activeStoryId: string | null
+  adminStoryIds: Set<string>
   onSelect: (id: string) => void
   onNewStory: () => void
   onEditStory: (s: StoryType) => void
@@ -668,13 +698,15 @@ function StorySwitcherSheet({ stories, activeStoryId, onSelect, onNewStory, onEd
                   </div>
                   {active && <div style={{ width: 8, height: 8, borderRadius: '50%', background: color, flexShrink: 0 }} />}
                 </button>
-                <button onClick={() => { onEditStory(s); onClose() }} style={{
-                  border: 'none', background: 'var(--card-2)', borderRadius: 12,
-                  width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: 'pointer', color: 'var(--ink-faint)', flexShrink: 0,
-                }}>
-                  <Icon name="edit" size={17} />
-                </button>
+                {adminStoryIds.has(s.id) && (
+                  <button onClick={() => { onEditStory(s); onClose() }} style={{
+                    border: 'none', background: 'var(--card-2)', borderRadius: 12,
+                    width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    cursor: 'pointer', color: 'var(--ink-faint)', flexShrink: 0,
+                  }}>
+                    <Icon name="edit" size={17} />
+                  </button>
+                )}
               </div>
             )
           })}

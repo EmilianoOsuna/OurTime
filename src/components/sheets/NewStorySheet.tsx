@@ -71,7 +71,12 @@ export const NewStorySheet: React.FC<Props> = ({ onClose, onCreated }) => {
 
       const { error: memberErr } = await supabase
         .from('story_members')
-        .insert({ story_id: story.id, user_id: user.id, role: 'admin' })
+        .insert({
+          story_id: story.id,
+          user_id: user.id,
+          permission_level: 'admin',
+          role: category === 'familia' ? (familyRole || null) : null,
+        })
       if (memberErr) throw memberErr
 
       // Save birthday to profile for familia

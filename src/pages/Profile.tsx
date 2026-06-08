@@ -32,9 +32,10 @@ interface StoryMember {
   isMe: boolean
   role: string | null
   joinedAt: string | null
+  permissionLevel: string
 }
 
-export function ProfileScreen({ plans, memories, onClose, onGoToFinance, onOpenPlan, partner, storyCode, onNewStory, onStorySwitcher, onEditStory }: {
+export function ProfileScreen({ plans, memories, onClose, onGoToFinance, onOpenPlan, partner, storyCode, isAdmin = false, onNewStory, onStorySwitcher, onEditStory }: {
   plans: PlanType[]
   memories: { id: string }[]
   onClose: () => void
@@ -42,6 +43,7 @@ export function ProfileScreen({ plans, memories, onClose, onGoToFinance, onOpenP
   onOpenPlan: (p: PlanType) => void
   partner: PersonDisplay | null
   storyCode: string | null
+  isAdmin?: boolean
   onNewStory?: () => void
   onStorySwitcher?: () => void
   onEditStory?: (s: StoryType) => void
@@ -67,6 +69,10 @@ export function ProfileScreen({ plans, memories, onClose, onGoToFinance, onOpenP
   const [roleInput, setRoleInput] = useState('')
   const [savingRole, setSavingRole] = useState(false)
   const [selectedMember, setSelectedMember] = useState<StoryMember | null>(null)
+  const [joinedStoryId, setJoinedStoryId] = useState<string | null>(null)
+  const [joinedStoryName, setJoinedStoryName] = useState('')
+  const [newRole, setNewRole] = useState('')
+  const [savingNewRole, setSavingNewRole] = useState(false)
 
   const activeStory = stories.find(s => s.id === activeStoryId) ?? null
   const spent = plans.reduce((s, p) => s + (p.actual_amount ?? 0), 0)
@@ -83,7 +89,7 @@ export function ProfileScreen({ plans, memories, onClose, onGoToFinance, onOpenP
   useEffect(() => {
     if (!activeStoryId || !user) return
     supabase.from('story_members')
-      .select('user_id, role, joined_at, profiles(full_name, avatar_url)')
+      .select('user_id, role, joined_at, permission_level, profiles(full_name, avatar_url)')
       .eq('story_id', activeStoryId)
       .then(({ data }) => {
         if (!data) return
@@ -94,12 +100,24 @@ export function ProfileScreen({ plans, memories, onClose, onGoToFinance, onOpenP
           isMe: m.user_id === user.id,
           role: m.role || null,
           joinedAt: m.joined_at || null,
+          permissionLevel: m.permission_level || 'member',
         }))
         setMembers(list)
         const me = list.find(m => m.isMe)
         if (me) setRoleInput(me.role || '')
       })
   }, [activeStoryId, user])
+
+  const toggleMemberPermission = async (target: StoryMember) => {
+    if (!activeStoryId || !user) return
+    const newLevel = target.permissionLevel === 'admin' ? 'member' : 'admin'
+    await supabase.from('story_members')
+      .update({ permission_level: newLevel })
+      .eq('story_id', activeStoryId)
+      .eq('user_id', target.userId)
+    setMembers(ms => ms.map(m => m.userId === target.userId ? { ...m, permissionLevel: newLevel } : m))
+    setSelectedMember(prev => prev ? { ...prev, permissionLevel: newLevel } : null)
+  }
 
   const saveRole = async () => {
     if (!activeStoryId || !user) return
@@ -112,6 +130,10 @@ export function ProfileScreen({ plans, memories, onClose, onGoToFinance, onOpenP
     setSavingRole(false)
     setEditingRole(false)
   }
+
+  const googleAvatarUrl = (user?.user_metadata?.avatar_url as string | undefined)
+                       ?? (user?.user_metadata?.picture as string | undefined)
+                       ?? null
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -131,6 +153,20 @@ export function ProfileScreen({ plans, memories, onClose, onGoToFinance, onOpenP
     } finally {
       setUploadingAvatar(false)
       e.target.value = ''
+    }
+  }
+
+  const useGoogleAvatar = async () => {
+    if (!user || !googleAvatarUrl) return
+    setUploadingAvatar(true)
+    try {
+      await supabase.from('profiles').update({ avatar_url: googleAvatarUrl }).eq('id', user.id)
+      await refreshProfile()
+      toast({ icon: 'check', title: 'Foto actualizada', body: 'Usando tu foto de Google' })
+    } catch (e: any) {
+      toast({ icon: 'x', title: 'Error', body: e.message })
+    } finally {
+      setUploadingAvatar(false)
     }
   }
 
@@ -166,16 +202,55 @@ export function ProfileScreen({ plans, memories, onClose, onGoToFinance, onOpenP
     setJoining(true)
     setJoinError('')
     try {
-      const { error } = await supabase.rpc('join_story_by_invite_code', { p_invite_code: code })
+      const { data: newStoryId, error } = await supabase.rpc('join_story_by_invite_code', { p_invite_code: code })
       if (error) throw error
       await refreshStories()
       setJoinSuccess(true)
       setJoinCode('')
       setTimeout(() => setJoinSuccess(false), 2500)
+      // Prompt for role in the newly joined story
+      if (newStoryId) {
+        const { data: storyData } = await supabase
+          .from('stories').select('id, name').eq('id', newStoryId).single()
+        if (storyData) {
+          setJoinedStoryId(storyData.id)
+          setJoinedStoryName(storyData.name)
+        }
+      }
     } catch (e: any) {
       setJoinError(e.message || 'Código inválido')
     } finally {
       setJoining(false)
+    }
+  }
+
+  const saveNewRole = async () => {
+    if (!joinedStoryId || !user) return
+    setSavingNewRole(true)
+    await supabase.from('story_members')
+      .update({ role: newRole.trim() || null })
+      .eq('story_id', joinedStoryId)
+      .eq('user_id', user.id)
+    setSavingNewRole(false)
+    setJoinedStoryId(null)
+    setNewRole('')
+    // Refresh members if this is the active story
+    if (joinedStoryId === activeStoryId) {
+      const { data } = await supabase.from('story_members')
+        .select('user_id, role, joined_at, permission_level, profiles(full_name, avatar_url)')
+        .eq('story_id', activeStoryId)
+      if (data) {
+        const list: StoryMember[] = data.map((m: any) => ({
+          userId: m.user_id,
+          name: m.profiles?.full_name || 'Miembro',
+          avatar_url: m.profiles?.avatar_url || null,
+          isMe: m.user_id === user.id,
+          role: m.role || null,
+          joinedAt: m.joined_at || null,
+          permissionLevel: m.permission_level || 'member',
+        }))
+        setMembers(list)
+      }
     }
   }
 
@@ -221,7 +296,7 @@ export function ProfileScreen({ plans, memories, onClose, onGoToFinance, onOpenP
                     fontSize: 13, fontWeight: 600, color: 'var(--orange)', fontFamily: 'var(--font-ui)',
                     padding: 0, display: 'flex', alignItems: 'center', gap: 4,
                   }}>
-                    <Icon name="edit" size={13} /> Editar
+                    <Icon name="edit" size={13} /> {isAdmin ? 'Editar' : 'Opciones'}
                   </button>
                 )}
               </div>
@@ -297,7 +372,17 @@ export function ProfileScreen({ plans, memories, onClose, onGoToFinance, onOpenP
                             person={{ name: m.name, initial: m.name[0]?.toUpperCase() || '?', color: m.isMe ? '#0474BA' : '#F17720', avatar_url: m.avatar_url }}
                             size={40}
                           />
-                          {!m.isMe && (
+                          {m.permissionLevel === 'admin' && (
+                            <span style={{
+                              position: 'absolute', bottom: -2, right: -2,
+                              width: 14, height: 14, borderRadius: '50%',
+                              background: 'var(--orange)', border: '2px solid var(--card)',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            }}>
+                              <Icon name="shield" size={7} style={{ color: '#fff' }} />
+                            </span>
+                          )}
+                          {!m.isMe && m.permissionLevel !== 'admin' && (
                             <span style={{ position: 'absolute', bottom: 0, right: 0 }}>
                               <PresenceDot size={10} />
                             </span>
@@ -306,7 +391,9 @@ export function ProfileScreen({ plans, memories, onClose, onGoToFinance, onOpenP
                         <div>
                           <div style={{ fontSize: 13.5, fontWeight: 700 }}>{m.name}</div>
                           <div style={{ fontSize: 11.5, color: 'var(--ink-faint)' }}>
-                            {m.isMe ? (m.role || 'Tú') : (m.role || 'Miembro')}
+                            {m.isMe
+                              ? (m.role || (m.permissionLevel === 'admin' ? 'Admin' : 'Tú'))
+                              : (m.role || (m.permissionLevel === 'admin' ? 'Admin' : 'Miembro'))}
                           </div>
                         </div>
                         {!m.isMe && <Icon name="chevR" size={13} style={{ color: 'var(--ink-faint)', marginLeft: 2 }} />}
@@ -380,6 +467,16 @@ export function ProfileScreen({ plans, memories, onClose, onGoToFinance, onOpenP
                     }
                   </div>
                 </button>
+                {googleAvatarUrl && googleAvatarUrl !== profile?.avatar_url && (
+                  <button onClick={useGoogleAvatar} disabled={uploadingAvatar} style={{
+                    marginTop: 6, border: 'none', background: 'var(--card-2)', borderRadius: 8,
+                    padding: '4px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center',
+                    gap: 4, fontSize: 10.5, fontWeight: 700, color: '#1976D2',
+                    fontFamily: 'var(--font-ui)', whiteSpace: 'nowrap',
+                  }}>
+                    <Icon name="googleCal" size={11} style={{ color: '#1976D2' }} /> Google
+                  </button>
+                )}
               </div>
 
               {!editing && (
@@ -444,6 +541,39 @@ export function ProfileScreen({ plans, memories, onClose, onGoToFinance, onOpenP
             {joinSuccess && (
               <div style={{ fontSize: 12.5, color: 'var(--done)', marginTop: 8, display: 'flex', alignItems: 'center', gap: 5 }}>
                 <Icon name="checkCircle" size={13} /> ¡Te uniste a la historia!
+              </div>
+            )}
+            {joinedStoryId && (
+              <div style={{ marginTop: 14, padding: '14px 16px', background: 'var(--card-2)', borderRadius: 14,
+                border: '1.5px solid var(--line)' }}>
+                <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--ink)', marginBottom: 2 }}>
+                  ¿Cuál es tu rol en «{joinedStoryName}»?
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--ink-faint)', marginBottom: 10 }}>
+                  Ej: Papá, Mamá, Hermano/a, Amigo/a…
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <input
+                    className="field"
+                    placeholder="Tu rol (opcional)"
+                    value={newRole}
+                    onChange={e => setNewRole(e.target.value)}
+                    autoFocus
+                    style={{ flex: 1 }}
+                    maxLength={32}
+                    onKeyDown={e => e.key === 'Enter' && saveNewRole()}
+                  />
+                  <button onClick={saveNewRole} disabled={savingNewRole}
+                    className="btn btn-primary"
+                    style={{ flexShrink: 0, padding: '10px 14px', borderRadius: 12, fontSize: 13 }}>
+                    {savingNewRole ? '…' : <Icon name="check" size={15} />}
+                  </button>
+                  <button onClick={() => { setJoinedStoryId(null); setNewRole('') }}
+                    style={{ border: 'none', background: 'transparent', cursor: 'pointer',
+                      color: 'var(--ink-faint)', padding: 6, flexShrink: 0 }}>
+                    <Icon name="x" size={15} />
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -554,8 +684,29 @@ export function ProfileScreen({ plans, memories, onClose, onGoToFinance, onOpenP
                 Se unió el {new Date(selectedMember.joinedAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
               </div>
             )}
+            <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{
+                flex: 1, padding: '8px 12px', borderRadius: 10,
+                background: selectedMember.permissionLevel === 'admin' ? 'var(--orange-tint)' : 'var(--card-2)',
+                display: 'flex', alignItems: 'center', gap: 6,
+              }}>
+                <Icon name="shield" size={13} style={{ color: selectedMember.permissionLevel === 'admin' ? 'var(--orange-deep)' : 'var(--ink-faint)' }} />
+                <span style={{ fontSize: 12.5, fontWeight: 600, color: selectedMember.permissionLevel === 'admin' ? 'var(--orange-deep)' : 'var(--ink-faint)' }}>
+                  {selectedMember.permissionLevel === 'admin' ? 'Administrador' : 'Miembro'}
+                </span>
+              </div>
+              {isAdmin && (
+                <button onClick={() => toggleMemberPermission(selectedMember)} style={{
+                  border: '1.5px solid var(--line)', background: 'var(--card)', borderRadius: 10,
+                  padding: '8px 12px', fontSize: 12.5, fontWeight: 600, color: 'var(--ink-soft)',
+                  cursor: 'pointer', fontFamily: 'var(--font-ui)', flexShrink: 0,
+                }}>
+                  {selectedMember.permissionLevel === 'admin' ? 'Degradar' : 'Promover'}
+                </button>
+              )}
+            </div>
             <button onClick={() => setSelectedMember(null)} style={{
-              marginTop: 20, width: '100%', border: '1.5px solid var(--line)', background: 'transparent',
+              marginTop: 16, width: '100%', border: '1.5px solid var(--line)', background: 'transparent',
               borderRadius: 14, padding: '13px', fontFamily: 'var(--font-ui)', fontWeight: 600,
               fontSize: 14.5, color: 'var(--ink-soft)', cursor: 'pointer',
             }}>
@@ -588,7 +739,8 @@ function GoogleCalendarSection() {
 
   const connect = async () => {
     setSyncing(true)
-    const { error } = await supabase.auth.signInWithOAuth({
+    // linkIdentity adds Google to the existing account without creating a new user
+    const { error } = await supabase.auth.linkIdentity({
       provider: 'google',
       options: {
         scopes: GCAL_SCOPE,
@@ -597,6 +749,7 @@ function GoogleCalendarSection() {
       },
     })
     if (error) { toast({ icon: 'x', title: 'Error al conectar', body: error.message }); setSyncing(false) }
+    // On success this redirects to Google — no further code runs here
   }
 
   const disconnect = async () => {
