@@ -135,8 +135,10 @@ export default function AppShell() {
   const ignorePop = useRef(false)
   const overlayRef = useRef(overlay)
   const notifsRef  = useRef(notifsVisible)
-  useEffect(() => { overlayRef.current = overlay },       [overlay])
-  useEffect(() => { notifsRef.current = notifsVisible },  [notifsVisible])
+  const tabRef     = useRef(tab)
+  useEffect(() => { overlayRef.current = overlay },      [overlay])
+  useEffect(() => { notifsRef.current = notifsVisible }, [notifsVisible])
+  useEffect(() => { tabRef.current = tab },              [tab])
 
   useEffect(() => {
     const open = overlay !== null || notifsVisible
@@ -152,7 +154,11 @@ export default function AppShell() {
       if (ignorePop.current) { ignorePop.current = false; return }
       historyPushed.current = false
       if (overlayRef.current !== null) setOverlay(null)
-      else if (notifsRef.current)     setNotifsVisible(false)
+      else if (notifsRef.current)      setNotifsVisible(false)
+      else if (tabRef.current === 'chat') {
+        setTab('home')
+        sessionStorage.setItem('activeTab', 'home')
+      }
     }
     window.addEventListener('popstate', handlePop)
     return () => window.removeEventListener('popstate', handlePop)
@@ -176,7 +182,22 @@ export default function AppShell() {
     }
   }, [])
 
+  const leaveChat = useCallback(() => {
+    setTab('home')
+    sessionStorage.setItem('activeTab', 'home')
+    if (historyPushed.current) {
+      historyPushed.current = false
+      ignorePop.current = true
+      window.history.back()
+    }
+  }, [])
+
   const go = useCallback((t: Tab) => {
+    // Push history when entering chat so device back gesture exits it
+    if (t === 'chat' && tabRef.current !== 'chat' && !historyPushed.current) {
+      window.history.pushState({ ot: 'chat' }, '')
+      historyPushed.current = true
+    }
     setTab(t)
     sessionStorage.setItem('activeTab', t)
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -277,7 +298,9 @@ export default function AppShell() {
     gallery: <Gallery memories={memories} setMemories={setMemories}
                onImageClick={(url: string) => setLightbox(url)} me={me} />,
     finance: <Finances />,
-    chat: <Chat me={me} partner={partnerDisplay} />,
+    chat: <Chat me={me} partner={partnerDisplay}
+             storyName={stories.find(s => s.id === activeStoryId)?.name}
+             onBack={leaveChat} />,
   }[tab]
 
   return (
@@ -320,11 +343,13 @@ export default function AppShell() {
         />
       )}
 
-      <NavBar tab={tab} setTab={go} onFab={() => setOverlay({ type: 'action' })}
-        me={me} onProfileOpen={() => setOverlay({ type: 'profile' })}
-        stories={stories} activeStoryId={activeStoryId}
-        onStorySwitcher={() => setStorySwitcherOpen(true)}
-        unreadCount={unreadCount} />
+      {tab !== 'chat' && (
+        <NavBar tab={tab} setTab={go} onFab={() => setOverlay({ type: 'action' })}
+          me={me} onProfileOpen={() => setOverlay({ type: 'profile' })}
+          stories={stories} activeStoryId={activeStoryId}
+          onStorySwitcher={() => setStorySwitcherOpen(true)}
+          unreadCount={unreadCount} />
+      )}
     </div>
   )
 }

@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Icon } from '../components/ui/Icon'
 import { Avatar } from '../components/ui/Avatar'
+import { PresenceDot } from '../components/ui/PresenceDot'
 import type { MessageType, PersonDisplay } from '../lib/supabase'
 
 function fmtTime(iso: string): string {
@@ -17,9 +18,7 @@ function fmtTime(iso: string): string {
 
 function shouldShowDate(msgs: MessageType[], idx: number): boolean {
   if (idx === 0) return true
-  const prev = new Date(msgs[idx - 1].created_at)
-  const curr = new Date(msgs[idx].created_at)
-  return prev.toDateString() !== curr.toDateString()
+  return new Date(msgs[idx - 1].created_at).toDateString() !== new Date(msgs[idx].created_at).toDateString()
 }
 
 function fmtDateLabel(iso: string): string {
@@ -34,9 +33,11 @@ function fmtDateLabel(iso: string): string {
 interface Props {
   me: PersonDisplay
   partner: PersonDisplay | null
+  storyName?: string
+  onBack: () => void
 }
 
-export default function Chat({ me, partner }: Props) {
+export default function Chat({ me, partner, storyName, onBack }: Props) {
   const { activeStoryId, user } = useAuth()
   const [messages, setMessages] = useState<MessageType[]>([])
   const [text, setText] = useState('')
@@ -49,11 +50,9 @@ export default function Chat({ me, partner }: Props) {
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior }), 50)
   }, [])
 
-  // Load + subscribe
   useEffect(() => {
     if (!activeStoryId) return
     setLoading(true)
-
     supabase.from('messages').select('*')
       .eq('story_id', activeStoryId)
       .order('created_at', { ascending: true })
@@ -75,7 +74,6 @@ export default function Chat({ me, partner }: Props) {
     return () => { supabase.removeChannel(channel) }
   }, [activeStoryId, scrollToBottom])
 
-  // Mark incoming messages as read
   useEffect(() => {
     if (!activeStoryId || !user || messages.length === 0) return
     const unread = messages.filter(m => m.sender_id !== user.id && !m.read_at)
@@ -93,9 +91,7 @@ export default function Chat({ me, partner }: Props) {
     setSending(true)
     setText('')
     const { error } = await supabase.from('messages').insert({
-      story_id: activeStoryId,
-      sender_id: user.id,
-      text: trimmed,
+      story_id: activeStoryId, sender_id: user.id, text: trimmed,
     })
     if (error) setText(trimmed)
     setSending(false)
@@ -106,80 +102,129 @@ export default function Chat({ me, partner }: Props) {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() }
   }
 
-  if (loading) {
-    return (
-      <div style={{ minHeight: '50vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: 32, height: 32, borderRadius: '50%', border: '3px solid var(--orange)',
-          borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite' }} />
-      </div>
-    )
-  }
+  const title = partner?.name || storyName || 'Chat'
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', background: 'var(--paper)' }}>
-      {/* Header */}
-      <div style={{ padding: '52px 22px 14px', flexShrink: 0, borderBottom: '1px solid var(--line)' }}>
-        <div className="eyebrow" style={{ marginBottom: 4 }}>Su espacio</div>
-        <h1 className="display" style={{ fontSize: 28, margin: 0 }}>Chat</h1>
+    <div style={{
+      display: 'flex', flexDirection: 'column',
+      height: '100dvh',
+      background: 'var(--paper)',
+    }}>
+      {/* ── Header ── */}
+      <div style={{
+        flexShrink: 0,
+        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 10px)',
+        padding: 'calc(env(safe-area-inset-top, 0px) + 10px) 14px 12px',
+        background: 'var(--card)',
+        borderBottom: '1px solid var(--line)',
+        display: 'flex', alignItems: 'center', gap: 10,
+        boxShadow: 'var(--sh-sm)',
+      }}>
+        <button onClick={onBack} style={{
+          width: 38, height: 38, borderRadius: '50%', border: 'none',
+          background: 'var(--card-2)', cursor: 'pointer', color: 'var(--ink)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+        }}>
+          <Icon name="chevL" size={20} />
+        </button>
+
+        <div style={{ position: 'relative', flexShrink: 0 }}>
+          <Avatar person={partner ?? { name: title, initial: title[0]?.toUpperCase() || '?', color: 'var(--orange)' }} size={36} />
+          <span style={{ position: 'absolute', bottom: -1, right: -1 }}>
+            <PresenceDot size={10} />
+          </span>
+        </div>
+
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{
+            fontWeight: 700, fontSize: 15.5, lineHeight: 1.1,
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          }}>{title}</div>
+          <div style={{ fontSize: 11.5, color: 'var(--orange)', fontWeight: 600, marginTop: 1 }}>
+            En línea
+          </div>
+        </div>
       </div>
 
-      {/* Messages */}
-      <div className="ot-scroll" style={{ flex: 1, overflowY: 'auto', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {messages.length === 0 && (
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, color: 'var(--ink-faint)', paddingBottom: 60 }}>
-            <Icon name="chat" size={44} style={{ opacity: 0.25 }} />
-            <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--ink-soft)' }}>Empiecen a escribir</div>
-            <div style={{ fontSize: 13.5, textAlign: 'center', maxWidth: 220 }}>Este es su espacio privado. Solo ustedes pueden leer esto.</div>
+      {/* ── Messages ── */}
+      <div className="ot-scroll" style={{
+        flex: 1, overflowY: 'auto',
+        padding: '14px 14px 8px',
+        display: 'flex', flexDirection: 'column', gap: 2,
+      }}>
+        {loading && (
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: 28, height: 28, borderRadius: '50%', border: '3px solid var(--orange)',
+              borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite' }} />
+          </div>
+        )}
+
+        {!loading && messages.length === 0 && (
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
+            justifyContent: 'center', gap: 10, color: 'var(--ink-faint)', paddingBottom: 40 }}>
+            <div style={{ width: 64, height: 64, borderRadius: 22, background: 'var(--orange-tint)',
+              color: 'var(--orange)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Icon name="chat" size={30} />
+            </div>
+            <div style={{ fontSize: 15.5, fontWeight: 700, color: 'var(--ink-soft)', marginTop: 4 }}>
+              Empiecen a escribir
+            </div>
+            <div style={{ fontSize: 13, textAlign: 'center', maxWidth: 200, lineHeight: 1.5 }}>
+              Este es su espacio privado. Solo ustedes pueden leer esto.
+            </div>
           </div>
         )}
 
         {messages.map((msg, idx) => {
           const isMe = msg.sender_id === user?.id
           const showDate = shouldShowDate(messages, idx)
-          const person = isMe ? me : (partner ?? { name: 'Compañero', initial: 'C', color: '#F17720' })
-
-          // Group consecutive messages from same sender
+          const person = isMe ? me : (partner ?? { name: 'Compañero', initial: 'C', color: 'var(--orange)' })
           const prevSame = idx > 0 && messages[idx - 1].sender_id === msg.sender_id && !shouldShowDate(messages, idx)
-          const nextSame = idx < messages.length - 1 && messages[idx + 1].sender_id === msg.sender_id
+          const nextSame = idx < messages.length - 1 && messages[idx + 1].sender_id === msg.sender_id && !shouldShowDate(messages, idx + 1)
+
+          // Border-radius: tail corner (bottom-right for me, bottom-left for them) rounds down when last in group
+          const br = isMe
+            ? (nextSame ? '18px 6px 6px 18px' : '18px 6px 18px 18px')
+            : (nextSame ? '6px 18px 18px 6px' : '6px 18px 18px 18px')
 
           return (
             <div key={msg.id}>
               {showDate && (
-                <div style={{ textAlign: 'center', margin: '12px 0 8px', fontSize: 11.5, fontWeight: 600,
-                  color: 'var(--ink-faint)', fontFamily: 'var(--font-ui)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                <div style={{ textAlign: 'center', margin: '14px 0 10px', fontSize: 11, fontWeight: 700,
+                  color: 'var(--ink-faint)', fontFamily: 'var(--font-ui)',
+                  textTransform: 'uppercase', letterSpacing: '0.07em' }}>
                   {fmtDateLabel(msg.created_at)}
                 </div>
               )}
-              <div style={{ display: 'flex', flexDirection: isMe ? 'row-reverse' : 'row',
-                alignItems: 'flex-end', gap: 8, marginBottom: nextSame ? 2 : 10 }}>
-                {/* Avatar — only on last message in a group */}
-                <div style={{ width: 28, flexShrink: 0, visibility: (!nextSame) ? 'visible' : 'hidden' }}>
-                  {!isMe && <Avatar person={person} size={28} />}
+              <div style={{
+                display: 'flex', flexDirection: isMe ? 'row-reverse' : 'row',
+                alignItems: 'flex-end', gap: 7,
+                marginBottom: nextSame ? 2 : 10,
+                marginTop: !prevSame && !showDate && idx > 0 ? 4 : 0,
+              }}>
+                {/* Avatar placeholder — keeps alignment even when hidden */}
+                <div style={{ width: 30, flexShrink: 0, alignSelf: 'flex-end' }}>
+                  {!isMe && !nextSame && <Avatar person={person} size={30} />}
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: isMe ? 'flex-end' : 'flex-start', maxWidth: '72%' }}>
-                  {/* Bubble */}
+                <div style={{ display: 'flex', flexDirection: 'column',
+                  alignItems: isMe ? 'flex-end' : 'flex-start', maxWidth: '74%' }}>
                   <div style={{
                     padding: '10px 14px',
-                    borderRadius: isMe
-                      ? (prevSame ? '18px 6px 6px 18px' : '18px 18px 6px 18px')
-                      : (prevSame ? '6px 18px 18px 6px' : '18px 18px 18px 6px'),
-                    ...(nextSame ? {} : { borderRadius: isMe ? '18px 18px 6px 18px' : '18px 18px 18px 6px' }),
+                    borderRadius: br,
                     background: isMe ? 'var(--orange)' : 'var(--card)',
                     color: isMe ? '#fff' : 'var(--ink)',
                     boxShadow: isMe ? 'none' : 'var(--sh-sm)',
-                    fontSize: 15,
-                    lineHeight: 1.45,
-                    wordBreak: 'break-word',
-                    whiteSpace: 'pre-wrap',
+                    fontSize: 15, lineHeight: 1.45,
+                    wordBreak: 'break-word', whiteSpace: 'pre-wrap',
                   }}>
                     {msg.text}
                   </div>
-                  {/* Time + read receipt — only last in group */}
                   {!nextSame && (
-                    <div style={{ fontSize: 10.5, color: 'var(--ink-faint)', marginTop: 3, display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <div style={{ fontSize: 10.5, color: 'var(--ink-faint)', marginTop: 3,
+                      display: 'flex', alignItems: 'center', gap: 4 }}>
                       {fmtTime(msg.created_at)}
-                      {isMe && msg.read_at && <Icon name="check" size={11} style={{ color: 'var(--blue)' }} />}
+                      {isMe && msg.read_at && <Icon name="check" size={11} style={{ color: 'var(--orange)' }} />}
                     </div>
                   )}
                 </div>
@@ -190,18 +235,29 @@ export default function Chat({ me, partner }: Props) {
         <div ref={bottomRef} />
       </div>
 
-      {/* Input */}
-      <div style={{ flexShrink: 0, padding: '10px 12px 14px', borderTop: '1px solid var(--line)',
-        background: 'var(--card)', display: 'flex', alignItems: 'flex-end', gap: 10, zIndex: 2 }}>
+      {/* ── Input ── */}
+      <div style={{
+        flexShrink: 0,
+        padding: '10px 12px',
+        paddingBottom: 'calc(10px + env(safe-area-inset-bottom, 0px))',
+        borderTop: '1px solid var(--line)',
+        background: 'var(--card)',
+        display: 'flex', alignItems: 'flex-end', gap: 10,
+      }}>
         <textarea
           ref={inputRef}
           value={text}
-          onChange={e => setText(e.target.value)}
+          onChange={e => {
+            setText(e.target.value)
+            // Auto-grow
+            e.target.style.height = 'auto'
+            e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'
+          }}
           onKeyDown={handleKey}
           placeholder="Escribe algo…"
           rows={1}
           style={{
-            flex: 1, border: '1.5px solid var(--line)', borderRadius: 20, padding: '10px 16px',
+            flex: 1, border: '1.5px solid var(--line)', borderRadius: 22, padding: '10px 16px',
             fontFamily: 'var(--font-ui)', fontSize: 15, resize: 'none', outline: 'none',
             background: 'var(--paper)', color: 'var(--ink)', lineHeight: 1.4,
             maxHeight: 120, overflowY: 'auto', transition: 'border-color .15s',
@@ -216,13 +272,12 @@ export default function Chat({ me, partner }: Props) {
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           cursor: text.trim() ? 'pointer' : 'default',
           transition: 'all .18s',
-          boxShadow: text.trim() ? '0 3px 10px color-mix(in srgb, var(--orange) 40%, transparent)' : 'none',
+          boxShadow: text.trim() ? '0 3px 12px color-mix(in srgb, var(--orange) 45%, transparent)' : 'none',
+          transform: text.trim() ? 'scale(1)' : 'scale(0.92)',
         }}>
           <Icon name="send" size={18} />
         </button>
       </div>
-      {/* Spacer so messages aren't hidden behind the floating NavBar */}
-      <div style={{ flexShrink: 0, height: 'calc(90px + env(safe-area-inset-bottom, 0px))', background: 'var(--paper)' }} />
     </div>
   )
 }
