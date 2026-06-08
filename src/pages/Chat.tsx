@@ -116,8 +116,7 @@ export default function Chat({ me, partner }: Props) {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', background: 'var(--paper)',
-      paddingBottom: 'calc(100px + env(safe-area-inset-bottom, 0px))' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', background: 'var(--paper)' }}>
       {/* Header */}
       <div style={{ padding: '52px 22px 14px', flexShrink: 0, borderBottom: '1px solid var(--line)' }}>
         <div className="eyebrow" style={{ marginBottom: 4 }}>Su espacio</div>
@@ -193,7 +192,7 @@ export default function Chat({ me, partner }: Props) {
 
       {/* Input */}
       <div style={{ flexShrink: 0, padding: '10px 12px 14px', borderTop: '1px solid var(--line)',
-        background: 'var(--card)', display: 'flex', alignItems: 'flex-end', gap: 10 }}>
+        background: 'var(--card)', display: 'flex', alignItems: 'flex-end', gap: 10, zIndex: 2 }}>
         <textarea
           ref={inputRef}
           value={text}
@@ -216,11 +215,14 @@ export default function Chat({ me, partner }: Props) {
           color: text.trim() ? '#fff' : 'var(--ink-faint)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           cursor: text.trim() ? 'pointer' : 'default',
-          transition: 'all .18s', boxShadow: text.trim() ? '0 3px 10px rgba(241,119,32,0.35)' : 'none',
+          transition: 'all .18s',
+          boxShadow: text.trim() ? '0 3px 10px color-mix(in srgb, var(--orange) 40%, transparent)' : 'none',
         }}>
           <Icon name="send" size={18} />
         </button>
       </div>
+      {/* Spacer so messages aren't hidden behind the floating NavBar */}
+      <div style={{ flexShrink: 0, height: 'calc(90px + env(safe-area-inset-bottom, 0px))', background: 'var(--paper)' }} />
     </div>
   )
 }

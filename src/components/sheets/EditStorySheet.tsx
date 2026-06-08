@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { BottomSheet } from '../ui/BottomSheet'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
+import { compressToWebP } from '../../lib/imageUtils'
 import { Icon } from '../ui/Icon'
 import type { StoryType } from '../../lib/supabase'
 
@@ -22,21 +23,50 @@ export const EditStorySheet: React.FC<Props> = ({ story, onClose, onUpdated }) =
   const { refreshStories } = useAuth()
   const [name, setName] = useState(story.name)
   const [category, setCategory] = useState<StoryType['category']>(story.category)
+  const [coverPreview, setCoverPreview] = useState<string | null>(story.cover_url)
+  const [coverFile, setCoverFile] = useState<File | null>(null)
+  const [uploadingCover, setUploadingCover] = useState(false)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
-  const hasChanges = name.trim() !== story.name || category !== story.category
+  const hasChanges = name.trim() !== story.name || category !== story.category || coverFile !== null
   const ok = name.trim().length > 0 && hasChanges
+
+  const handleCoverFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0]
+    if (!f) return
+    setCoverFile(f)
+    setCoverPreview(URL.createObjectURL(f))
+  }
 
   const save = async () => {
     if (!ok) return
     setSaving(true)
-    const { error } = await supabase.from('stories')
-      .update({ name: name.trim(), category })
-      .eq('id', story.id)
+    try {
+      let coverUrl = story.cover_url
+      if (coverFile) {
+        setUploadingCover(true)
+        const webp = await compressToWebP(coverFile, 1200, 0.82)
+        const path = `covers/${story.id}/${Date.now()}.webp`
+        const { error: upErr } = await supabase.storage.from('Fotos').upload(path, webp, {
+          contentType: 'image/webp', upsert: true,
+        })
+        setUploadingCover(false)
+        if (upErr) throw upErr
+        const { data: { publicUrl } } = supabase.storage.from('Fotos').getPublicUrl(path)
+        coverUrl = publicUrl
+      }
+      const { error } = await supabase.from('stories')
+        .update({ name: name.trim(), category, cover_url: coverUrl })
+        .eq('id', story.id)
+      if (error) throw error
+    } catch (e: any) {
+      alert(e.message)
+      setSaving(false)
+      return
+    }
     setSaving(false)
-    if (error) { alert(error.message); return }
     await refreshStories()
     onUpdated()
     onClose()
@@ -56,7 +86,38 @@ export const EditStorySheet: React.FC<Props> = ({ story, onClose, onUpdated }) =
     <BottomSheet onClose={onClose}>
       <div style={{ padding: '4px 0 16px' }}>
         <div className="eyebrow" style={{ color: 'var(--ink-faint)', marginBottom: 6 }}>· Editar Historia ·</div>
-        <h2 className="display" style={{ fontSize: 26, margin: '0 0 24px' }}>{story.name}</h2>
+        <h2 className="display" style={{ fontSize: 26, margin: '0 0 20px' }}>{story.name}</h2>
+
+        {/* Cover image */}
+        <input id="story-cover" type="file" accept="image/*" style={{ display: 'none' }} onChange={handleCoverFile} />
+        <div onClick={() => document.getElementById('story-cover')?.click()}
+          style={{
+            height: 140, borderRadius: 18, overflow: 'hidden', cursor: 'pointer',
+            marginBottom: 20, position: 'relative',
+            background: coverPreview ? '#111' : 'var(--orange-tint)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+          {coverPreview ? (
+            <img src={coverPreview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.85 }} />
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, color: 'var(--orange)' }}>
+              <Icon name="camera" size={28} />
+              <span style={{ fontSize: 12, fontWeight: 700, fontFamily: 'var(--font-ui)', color: 'var(--orange-deep)' }}>
+                Añadir portada
+              </span>
+            </div>
+          )}
+          <div style={{
+            position: 'absolute', bottom: 10, right: 10,
+            background: 'rgba(0,0,0,0.55)', color: '#fff',
+            borderRadius: 8, padding: '5px 9px',
+            fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-ui)',
+            display: 'flex', alignItems: 'center', gap: 5,
+            backdropFilter: 'blur(4px)',
+          }}>
+            <Icon name="camera" size={12} /> {coverPreview ? 'Cambiar' : 'Subir foto'}
+          </div>
+        </div>
 
         <label className="field-label">Nombre</label>
         <input className="field" value={name} onChange={e => setName(e.target.value)}
@@ -101,7 +162,8 @@ export const EditStorySheet: React.FC<Props> = ({ story, onClose, onUpdated }) =
 
         <button className="btn btn-orange btn-block" style={{ marginTop: 24 }}
           disabled={!ok || saving} onClick={save}>
-          <Icon name="check" size={18} /> {saving ? 'Guardando…' : 'Guardar cambios'}
+          <Icon name="check" size={18} />
+          {uploadingCover ? 'Subiendo imagen…' : saving ? 'Guardando…' : 'Guardar cambios'}
         </button>
 
         {/* Leave story */}

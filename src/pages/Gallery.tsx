@@ -71,9 +71,9 @@ function AlbumCard({ album, coverUrl, count, onClick }: {
             onLoad={e => { (e.target as HTMLImageElement).style.opacity = '1' }}
             style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0, transition: 'opacity 0.4s' }} />
         ) : (
-          <div className="ph blue" style={{ width: '100%', height: '100%',
+          <div className="ph" style={{ width: '100%', height: '100%',
             display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Icon name="image" size={30} style={{ color: 'var(--blue)', opacity: 0.5 }} />
+            <Icon name="image" size={30} style={{ color: 'var(--orange)', opacity: 0.5 }} />
           </div>
         )}
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0,
@@ -285,8 +285,8 @@ export default function Gallery({ memories, setMemories, onImageClick, me }: {
 
           {albums.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '40px 20px' }}>
-              <div style={{ width: 72, height: 72, borderRadius: 22, background: 'var(--blue-tint)',
-                color: 'var(--blue)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+              <div style={{ width: 72, height: 72, borderRadius: 22, background: 'var(--orange-tint)',
+                color: 'var(--orange)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                 <Icon name="image" size={34} />
               </div>
               <div className="display" style={{ fontSize: 20, marginBottom: 6 }}>Sin álbumes aún</div>
@@ -322,8 +322,8 @@ export default function Gallery({ memories, setMemories, onImageClick, me }: {
           </div>
         ) : (
           <div style={{ textAlign: 'center', padding: '60px 30px' }}>
-            <div style={{ width: 80, height: 80, borderRadius: 24, background: 'var(--blue-tint)',
-              color: 'var(--blue)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
+            <div style={{ width: 80, height: 80, borderRadius: 24, background: 'var(--orange-tint)',
+              color: 'var(--orange)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
               <Icon name={q ? 'search' : 'image'} size={36} />
             </div>
             <div className="display" style={{ fontSize: 22, marginBottom: 6 }}>

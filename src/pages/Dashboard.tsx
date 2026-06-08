@@ -17,12 +17,13 @@ function daysTogether(since: string) {
 }
 
 
-export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpen, me, partner }: {
+export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpen, onNewPlan, me, partner }: {
   plans: PlanType[]
   go: (t: Tab) => void
   onBell: () => void
   onPlanClick: (p: PlanType) => void
   onProfileOpen?: () => void
+  onNewPlan?: () => void
   me: PersonDisplay
   partner: PersonDisplay | null
 }) {
@@ -116,7 +117,39 @@ export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpe
           <div className="eyebrow" style={{ marginBottom: 12, color: 'var(--orange-deep)' }}>· Su próximo momento ·</div>
           <NextHero plan={next} no={chapterNo(next.id)} onClick={() => onPlanClick(next)} />
         </div>
-      ) : !loading && allPlans.length === 0 && <EmptyDashboard />}
+      ) : !loading && allPlans.length === 0 && <EmptyDashboard onNewPlan={onNewPlan} />}
+
+      {/* Upcoming plans beyond the hero */}
+      {upcoming.length > 1 && (
+        <div style={{ marginTop: 22 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+            <span className="eyebrow">Lo que viene</span>
+            <span style={{ flex: 1, height: 1, background: 'var(--line)' }} />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {upcoming.slice(1).map(p => (
+              <button key={p.id} onClick={() => onPlanClick(p)} className="ot-card" style={{
+                border: 'none', cursor: 'pointer', padding: '13px 15px', textAlign: 'left',
+                display: 'flex', alignItems: 'center', gap: 12,
+              }}>
+                <div style={{ width: 38, height: 38, borderRadius: 11, background: 'var(--orange-tint)',
+                  color: 'var(--orange-deep)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Icon name="clock" size={17} />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 700, fontSize: 14.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {p.title}
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--ink-faint)', marginTop: 2 }}>
+                    {fmtDateShort(p.plan_date)}
+                  </div>
+                </div>
+                <Icon name="chevR" size={16} style={{ color: 'var(--ink-faint)', flexShrink: 0 }} />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Timeline of lived chapters */}
       {past.length > 0 && (
@@ -162,9 +195,9 @@ export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpe
             flex: 1, border: 'none', cursor: 'pointer', padding: '18px 16px',
             display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8,
           }}>
-            <div style={{ width: 40, height: 40, borderRadius: 12, background: 'var(--blue-tint)',
-              color: 'var(--blue-deep)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Icon name="camera" size={20} />
+            <div style={{ width: 40, height: 40, borderRadius: 12, background: 'var(--orange-tint)',
+              color: 'var(--orange-deep)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Icon name="image" size={20} />
             </div>
             <div>
               <div style={{ fontWeight: 700, fontSize: 15 }}>Recuerdos</div>
@@ -177,7 +210,7 @@ export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpe
           }}>
             <div style={{ width: 40, height: 40, borderRadius: 12, background: 'var(--orange-tint)',
               color: 'var(--orange-deep)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Icon name="feather" size={20} />
+              <Icon name="calendar" size={20} />
             </div>
             <div>
               <div style={{ fontWeight: 700, fontSize: 15 }}>Momentos</div>
@@ -259,7 +292,7 @@ function TimelineRow({ plan, no, onClick, index }: { plan: PlanType; no: number;
   )
 }
 
-function EmptyDashboard() {
+function EmptyDashboard({ onNewPlan }: { onNewPlan?: () => void }) {
   return (
     <div className="anim-up" style={{
       display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '40px 30px',
@@ -271,7 +304,7 @@ function EmptyDashboard() {
           background: 'var(--card)', borderRadius: 18, boxShadow: 'var(--sh-sm)', border: '1px solid var(--line)' }} />
         <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
           background: 'var(--orange-tint)', borderRadius: 18, boxShadow: 'var(--sh-md)',
-          animation: 'floatY 4s ease-in-out infinite' }}>
+          animation: 'floatY 4s ease-in-out infinite', color: 'var(--orange)' }}>
           <Icon name="heartFill" size={44} />
         </div>
       </div>
@@ -279,7 +312,7 @@ function EmptyDashboard() {
       <div style={{ fontSize: 15, color: 'var(--ink-soft)', lineHeight: 1.5, maxWidth: 270 }}>
         Su historia empieza con un plan. ¿Cuál será el primero?
       </div>
-      <button className="btn btn-orange" style={{ marginTop: 22 }}>
+      <button className="btn btn-orange" style={{ marginTop: 22 }} onClick={onNewPlan}>
         Crear primer momento
       </button>
     </div>

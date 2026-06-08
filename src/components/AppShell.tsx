@@ -29,6 +29,14 @@ const CAT_COLOR: Record<string, string> = {
   otro:    'var(--ink-faint)',
 }
 
+// Stable colors that never get overridden by the accent-switching effect
+const CAT_COLOR_STABLE: Record<string, string> = {
+  pareja:  'var(--cat-pareja)',
+  amigos:  'var(--cat-amigos)',
+  familia: 'var(--cat-familia)',
+  otro:    'var(--cat-otro)',
+}
+
 export type Tab = 'home' | 'calendar' | 'gallery' | 'finance' | 'chat'
 type Overlay = { type: 'plan'; data: any } | { type: 'action' } | { type: 'newplan' } | { type: 'money' } | { type: 'memory' } | { type: 'profile' } | { type: 'newstory' } | { type: 'editstory'; story: StoryType } | null
 
@@ -263,6 +271,7 @@ export default function AppShell() {
     home: <Dashboard plans={plans} go={go}
             onBell={() => setNotifsVisible(true)} onPlanClick={openPlan}
             onProfileOpen={() => setOverlay({ type: 'profile' })}
+            onNewPlan={() => setOverlay({ type: 'newplan' })}
             me={me} partner={partnerDisplay} />,
     calendar: <Calendar onOpenPlan={openPlan} />,
     gallery: <Gallery memories={memories} setMemories={setMemories}
@@ -439,7 +448,7 @@ function StorySwitcherSheet({ stories, activeStoryId, onSelect, onNewStory, onEd
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
           {stories.map(s => {
-            const color = CAT_COLOR[s.category] || 'var(--ink-faint)'
+            const color = CAT_COLOR_STABLE[s.category] || 'var(--cat-otro)'
             const active = s.id === activeStoryId
             return (
               <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

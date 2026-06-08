@@ -53,6 +53,12 @@
   --r-md: 22px;
   --r-sm: 14px;
 
+  /* Stable per-category colors — never overridden by accent switching */
+  --cat-pareja:  #F17720;
+  --cat-amigos:  #0474BA;
+  --cat-familia: #2E7D5B;
+  --cat-otro:    #9CA3AF;
+
   /* Tailwind compat aliases */
   --color-primary:           var(--orange);
   --color-primary-container: var(--orange-tint);
@@ -127,7 +133,7 @@ body {
 }
 .btn:active { transform: scale(0.965); }
 .btn-primary { background: var(--ink); color: var(--paper); box-shadow: var(--sh-md); }
-.btn-orange  { background: var(--orange); color: #fff; box-shadow: 0 4px 14px rgba(241,119,32,0.32); }
+.btn-orange  { background: var(--orange); color: #fff; box-shadow: 0 4px 14px color-mix(in srgb, var(--orange) 40%, transparent); }
 .btn-blue    { background: var(--blue); color: #fff; box-shadow: 0 4px 14px rgba(4,116,186,0.30); }
 .btn-ghost   { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--line); }
 .btn-soft    { background: var(--card); color: var(--ink); box-shadow: var(--sh-sm); }
@@ -314,6 +320,12 @@ body {
     --hero-bg:   #2E2720;
     --hero-text: #F4EEE4;
     --hero-soft: rgba(244,238,228,0.55);
+
+    /* Stable per-category colors — dark mode variants */
+    --cat-pareja:  #F98130;
+    --cat-amigos:  #3B9EDF;
+    --cat-familia: #4DB880;
+    --cat-otro:    #9CA3AF;
   }
 }
 
@@ -407,8 +419,10 @@ body {
     box-shadow: var(--sh-lg);
   }
 
-  .hero-card {
-    background: var(--hero-bg);
-    color: var(--hero-text);
-  }
+}
+
+/* hero-card must live outside @layer so it beats the unlayered .card rule */
+.hero-card {
+  background: var(--hero-bg) !important;
+  color: var(--hero-text);
 }
