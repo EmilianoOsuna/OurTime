@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<title>OurTime — Playwright Review 2026-06-08</title>
+<style>
+  body { font-family: -apple-system, sans-serif; max-width: 1100px; margin: 0 auto; padding: 24px; background: #f5f0e8; color: #211D18; }
+  h1 { font-size: 28px; margin-bottom: 4px; }
+  .meta { color: #888; font-size: 13px; margin-bottom: 32px; }
+  h2 { font-size: 18px; margin: 32px 0 12px; border-bottom: 2px solid #e0d8cc; padding-bottom: 6px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; }
+  .card { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,.1); }
+  .card img { width: 100%; display: block; }
+  .card p { font-size: 11px; color: #666; padding: 8px 10px; margin: 0; }
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .pair .card img { border-radius: 0; }
+  .issue { background: #fff3cd; border-left: 4px solid #f0a000; padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 8px 0; font-size: 14px; }
+  .ok    { background: #d4edda; border-left: 4px solid #28a745; padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 8px 0; font-size: 14px; }
+  video  { width: 100%; max-width: 390px; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,.15); display: block; }
+  .videos { display: flex; gap: 24px; flex-wrap: wrap; }
+  .vwrap label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .05em; }
+</style>
+</head>
+<body>
+<h1>OurTime — Playwright Review</h1>
+<div class="meta">Generado el 2026-06-08 · Rama: main · Entorno: dev (localhost:5173)</div>
+
+<h2>⚠️ Inconsistencias encontradas</h2>
+
+<div class="issue">
+  <strong>Auth welcome — "FOTO DE PORTADA" visible como etiqueta flotante</strong><br>
+  En ambos modos (light/dark), aparece el texto "FOTO DE PORTADA" en la esquina superior derecha de la pantalla de bienvenida. Es la clase <code>.ph-label</code> de Auth.tsx (línea 108). Está pensada como indicador del área de cover photo pero resulta confusa para usuarios nuevos — parece un botón o badge sin función aparente.
+</div>
+
+<div class="issue">
+  <strong>Register — Avatar "?" con color azul primario</strong><br>
+  El avatar por defecto en el form de registro muestra un círculo azul (#0474BA) con "?". Este color no casa con la paleta cálida del design system (debería ser var(--card-2) o un tono naranja/neutro).
+</div>
+
+<div class="issue">
+  <strong>Dark mode — Botón "Continuar" / "Entrar" en estado deshabilitado casi invisible</strong><br>
+  En dark mode, el botón primario deshabilitado tiene un fondo muy oscuro que apenas contrasta con el fondo de la página. Falta añadir <code>opacity: 0.5</code> o un color de fondo explícito para el estado disabled en dark mode.
+</div>
+
+<div class="ok">
+  <strong>Sin errores de consola JS en ninguna pantalla</strong> — auth, register y login pasaron sin errores.
+</div>
+
+<div class="ok">
+  <strong>Dark mode</strong> — La paleta cálida oscura se aplica correctamente en todas las pantallas analizadas. Tipografía, colores y layout son consistentes.
+</div>
+
+<div class="ok">
+  <strong>Flujo de navegación Auth → Register → Login</strong> — Funciona sin errores. Los campos, placeholders y labels son correctos.
+</div>
+
+<h2>📹 Replays de video</h2>
+<p style="font-size:13px;color:#666;">Grabaciones del navegador durante la revisión. Los videos cubren: welcome → register → volver → login.</p>
+<div class="videos">
+  <div class="vwrap">
+    <label>☀️ Light mode</label>
+    <video src="review-light.webm" controls></video>
+  </div>
+  <div class="vwrap">
+    <label>🌙 Dark mode</label>
+    <video src="review-dark.webm" controls></video>
+  </div>
+</div>
+
+<h2>📸 Screenshots — Light mode</h2>
+<div class="grid">
+  <div class="card"><img src="light-01-welcome.png"><p>01 · Welcome</p></div>
+  <div class="card"><img src="light-02-register.png"><p>02 · Register form</p></div>
+  <div class="card"><img src="light-03-register-name.png"><p>03 · Register (nombre)</p></div>
+  <div class="card"><img src="light-04-back-welcome.png"><p>04 · Back a Welcome</p></div>
+  <div class="card"><img src="light-05-login.png"><p>05 · Login</p></div>
+  <div class="card"><img src="light-06-login-filled.png"><p>06 · Login (filled)</p></div>
+</div>
+
+<h2>📸 Screenshots — Dark mode</h2>
+<div class="grid">
+  <div class="card"><img src="dark-01-welcome.png"><p>01 · Welcome</p></div>
+  <div class="card"><img src="dark-02-register.png"><p>02 · Register form</p></div>
+  <div class="card"><img src="dark-03-register-name.png"><p>03 · Register (nombre)</p></div>
+  <div class="card"><img src="dark-04-back-welcome.png"><p>04 · Back a Welcome</p></div>
+  <div class="card"><img src="dark-05-login.png"><p>05 · Login</p></div>
+  <div class="card"><img src="dark-06-login-filled.png"><p>06 · Login (filled)</p></div>
+</div>
+
+<h2>📝 Nota</h2>
+<p style="font-size:13px;color:#555;">
+  Las pantallas dentro del app (Dashboard, Agenda, Recuerdos, etc.) requieren login activo para ser capturadas.
+  Las mejoras de esta sesión — nombre de la historia en Dashboard, pill del switcher junto a la campana,
+  portadas en StorySwitcher, añadir fotos a álbumes — no pudieron validarse visualmente sin credenciales de prueba.
+  Se recomienda añadir un usuario seed o una sesión de prueba para futuros reviews automatizados.
+</p>
+</body>
+</html>

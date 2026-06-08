@@ -17,13 +17,14 @@ function daysTogether(since: string) {
 }
 
 
-export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpen, onNewPlan, me, partner }: {
+export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpen, onNewPlan, onStorySwitcher, me, partner }: {
   plans: PlanType[]
   go: (t: Tab) => void
   onBell: () => void
   onPlanClick: (p: PlanType) => void
   onProfileOpen?: () => void
   onNewPlan?: () => void
+  onStorySwitcher?: () => void
   me: PersonDisplay
   partner: PersonDisplay | null
 }) {
@@ -76,14 +77,31 @@ export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpe
           <div>
             <div className="eyebrow" style={{ marginBottom: 7 }}>Nuestra Historia</div>
             <h1 className="display" style={{ fontSize: 34, margin: 0, lineHeight: 0.98 }}>
-              {profile?.full_name ? profile.full_name : 'Nuestro espacio'}
+              {activeStory?.name || 'Nuestro espacio'}
             </h1>
           </div>
-          <button onClick={onBell} style={{ border: 'none', background: 'var(--card)', cursor: 'pointer',
-            width: 44, height: 44, borderRadius: '50%', boxShadow: 'var(--sh-sm)', position: 'relative',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--ink)' }}>
-            <Icon name="bell" size={21} />
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {stories.length > 1 && onStorySwitcher && (
+              <button onClick={onStorySwitcher} style={{
+                border: 'none', background: 'var(--card)', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: 6,
+                borderRadius: 999, padding: '8px 12px 8px 9px',
+                boxShadow: 'var(--sh-sm)', flexShrink: 0,
+              }}>
+                <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--orange)', flexShrink: 0 }} />
+                <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink)', fontFamily: 'var(--font-ui)',
+                  maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {activeStory?.name || 'Historia'}
+                </span>
+                <Icon name="chevD" size={12} style={{ color: 'var(--ink-faint)', flexShrink: 0 }} />
+              </button>
+            )}
+            <button onClick={onBell} style={{ border: 'none', background: 'var(--card)', cursor: 'pointer',
+              width: 44, height: 44, borderRadius: '50%', boxShadow: 'var(--sh-sm)', position: 'relative',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--ink)', flexShrink: 0 }}>
+              <Icon name="bell" size={21} />
+            </button>
+          </div>
         </div>
 
         {/* Presence card — only for pareja stories */}

@@ -118,6 +118,9 @@ export default function Gallery({ memories, setMemories, onImageClick, me }: {
   const [savingAlbum, setSavingAlbum] = useState(false)
   const [q, setQ] = useState('')
   const [searchOpen, setSearchOpen] = useState(false)
+  const [pickerOpen, setPickerOpen] = useState(false)
+  const [pickerSelected, setPickerSelected] = useState<Set<string>>(new Set())
+  const [assigningPhotos, setAssigningPhotos] = useState(false)
 
   useEffect(() => {
     if (!activeStoryId) return
@@ -147,6 +150,27 @@ export default function Gallery({ memories, setMemories, onImageClick, me }: {
     if (activeAlbumId === albumId) setActiveAlbumId(null)
   }
 
+  const togglePickerSelection = (id: string) => {
+    setPickerSelected(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
+
+  const assignSelectedToAlbum = async () => {
+    if (!activeAlbumId || pickerSelected.size === 0) return
+    setAssigningPhotos(true)
+    try {
+      const ids = Array.from(pickerSelected)
+      await supabase.from('memories').update({ album_id: activeAlbumId }).in('id', ids)
+      setMemories(memories.map(m => ids.includes(m.id) ? { ...m, album_id: activeAlbumId } : m))
+      setPickerSelected(new Set())
+      setPickerOpen(false)
+    } catch (e: any) { alert(e.message) }
+    finally { setAssigningPhotos(false) }
+  }
+
   const getCover = (albumId: string) =>
     memories.find(m => m.album_id === albumId)?.image_url ?? null
 
@@ -171,6 +195,8 @@ export default function Gallery({ memories, setMemories, onImageClick, me }: {
   if (activeAlbumId !== null) {
     const album = albums.find(a => a.id === activeAlbumId)
     const cols = makeCols(albumMemories)
+    const availableForPicker = memories.filter(m => m.album_id !== activeAlbumId)
+    const pickerCols = makeCols(availableForPicker)
     return (
       <div className="ot-scroll page-enter" style={{ paddingBottom: 130 }}>
         <div style={{ padding: '8px 22px 0' }}>
@@ -188,6 +214,12 @@ export default function Gallery({ memories, setMemories, onImageClick, me }: {
                 {album?.name ?? 'Álbum'}
               </h1>
             </div>
+            <button onClick={() => { setPickerSelected(new Set()); setPickerOpen(true) }}
+              style={{ border: 'none', background: 'var(--orange-tint)', cursor: 'pointer',
+                width: 38, height: 38, borderRadius: '50%', color: 'var(--orange-deep)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Icon name="plus" size={20} stroke={2.3} />
+            </button>
             <button onClick={() => { if (confirm('¿Eliminar este álbum? Las fotos se conservan.')) deleteAlbum(activeAlbumId) }}
               style={{ border: 'none', background: 'transparent', cursor: 'pointer',
                 color: 'var(--ink-faint)', padding: 4 }}>
@@ -209,7 +241,75 @@ export default function Gallery({ memories, setMemories, onImageClick, me }: {
           <div style={{ textAlign: 'center', padding: '60px 30px', color: 'var(--ink-faint)' }}>
             <Icon name="image" size={40} style={{ opacity: 0.25, marginBottom: 12 }} />
             <div style={{ fontSize: 15, fontWeight: 600 }}>Este álbum está vacío</div>
-            <div style={{ fontSize: 13, marginTop: 6 }}>Asigna fotos a este álbum desde el botón +</div>
+            <div style={{ fontSize: 13, marginTop: 6 }}>
+              Toca <strong>+</strong> para añadir fotos existentes
+            </div>
+          </div>
+        )}
+
+        {/* Photo picker sheet */}
+        {pickerOpen && (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 90, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)',
+              WebkitBackdropFilter: 'blur(4px)', animation: 'fadeIn .2s both' }} onClick={() => setPickerOpen(false)} />
+            <div style={{ position: 'relative', background: 'var(--card)', borderRadius: '24px 24px 0 0',
+              padding: '20px 20px 0', animation: 'sheetUp .38s cubic-bezier(.2,.9,.2,1) both',
+              maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ width: 36, height: 4, borderRadius: 2, background: 'var(--line)', margin: '0 auto 16px', flexShrink: 0 }} />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexShrink: 0 }}>
+                <div>
+                  <div className="eyebrow" style={{ marginBottom: 2 }}>Añadir al álbum</div>
+                  <h2 className="display" style={{ fontSize: 20, margin: 0 }}>
+                    {pickerSelected.size > 0 ? `${pickerSelected.size} seleccionada${pickerSelected.size > 1 ? 's' : ''}` : 'Selecciona fotos'}
+                  </h2>
+                </div>
+                <button onClick={() => setPickerOpen(false)} style={{ border: 'none', background: 'var(--card-2)',
+                  cursor: 'pointer', width: 34, height: 34, borderRadius: '50%',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--ink-faint)', flexShrink: 0 }}>
+                  <Icon name="x" size={17} />
+                </button>
+              </div>
+              {availableForPicker.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--ink-faint)' }}>
+                  <Icon name="image" size={36} style={{ opacity: 0.25, marginBottom: 10 }} />
+                  <div style={{ fontSize: 14 }}>No hay más fotos disponibles</div>
+                </div>
+              ) : (
+                <div style={{ overflowY: 'auto', flex: 1, paddingBottom: 16 }}>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    {pickerCols.map((col, ci) => (
+                      <div key={ci} style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        {col.map(m => (
+                          <button key={m.id} onClick={() => togglePickerSelection(m.id)} style={{
+                            border: 'none', padding: 0, cursor: 'pointer', borderRadius: 12,
+                            overflow: 'hidden', position: 'relative', display: 'block', width: '100%',
+                            outline: pickerSelected.has(m.id) ? '3px solid var(--orange)' : '3px solid transparent',
+                            transition: 'outline .15s',
+                          }}>
+                            <img src={m.image_url} alt="" loading="lazy" style={{
+                              width: '100%', aspectRatio: '1', objectFit: 'cover', display: 'block' }} />
+                            {pickerSelected.has(m.id) && (
+                              <div style={{ position: 'absolute', top: 6, right: 6, width: 22, height: 22,
+                                borderRadius: '50%', background: 'var(--orange)',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <Icon name="check" size={13} style={{ color: '#fff' }} stroke={2.5} />
+                              </div>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div style={{ padding: '12px 0 40px', flexShrink: 0, borderTop: '1px solid var(--line)' }}>
+                <button className="btn btn-primary btn-block" disabled={pickerSelected.size === 0 || assigningPhotos}
+                  onClick={assignSelectedToAlbum}>
+                  <Icon name="check" size={17} />
+                  {assigningPhotos ? 'Añadiendo…' : `Añadir ${pickerSelected.size > 0 ? pickerSelected.size : ''} foto${pickerSelected.size !== 1 ? 's' : ''}`}
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>

@@ -310,6 +310,7 @@ export default function AppShell() {
             onBell={() => setNotifsVisible(true)} onPlanClick={openPlan}
             onProfileOpen={() => setOverlay({ type: 'profile' })}
             onNewPlan={() => setOverlay({ type: 'newplan' })}
+            onStorySwitcher={() => setStorySwitcherOpen(true)}
             me={me} partner={partnerDisplay} />,
     calendar: <Calendar onOpenPlan={openPlan} />,
     gallery: <Gallery memories={memories} setMemories={setMemories}
@@ -364,7 +365,6 @@ export default function AppShell() {
         <NavBar tab={tab} setTab={go} onFab={() => setOverlay({ type: 'action' })}
           me={me} onProfileOpen={() => setOverlay({ type: 'profile' })}
           stories={stories} activeStoryId={activeStoryId}
-          onStorySwitcher={() => setStorySwitcherOpen(true)}
           unreadCount={unreadCount} />
       )}
     </div>
@@ -386,7 +386,7 @@ function Lightbox({ url, onClose }: { url: string; onClose: () => void }) {
   )
 }
 
-function NavBar({ tab, setTab, onFab, me, onProfileOpen, stories, activeStoryId, onStorySwitcher, unreadCount }: {
+function NavBar({ tab, setTab, onFab, me, onProfileOpen, stories, activeStoryId, unreadCount }: {
   tab: Tab
   setTab: (t: Tab) => void
   onFab: () => void
@@ -394,7 +394,6 @@ function NavBar({ tab, setTab, onFab, me, onProfileOpen, stories, activeStoryId,
   onProfileOpen: () => void
   stories: StoryType[]
   activeStoryId: string | null
-  onStorySwitcher: () => void
   unreadCount: number
 }) {
   const activeStory = stories.find(s => s.id === activeStoryId)
@@ -411,22 +410,6 @@ function NavBar({ tab, setTab, onFab, me, onProfileOpen, stories, activeStoryId,
   return (
     <nav style={{ position: 'fixed', bottom: 22, left: 0, right: 0, zIndex: 70,
       display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, pointerEvents: 'none' }}>
-
-      {/* Stories switcher pill — only shown when >1 story */}
-      {stories.length > 1 && (
-        <button onClick={onStorySwitcher} className="ot-glass-nav" style={{
-          pointerEvents: 'auto', cursor: 'pointer',
-          display: 'flex', alignItems: 'center', gap: 7,
-          borderRadius: 999, padding: '6px 14px 6px 8px',
-        }}>
-          <div style={{ width: 20, height: 20, borderRadius: '50%', background: catColor, flexShrink: 0 }} />
-          <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--ink)', fontFamily: 'var(--font-ui)', maxWidth: 120,
-            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {activeStory?.name || 'Historia'}
-          </span>
-          <Icon name="chevD" size={13} style={{ color: 'var(--ink-faint)', flexShrink: 0 }} />
-        </button>
-      )}
 
       <div className="ot-glass-nav" style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: 0,
         borderRadius: 999, padding: '5px 6px' }}>
@@ -500,9 +483,11 @@ function StorySwitcherSheet({ stories, activeStoryId, onSelect, onNewStory, onEd
                   padding: '14px 16px', cursor: 'pointer', textAlign: 'left',
                   display: 'flex', alignItems: 'center', gap: 14, transition: 'all .15s',
                 }}>
-                  <div style={{ width: 38, height: 38, borderRadius: 11, background: color,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Icon name={s.category === 'pareja' ? 'heartFill' : s.category === 'amigos' ? 'users' : s.category === 'familia' ? 'home' : 'tag'} size={18} style={{ color: '#fff' }} />
+                  <div style={{ width: 38, height: 38, borderRadius: 11, flexShrink: 0, overflow: 'hidden',
+                    background: color, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    backgroundImage: s.cover_url ? `url(${s.cover_url})` : undefined,
+                    backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                    {!s.cover_url && <Icon name={s.category === 'pareja' ? 'heartFill' : s.category === 'amigos' ? 'users' : s.category === 'familia' ? 'home' : 'tag'} size={18} style={{ color: '#fff' }} />}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontWeight: 700, fontSize: 15.5, color: 'var(--ink)',

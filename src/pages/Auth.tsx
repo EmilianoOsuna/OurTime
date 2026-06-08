@@ -104,9 +104,7 @@ export default function Auth({ onAuth }: { onAuth: () => void }) {
               padding: '0 30px 40px', position: 'relative' }}>
             <div className="ph" style={{ position: 'absolute', inset: 0, opacity: 0.5,
               maskImage: 'linear-gradient(to bottom, black, transparent 62%)',
-              WebkitMaskImage: 'linear-gradient(to bottom, black, transparent 62%)' }}>
-              <span className="ph-label" style={{ position: 'absolute', top: 90, right: 18 }}>foto de portada</span>
-            </div>
+              WebkitMaskImage: 'linear-gradient(to bottom, black, transparent 62%)' }} />
             <div style={{ flex: 1 }} />
             <div className="anim-up" style={{ position: 'relative' }}>
               <div className="eyebrow" style={{ color: 'var(--orange-deep)', marginBottom: 18 }}>· Bienvenidos a OurTime ·</div>
@@ -155,8 +153,11 @@ export default function Auth({ onAuth }: { onAuth: () => void }) {
 
             {/* Avatar preview */}
             <div style={{ display: 'flex', justifyContent: 'center', margin: '0 0 22px' }}>
-              <div className="avatar" style={{ width: 76, height: 76, background: 'var(--blue)', fontSize: 34,
-                animation: 'pop .5s cubic-bezier(.2,.8,.2,1) both', boxShadow: 'inset 0 0 0 2px rgba(255,255,255,0.55)' }}>
+              <div className="avatar" style={{ width: 76, height: 76, fontSize: 34,
+                background: name.trim() ? 'var(--orange)' : 'var(--card-2)',
+                color: name.trim() ? '#fff' : 'var(--ink-faint)',
+                animation: 'pop .5s cubic-bezier(.2,.8,.2,1) both',
+                boxShadow: 'inset 0 0 0 2px rgba(255,255,255,0.3)' }}>
                 {name.trim() ? name.trim()[0].toUpperCase() : '?'}
               </div>
             </div>

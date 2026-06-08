@@ -7,18 +7,20 @@ import { toRoman } from '../../lib/chapterUtils'
 import { compressToWebP } from '../../lib/imageUtils'
 import { sendPushToStoryMembers } from '../../lib/usePushNotifications'
 import { Icon } from '../ui/Icon'
-import type { PlanType } from '../../lib/supabase'
+import type { PlanType, AlbumType } from '../../lib/supabase'
 
-interface Props { onClose: () => void; onCreated: () => void }
+interface Props { onClose: () => void; onCreated: () => void; initialAlbumId?: string }
 
-export const NewMemorySheet: React.FC<Props> = ({ onClose, onCreated }) => {
+export const NewMemorySheet: React.FC<Props> = ({ onClose, onCreated, initialAlbumId }) => {
   const { activeStoryId } = useAuth()
   const { push } = useToast()
   const [file, setFile]     = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
   const [caption, setCaption] = useState('')
   const [planId, setPlanId]   = useState('')
+  const [albumId, setAlbumId] = useState(initialAlbumId ?? '')
   const [plans, setPlans]     = useState<PlanType[]>([])
+  const [albums, setAlbums]   = useState<AlbumType[]>([])
   const [saving, setSaving]   = useState(false)
 
   useEffect(() => {
@@ -26,6 +28,9 @@ export const NewMemorySheet: React.FC<Props> = ({ onClose, onCreated }) => {
     supabase.from('plans').select('*').eq('story_id', activeStoryId)
       .order('plan_date', { ascending: true })
       .then(({ data }) => { if (data) setPlans(data as PlanType[]) })
+    supabase.from('albums').select('*').eq('story_id', activeStoryId)
+      .order('created_at', { ascending: false })
+      .then(({ data }) => { if (data) setAlbums(data as AlbumType[]) })
   }, [activeStoryId])
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -46,6 +51,7 @@ export const NewMemorySheet: React.FC<Props> = ({ onClose, onCreated }) => {
       const { data: { publicUrl } } = supabase.storage.from('Fotos').getPublicUrl(path)
       const { error: insErr } = await supabase.from('memories').insert({
         story_id: activeStoryId, plan_id: planId || null,
+        album_id: albumId || null,
         image_url: publicUrl, caption: caption || null,
       })
       if (insErr) throw insErr
@@ -111,6 +117,22 @@ export const NewMemorySheet: React.FC<Props> = ({ onClose, onCreated }) => {
             </button>
           ))}
         </div>
+
+        {albums.length > 0 && (
+          <>
+            <label className="field-label" style={{ marginTop: 18 }}>Álbum</label>
+            <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }} className="ot-scroll">
+              <button onClick={() => setAlbumId('')} className={'chip' + (!albumId ? ' active' : '')}
+                style={{ flexShrink: 0 }}>Sin álbum</button>
+              {albums.map(a => (
+                <button key={a.id} onClick={() => setAlbumId(a.id)}
+                  className={'chip' + (albumId === a.id ? ' active' : '')} style={{ flexShrink: 0 }}>
+                  {a.name}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
 
         <button className="btn btn-blue btn-block" style={{ marginTop: 24 }}
           disabled={!file || saving} onClick={submit}>
