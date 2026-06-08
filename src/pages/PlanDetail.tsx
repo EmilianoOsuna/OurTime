@@ -209,14 +209,15 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
       {/* Hero */}
       <div
         className={coverUrl ? '' : ('ph' + (blue ? ' blue' : ''))}
-        style={{ height: 260, position: 'relative', flexShrink: 0, overflow: 'hidden',
-          background: coverUrl ? '#111' : undefined }}
+        style={{ height: 250, position: 'relative', flexShrink: 0, overflow: 'hidden',
+          background: coverUrl ? '#111' : undefined,
+          borderRadius: '0 0 28px 28px' }}
       >
         {coverUrl && (
           <img src={coverUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.9 }} />
         )}
         {!coverUrl && (
-          <span className="ph-label" style={{ position: 'absolute', bottom: 48, right: 16 }}>
+          <span className="ph-label" style={{ position: 'absolute', bottom: 20, right: 16 }}>
             foto del capítulo
           </span>
         )}
@@ -250,15 +251,14 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
         </div>
 
         {/* Category tag */}
-        <div style={{ position: 'absolute', bottom: 48, left: 18 }}>
+        <div style={{ position: 'absolute', bottom: 20, left: 18 }}>
           <CatTag cat={editing ? editType : plan.type} />
         </div>
       </div>
 
       {/* Scrollable content */}
       <div className="ot-scroll" style={{ flex: 1, padding: '0 20px 140px' }}>
-        {/* fix 1: z-index ensures card appears over the hero border */}
-        <div style={{ marginTop: -32, position: 'relative', zIndex: 1 }}>
+        <div style={{ marginTop: 14, position: 'relative' }}>
           <div className="card" style={{ padding: '20px 18px 22px', boxShadow: 'var(--sh-md)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <span className="eyebrow" style={{ color: blue ? 'var(--blue-deep)' : 'var(--orange-deep)' }}>
@@ -460,7 +460,7 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
           <button onClick={complete} className="btn btn-orange btn-block" style={{ fontSize: 17 }}
             title={isFuture ? `Disponible el ${fmtDate(plan.plan_date)}` : undefined}>
             <Icon name="check" size={19} stroke={2.6} />
-            {isFuture ? `Vivir el ${fmtDate(plan.plan_date).split(' de ')[0]} de ${fmtDate(plan.plan_date).split(' de ')[1]}` : 'Marcar como vivido'}
+            {isFuture ? `Vivir el ${fmtDate(plan.plan_date)}` : 'Marcar como vivido'}
           </button>
         )}
       </div>
