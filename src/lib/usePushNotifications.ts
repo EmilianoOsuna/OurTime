@@ -54,3 +54,17 @@ export async function sendPushToStoryMembers(
     body: { story_id: storyId, sender_id: senderId, title, body },
   })
 }
+
+export async function syncPlanToGoogleCalendar(planId: string) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('google_calendar_enabled, google_calendar_token')
+    .eq('id', user.id)
+    .single()
+  if (!profile?.google_calendar_enabled || !profile?.google_calendar_token) return
+  await supabase.functions.invoke('sync-google-calendar', {
+    body: { plan_id: planId, provider_token: profile.google_calendar_token },
+  })
+}

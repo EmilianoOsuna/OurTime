@@ -8,6 +8,7 @@ import Dashboard from '../pages/Dashboard'
 import Calendar from '../pages/Calendar'
 import Gallery from '../pages/Gallery'
 import Finances from '../pages/Finances'
+import Chat from '../pages/Chat'
 import { PlanDetail } from '../pages/PlanDetail'
 import { ProfileScreen } from '../pages/Profile'
 import { NotificationsPanel } from './NotificationsPanel'
@@ -16,6 +17,7 @@ import { NewPlanSheet } from './sheets/NewPlanSheet'
 import { MoneySheet } from './sheets/MoneySheet'
 import { NewMemorySheet } from './sheets/NewMemorySheet'
 import { NewStorySheet } from './sheets/NewStorySheet'
+import { EditStorySheet } from './sheets/EditStorySheet'
 import { Icon } from './ui/Icon'
 import { Avatar } from './ui/Avatar'
 import { usePushNotifications } from '../lib/usePushNotifications'
@@ -27,8 +29,8 @@ const CAT_COLOR: Record<string, string> = {
   otro:    'var(--ink-faint)',
 }
 
-export type Tab = 'home' | 'calendar' | 'gallery' | 'finance'
-type Overlay = { type: 'plan'; data: any } | { type: 'action' } | { type: 'newplan' } | { type: 'money' } | { type: 'memory' } | { type: 'profile' } | { type: 'newstory' } | null
+export type Tab = 'home' | 'calendar' | 'gallery' | 'finance' | 'chat'
+type Overlay = { type: 'plan'; data: any } | { type: 'action' } | { type: 'newplan' } | { type: 'money' } | { type: 'memory' } | { type: 'profile' } | { type: 'newstory' } | { type: 'editstory'; story: StoryType } | null
 
 const NOTIFS = [
   { icon: 'sparkle', text: <><strong>Bienvenidos a OurTime</strong> 💛</>, time: 'Ahora', read: false },
@@ -36,15 +38,46 @@ const NOTIFS = [
 
 function getInitialTab(): Tab {
   const saved = sessionStorage.getItem('activeTab')
-  if (saved === 'home' || saved === 'calendar' || saved === 'gallery' || saved === 'finance') return saved
+  if (saved === 'home' || saved === 'calendar' || saved === 'gallery' || saved === 'finance' || saved === 'chat') return saved
   return 'home'
+}
+
+// Unread message count badge
+function useUnreadCount(activeStoryId: string | null, userId: string | undefined): number {
+  const [count, setCount] = useState(0)
+  useEffect(() => {
+    if (!activeStoryId || !userId) return
+    supabase.from('messages').select('id', { count: 'exact', head: true })
+      .eq('story_id', activeStoryId).neq('sender_id', userId).is('read_at', null)
+      .then(({ count: n }) => setCount(n ?? 0))
+    const ch = supabase.channel('unread:' + activeStoryId)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages', filter: `story_id=eq.${activeStoryId}` }, () => {
+        supabase.from('messages').select('id', { count: 'exact', head: true })
+          .eq('story_id', activeStoryId).neq('sender_id', userId).is('read_at', null)
+          .then(({ count: n }) => setCount(n ?? 0))
+      })
+      .subscribe()
+    return () => { supabase.removeChannel(ch) }
+  }, [activeStoryId, userId])
+  return count
 }
 
 export default function AppShell() {
   const { activeStoryId, stories, setActiveStoryId, profile, user } = useAuth()
   usePushNotifications()
-  const [tab, setTab] = useState<Tab>(getInitialTab)
-  const [overlay, setOverlay] = useState<Overlay>(null)
+  const [tab, setTab] = useState<Tab>(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('shortcut') === 'chat') return 'chat'
+    return getInitialTab()
+  })
+  const [overlay, setOverlay] = useState<Overlay>(() => {
+    // Handle PWA home screen shortcuts
+    const params = new URLSearchParams(window.location.search)
+    const shortcut = params.get('shortcut')
+    if (shortcut === 'newplan') return { type: 'newplan' }
+    if (shortcut === 'memory')  return { type: 'memory' }
+    return null
+  })
   const [notifsVisible, setNotifsVisible] = useState(false)
   const [storySwitcherOpen, setStorySwitcherOpen] = useState(false)
   const [plans, setPlans] = useState<any[]>([])
@@ -189,6 +222,8 @@ export default function AppShell() {
     return () => { supabase.removeChannel(channel) }
   }, [activeStoryId])
 
+  const unreadCount = useUnreadCount(activeStoryId, user?.id)
+
   const screen = {
     home: <Dashboard plans={plans} go={go}
             onBell={() => setNotifsVisible(true)} onPlanClick={openPlan}
@@ -199,6 +234,7 @@ export default function AppShell() {
     gallery: <Gallery memories={memories} setMemories={setMemories}
                onImageClick={(url: string) => setLightbox(url)} me={me} />,
     finance: <Finances me={me} partner={partnerDisplay} />,
+    chat: <Chat me={me} partner={partnerDisplay} />,
   }[tab]
 
   return (
@@ -224,6 +260,7 @@ export default function AppShell() {
       {overlay?.type === 'money' && <MoneySheet onClose={closeOverlay} onCreated={() => { closeOverlay(); refreshTransactions() }} />}
       {overlay?.type === 'memory' && <NewMemorySheet onClose={closeOverlay} onCreated={() => { closeOverlay(); refreshMemories() }} />}
       {overlay?.type === 'newstory' && <NewStorySheet onClose={closeOverlay} onCreated={() => { closeOverlay(); go('home') }} />}
+      {overlay?.type === 'editstory' && <EditStorySheet story={overlay.story} onClose={closeOverlay} onUpdated={() => {}} />}
       {notifsVisible && <NotificationsPanel onClose={closeNotifs} items={NOTIFS} />}
       {lightbox && <Lightbox url={lightbox} onClose={() => setLightbox(null)} />}
       {storySwitcherOpen && (
@@ -232,6 +269,7 @@ export default function AppShell() {
           activeStoryId={activeStoryId}
           onSelect={id => { setActiveStoryId(id); setStorySwitcherOpen(false) }}
           onNewStory={() => { setStorySwitcherOpen(false); setOverlay({ type: 'newstory' }) }}
+          onEditStory={s => { setStorySwitcherOpen(false); setOverlay({ type: 'editstory', story: s }) }}
           onClose={() => setStorySwitcherOpen(false)}
         />
       )}
@@ -239,7 +277,8 @@ export default function AppShell() {
       <NavBar tab={tab} setTab={go} onFab={() => setOverlay({ type: 'action' })}
         me={me} onProfileOpen={() => setOverlay({ type: 'profile' })}
         stories={stories} activeStoryId={activeStoryId}
-        onStorySwitcher={() => setStorySwitcherOpen(true)} />
+        onStorySwitcher={() => setStorySwitcherOpen(true)}
+        unreadCount={unreadCount} />
     </div>
   )
 }
@@ -259,7 +298,7 @@ function Lightbox({ url, onClose }: { url: string; onClose: () => void }) {
   )
 }
 
-function NavBar({ tab, setTab, onFab, me, onProfileOpen, stories, activeStoryId, onStorySwitcher }: {
+function NavBar({ tab, setTab, onFab, me, onProfileOpen, stories, activeStoryId, onStorySwitcher, unreadCount }: {
   tab: Tab
   setTab: (t: Tab) => void
   onFab: () => void
@@ -268,15 +307,17 @@ function NavBar({ tab, setTab, onFab, me, onProfileOpen, stories, activeStoryId,
   stories: StoryType[]
   activeStoryId: string | null
   onStorySwitcher: () => void
+  unreadCount: number
 }) {
   const activeStory = stories.find(s => s.id === activeStoryId)
   const catColor = activeStory ? (CAT_COLOR[activeStory.category] || 'var(--orange)') : 'var(--orange)'
 
-  const items: { key: Tab; icon: string; label: string }[] = [
-    { key: 'home',     icon: 'home',     label: 'Inicio'       },
-    { key: 'calendar', icon: 'calendar', label: 'Agenda'       },
-    { key: 'gallery',  icon: 'image',    label: 'Recuerdos'    },
-    { key: 'finance',  icon: 'wallet',   label: 'Presupuesto'  },
+  const items: { key: Tab; icon: string; label: string; badge?: number }[] = [
+    { key: 'home',     icon: 'home',     label: 'Inicio'      },
+    { key: 'calendar', icon: 'calendar', label: 'Agenda'      },
+    { key: 'gallery',  icon: 'image',    label: 'Fotos'       },
+    { key: 'finance',  icon: 'wallet',   label: 'Gasto'       },
+    { key: 'chat',     icon: 'chat',     label: 'Chat', badge: unreadCount },
   ]
 
   return (
@@ -299,20 +340,20 @@ function NavBar({ tab, setTab, onFab, me, onProfileOpen, stories, activeStoryId,
         </button>
       )}
 
-      <div className="ot-glass-nav" style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: 2,
-        borderRadius: 999, padding: '6px 8px' }}>
+      <div className="ot-glass-nav" style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: 0,
+        borderRadius: 999, padding: '5px 6px' }}>
 
         {/* Avatar — izquierda del todo */}
         <button onClick={onProfileOpen} style={{
           border: 'none', background: 'transparent', cursor: 'pointer',
-          width: 44, height: 46, borderRadius: 15, padding: 3,
+          width: 40, height: 44, borderRadius: 14, padding: 3,
           display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
         }}>
           <div style={{ borderRadius: '50%', padding: 2,
             border: `2px solid ${catColor}`, display: 'inline-flex', transition: 'border-color .3s' }}>
-            <Avatar person={me} size={22} />
+            <Avatar person={me} size={20} />
           </div>
-          <span style={{ fontSize: 9, fontWeight: 700, fontFamily: 'var(--font-ui)',
+          <span style={{ fontSize: 8.5, fontWeight: 700, fontFamily: 'var(--font-ui)',
             letterSpacing: '0.02em', color: 'var(--ink-faint)' }}>Yo</span>
         </button>
 
@@ -320,7 +361,7 @@ function NavBar({ tab, setTab, onFab, me, onProfileOpen, stories, activeStoryId,
         <NavBtn {...items[1]} active={tab === items[1].key} onClick={() => setTab(items[1].key)} />
 
         <button onClick={onFab} style={{
-          width: 48, height: 48, borderRadius: '50%', border: 'none',
+          width: 44, height: 44, borderRadius: '50%', border: 'none',
           background: catColor, color: '#fff', cursor: 'pointer', margin: '0 2px',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           boxShadow: `0 4px 14px color-mix(in srgb, ${catColor} 50%, transparent)`,
@@ -329,21 +370,23 @@ function NavBar({ tab, setTab, onFab, me, onProfileOpen, stories, activeStoryId,
           onMouseDown={e => (e.currentTarget.style.transform = 'scale(0.9)')}
           onMouseUp={e => (e.currentTarget.style.transform = 'none')}
           onMouseLeave={e => (e.currentTarget.style.transform = 'none')}>
-          <Icon name="plus" size={23} stroke={2.4} />
+          <Icon name="plus" size={21} stroke={2.4} />
         </button>
 
         <NavBtn {...items[2]} active={tab === items[2].key} onClick={() => setTab(items[2].key)} />
         <NavBtn {...items[3]} active={tab === items[3].key} onClick={() => setTab(items[3].key)} />
+        <NavBtn {...items[4]} active={tab === items[4].key} onClick={() => setTab(items[4].key)} />
       </div>
     </nav>
   )
 }
 
-function StorySwitcherSheet({ stories, activeStoryId, onSelect, onNewStory, onClose }: {
+function StorySwitcherSheet({ stories, activeStoryId, onSelect, onNewStory, onEditStory, onClose }: {
   stories: StoryType[]
   activeStoryId: string | null
   onSelect: (id: string) => void
   onNewStory: () => void
+  onEditStory: (s: StoryType) => void
   onClose: () => void
 }) {
   return (
@@ -362,23 +405,32 @@ function StorySwitcherSheet({ stories, activeStoryId, onSelect, onNewStory, onCl
             const color = CAT_COLOR[s.category] || 'var(--ink-faint)'
             const active = s.id === activeStoryId
             return (
-              <button key={s.id} onClick={() => onSelect(s.id)} style={{
-                border: active ? `2px solid ${color}` : '2px solid var(--line)',
-                borderRadius: 16, background: active ? 'var(--card-2)' : 'var(--card)',
-                padding: '14px 16px', cursor: 'pointer', textAlign: 'left',
-                display: 'flex', alignItems: 'center', gap: 14, transition: 'all .15s',
-              }}>
-                <div style={{ width: 38, height: 38, borderRadius: 11, background: color,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <Icon name={s.category === 'pareja' ? 'heartFill' : s.category === 'amigos' ? 'users' : s.category === 'familia' ? 'home' : 'tag'} size={18} style={{ color: '#fff' }} />
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 700, fontSize: 15.5, color: 'var(--ink)',
-                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name}</div>
-                  <div style={{ fontSize: 12, color: 'var(--ink-faint)', marginTop: 2, textTransform: 'capitalize' }}>{s.category}</div>
-                </div>
-                {active && <div style={{ width: 8, height: 8, borderRadius: '50%', background: color, flexShrink: 0 }} />}
-              </button>
+              <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <button onClick={() => onSelect(s.id)} style={{
+                  flex: 1, border: active ? `2px solid ${color}` : '2px solid var(--line)',
+                  borderRadius: 16, background: active ? 'var(--card-2)' : 'var(--card)',
+                  padding: '14px 16px', cursor: 'pointer', textAlign: 'left',
+                  display: 'flex', alignItems: 'center', gap: 14, transition: 'all .15s',
+                }}>
+                  <div style={{ width: 38, height: 38, borderRadius: 11, background: color,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Icon name={s.category === 'pareja' ? 'heartFill' : s.category === 'amigos' ? 'users' : s.category === 'familia' ? 'home' : 'tag'} size={18} style={{ color: '#fff' }} />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 700, fontSize: 15.5, color: 'var(--ink)',
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name}</div>
+                    <div style={{ fontSize: 12, color: 'var(--ink-faint)', marginTop: 2, textTransform: 'capitalize' }}>{s.category}</div>
+                  </div>
+                  {active && <div style={{ width: 8, height: 8, borderRadius: '50%', background: color, flexShrink: 0 }} />}
+                </button>
+                <button onClick={() => { onEditStory(s); onClose() }} style={{
+                  border: 'none', background: 'var(--card-2)', borderRadius: 12,
+                  width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', color: 'var(--ink-faint)', flexShrink: 0,
+                }}>
+                  <Icon name="edit" size={17} />
+                </button>
+              </div>
             )
           })}
         </div>
@@ -399,16 +451,29 @@ function StorySwitcherSheet({ stories, activeStoryId, onSelect, onNewStory, onCl
   )
 }
 
-function NavBtn({ icon, label, active, onClick }: { icon: string; label: string; active: boolean; onClick: () => void }) {
+function NavBtn({ icon, label, active, onClick, badge }: { icon: string; label: string; active: boolean; onClick: () => void; badge?: number }) {
   return (
     <button onClick={onClick} style={{
       border: 'none', background: 'transparent', cursor: 'pointer',
-      width: 52, height: 46, borderRadius: 15,
+      width: 46, height: 44, borderRadius: 14, position: 'relative',
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
       color: active ? 'var(--orange-deep)' : 'var(--ink-faint)', transition: 'color .2s',
     }}>
-      <Icon name={icon} size={20} stroke={active ? 2.3 : 1.9} />
-      <span style={{ fontSize: 9, fontWeight: active ? 700 : 600,
+      <div style={{ position: 'relative' }}>
+        <Icon name={icon} size={19} stroke={active ? 2.3 : 1.9} />
+        {badge != null && badge > 0 && (
+          <span style={{
+            position: 'absolute', top: -4, right: -6,
+            background: 'var(--orange)', color: '#fff',
+            borderRadius: 99, fontSize: 9, fontWeight: 800,
+            minWidth: 14, height: 14, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '0 3px', fontFamily: 'var(--font-ui)', lineHeight: 1,
+          }}>
+            {badge > 9 ? '9+' : badge}
+          </span>
+        )}
+      </div>
+      <span style={{ fontSize: 8.5, fontWeight: active ? 700 : 600,
         fontFamily: 'var(--font-ui)', letterSpacing: '0.02em' }}>{label}</span>
     </button>
   )

@@ -60,11 +60,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      (event, session) => {
         setSession(session)
         setUser(session?.user ?? null)
         if (session?.user) {
           fetchProfileAndStories(session.user.id)
+          // Save Google provider_token if this was a Calendar OAuth redirect
+          if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session.provider_token) {
+            supabase.from('profiles').update({
+              google_calendar_token: session.provider_token,
+              google_calendar_enabled: true,
+            }).eq('id', session.user.id)
+          }
         } else {
           _setActiveStoryId(null)
           setStories([])

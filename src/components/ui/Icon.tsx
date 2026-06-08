@@ -45,6 +45,9 @@ const ICON_PATHS: Record<string, React.ReactNode> = {
   settings:  <><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M22 12h-3M5 12H2M19 5l-2 2M7 17l-2 2M19 19l-2-2M7 7 5 5"/></>,
   logout:    <><path d="M14 21H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8"/><path d="M18 16l4-4-4-4M9 12h13"/></>,
   star:      <><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 17l-5.2 2.7 1-5.8L3.5 9.7l5.9-.9L12 3.5Z"/></>,
+  chat:      <><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></>,
+  send:      <><path d="M22 2 11 13M22 2 15 22l-4-9-9-4 20-7z"/></>,
+  googleCal: <><rect x="3" y="4" width="18" height="18" rx="2.5"/><path d="M3 9h18M8 2v4M16 2v4"/><path d="M8 13h2v3H8z" fill="currentColor" stroke="none" opacity=".5"/><path d="M12.5 13.5h3v2h-3z" fill="currentColor" stroke="none" opacity=".5"/></>,
 }
 
 export function Icon({ name, size = 22, stroke = 2, className = '', style = {} }: {

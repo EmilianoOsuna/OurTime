@@ -38,6 +38,29 @@ export default defineConfig({
         start_url: '/',
         lang: 'es',
         categories: ['lifestyle', 'social'],
+        shortcuts: [
+          {
+            name: 'Nuevo momento',
+            short_name: 'Momento',
+            description: 'Crear un nuevo plan',
+            url: '/?shortcut=newplan',
+            icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }],
+          },
+          {
+            name: 'Chat',
+            short_name: 'Chat',
+            description: 'Abrir el chat',
+            url: '/?shortcut=chat',
+            icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }],
+          },
+          {
+            name: 'Nuevo recuerdo',
+            short_name: 'Foto',
+            description: 'Subir una foto',
+            url: '/?shortcut=memory',
+            icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }],
+          },
+        ],
         icons: [
           {
             src: 'pwa-192x192.png',

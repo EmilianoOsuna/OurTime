@@ -423,6 +423,12 @@ export function ProfileScreen({ plans, transactions, memories, onClose, onGoToFi
           </div>
         </div>
 
+        {/* Google Calendar sync */}
+        <div style={{ padding: '18px 22px 0' }}>
+          <div className="eyebrow" style={{ marginBottom: 12 }}>Integraciones</div>
+          <GoogleCalendarSection />
+        </div>
+
         {/* Sign out */}
         <div style={{ padding: '18px 22px 0' }}>
           <button onClick={signOut} style={{
@@ -441,6 +447,73 @@ export function ProfileScreen({ plans, transactions, memories, onClose, onGoToFi
           <div style={{ fontSize: 11.5, color: 'var(--ink-faint)' }}>Su historia, siempre</div>
         </div>
       </div>
+    </div>
+  )
+}
+
+const GCAL_SCOPE = 'https://www.googleapis.com/auth/calendar.events'
+
+function GoogleCalendarSection() {
+  const { user } = useAuth()
+  const [connected, setConnected] = useState(false)
+  const [syncing, setSyncing] = useState(false)
+
+  // Check if user has Google Calendar token stored
+  useState(() => {
+    if (!user) return
+    supabase.from('profiles').select('google_calendar_enabled').eq('id', user.id).single()
+      .then(({ data }) => { if (data?.google_calendar_enabled) setConnected(true) })
+  })
+
+  const connect = async () => {
+    setSyncing(true)
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        scopes: GCAL_SCOPE,
+        redirectTo: window.location.origin,
+        queryParams: { access_type: 'offline', prompt: 'consent' },
+      },
+    })
+    if (error) { alert(error.message); setSyncing(false) }
+  }
+
+  const disconnect = async () => {
+    if (!user) return
+    await supabase.from('profiles').update({ google_calendar_enabled: false }).eq('id', user.id)
+    setConnected(false)
+  }
+
+  return (
+    <div className="card" style={{ padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 14 }}>
+      <div style={{ width: 40, height: 40, borderRadius: 12, background: connected ? '#EBF5FB' : 'var(--card-2)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <Icon name="googleCal" size={22} style={{ color: connected ? '#1976D2' : 'var(--ink-faint)' }} />
+      </div>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontWeight: 700, fontSize: 14.5, color: 'var(--ink)' }}>Google Calendar</div>
+        <div style={{ fontSize: 12, color: 'var(--ink-faint)', marginTop: 2 }}>
+          {connected ? 'Conectado — los nuevos momentos se añadirán a tu calendario' : 'Sincroniza tus momentos con Google Calendar'}
+        </div>
+      </div>
+      {connected ? (
+        <button onClick={disconnect} style={{
+          border: '1.5px solid var(--line)', background: 'transparent', borderRadius: 10,
+          padding: '8px 12px', fontSize: 12.5, fontWeight: 600, color: 'var(--ink-soft)',
+          cursor: 'pointer', fontFamily: 'var(--font-ui)', flexShrink: 0,
+        }}>
+          Desconectar
+        </button>
+      ) : (
+        <button onClick={connect} disabled={syncing} style={{
+          border: 'none', background: '#1976D2', borderRadius: 10,
+          padding: '8px 12px', fontSize: 12.5, fontWeight: 700, color: '#fff',
+          cursor: 'pointer', fontFamily: 'var(--font-ui)', flexShrink: 0,
+          opacity: syncing ? 0.7 : 1,
+        }}>
+          {syncing ? '…' : 'Conectar'}
+        </button>
+      )}
     </div>
   )
 }
