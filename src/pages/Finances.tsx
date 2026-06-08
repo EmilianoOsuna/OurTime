@@ -6,7 +6,7 @@ import { Segmented } from '../components/ui/Segmented'
 import { fmtDateShort } from '../lib/chapterUtils'
 import { useCurrency } from '../context/CurrencyContext'
 import { useAuth } from '../context/AuthContext'
-import type { PersonDisplay } from '../lib/supabase'
+import type { PersonDisplay, PlanType } from '../lib/supabase'
 
 interface Tx {
   id: string
@@ -32,6 +32,7 @@ export default function Finances({ me, partner }: {
   const { fmt } = useCurrency()
   const { user, activeStoryId } = useAuth()
   const [txs, setTxs] = useState<Tx[]>([])
+  const [budgetPlans, setBudgetPlans] = useState<PlanType[]>([])
   const [seg, setSeg] = useState(0)
   const [loading, setLoading] = useState(true)
 
@@ -42,6 +43,10 @@ export default function Finances({ me, partner }: {
         if (data) setTxs(data as Tx[])
         setLoading(false)
       })
+    supabase.from('plans').select('*').eq('story_id', activeStoryId)
+      .not('budget_amount', 'is', null)
+      .order('plan_date', { ascending: true })
+      .then(({ data }) => { if (data) setBudgetPlans(data as PlanType[]) })
   }, [activeStoryId])
 
   const income = txs.filter(t => t.type === 'ingreso').reduce((s, t) => s + t.amount, 0)
@@ -74,19 +79,19 @@ export default function Finances({ me, partner }: {
 
       {/* Balance hero card */}
       <div style={{ padding: '18px 22px 0' }}>
-        <div className="card" style={{
-          padding: '22px 20px', background: 'var(--ink)', color: '#FBF6EE',
+        <div className="card hero-card" style={{
+          padding: '22px 20px',
           boxShadow: 'var(--sh-md)', position: 'relative', overflow: 'hidden',
         }}>
           {/* Radial orange accent */}
           <div style={{
             position: 'absolute', right: -30, top: -30, width: 130, height: 130,
             borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(241,119,32,0.4), transparent 70%)',
+            background: 'radial-gradient(circle, rgba(241,119,32,0.35), transparent 70%)',
           }} />
 
-          <div className="eyebrow" style={{ color: 'rgba(251,246,238,0.6)' }}>Saldo disponible</div>
-          <div className="display" style={{ fontSize: 42, margin: '6px 0 0' }}>{fmt(balance)}</div>
+          <div className="eyebrow" style={{ color: 'var(--hero-soft)' }}>Saldo disponible</div>
+          <div className="display" style={{ fontSize: 42, margin: '6px 0 0', color: 'var(--hero-text)' }}>{fmt(balance)}</div>
 
           <div style={{ display: 'flex', gap: 20, marginTop: 18 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -98,8 +103,8 @@ export default function Finances({ me, partner }: {
                 <Icon name="trendUp" size={16} />
               </span>
               <div>
-                <div style={{ fontSize: 11, color: 'rgba(251,246,238,0.55)' }}>Aportado</div>
-                <div style={{ fontWeight: 700, fontSize: 15 }}>{fmt(income)}</div>
+                <div style={{ fontSize: 11, color: 'var(--hero-soft)' }}>Aportado</div>
+                <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--hero-text)' }}>{fmt(income)}</div>
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -111,8 +116,8 @@ export default function Finances({ me, partner }: {
                 <Icon name="trendDown" size={16} />
               </span>
               <div>
-                <div style={{ fontSize: 11, color: 'rgba(251,246,238,0.55)' }}>Gastado</div>
-                <div style={{ fontWeight: 700, fontSize: 15 }}>{fmt(spent)}</div>
+                <div style={{ fontSize: 11, color: 'var(--hero-soft)' }}>Gastado</div>
+                <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--hero-text)' }}>{fmt(spent)}</div>
               </div>
             </div>
           </div>
@@ -148,6 +153,61 @@ export default function Finances({ me, partner }: {
           {list.map(tx => <TxRow key={tx.id} tx={tx} fmt={fmt} />)}
         </div>
       </div>
+
+      {/* Budget per plan */}
+      {budgetPlans.length > 0 && (
+        <div style={{ padding: '22px 22px 0' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+            <span className="eyebrow">Presupuesto por momento</span>
+            <span style={{ flex: 1, height: 1, background: 'var(--line)' }} />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {budgetPlans.map(plan => {
+              const planSpent = txs
+                .filter(t => (t as any).plan_id === plan.id && t.type === 'gasto')
+                .reduce((s, t) => s + t.amount, 0)
+              const budget = plan.budget_amount ?? 0
+              const pct = budget > 0 ? Math.min(planSpent / budget, 1) : 0
+              const over = planSpent > budget
+              return (
+                <div key={plan.id} className="card" style={{ padding: '14px 16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 700, fontSize: 14.5, lineHeight: 1.2,
+                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {plan.title}
+                      </div>
+                      {plan.place && (
+                        <div style={{ fontSize: 12, color: 'var(--ink-faint)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <Icon name="pin" size={11} /> {plan.place}
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: 10 }}>
+                      <div style={{ fontWeight: 700, fontSize: 15, color: over ? 'var(--orange-deep)' : 'var(--ink)' }}>
+                        {fmt(planSpent)}
+                      </div>
+                      <div style={{ fontSize: 11.5, color: 'var(--ink-faint)' }}>/ {fmt(budget)}</div>
+                    </div>
+                  </div>
+                  {/* Progress bar */}
+                  <div style={{ height: 6, borderRadius: 99, background: 'var(--card-2)', overflow: 'hidden' }}>
+                    <div style={{
+                      height: '100%', borderRadius: 99, transition: 'width .5s cubic-bezier(.2,.8,.2,1)',
+                      width: (pct * 100) + '%',
+                      background: over ? 'var(--orange-deep)' : pct > 0.8 ? 'var(--orange)' : 'var(--done)',
+                    }} />
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: 11.5, color: 'var(--ink-faint)' }}>
+                    <span>{Math.round(pct * 100)}% utilizado</span>
+                    <span>{over ? `+${fmt(planSpent - budget)} sobre presupuesto` : `${fmt(budget - planSpent)} restante`}</span>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

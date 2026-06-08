@@ -39,6 +39,16 @@
   --sh-md: 0 2px 6px rgba(60,40,20,0.06), 0 12px 28px rgba(60,40,20,0.08);
   --sh-lg: 0 8px 24px rgba(60,40,20,0.10), 0 30px 60px rgba(60,40,20,0.14);
 
+  /* Glass surfaces (navbar, pills, overlays) */
+  --glass-bg:        rgba(255,252,247,0.88);
+  --glass-bg-soft:   rgba(255,252,247,0.82);
+  --glass-border:    rgba(255,255,255,0.60);
+
+  /* Hero card (always visually dark regardless of mode) */
+  --hero-bg:   #211D18;
+  --hero-text: #F4EEE4;
+  --hero-soft: rgba(244,238,228,0.55);
+
   --r-lg: 30px;
   --r-md: 22px;
   --r-sm: 14px;
@@ -294,6 +304,16 @@ body {
     --sh-sm: 0 1px 2px rgba(0,0,0,0.25), 0 2px 8px rgba(0,0,0,0.18);
     --sh-md: 0 2px 6px rgba(0,0,0,0.30), 0 12px 28px rgba(0,0,0,0.32);
     --sh-lg: 0 8px 24px rgba(0,0,0,0.36), 0 30px 60px rgba(0,0,0,0.48);
+
+    /* Glass surfaces */
+    --glass-bg:      rgba(37,31,24,0.90);
+    --glass-bg-soft: rgba(37,31,24,0.85);
+    --glass-border:  rgba(255,255,255,0.07);
+
+    /* Hero card stays dark-on-dark (slightly elevated) */
+    --hero-bg:   #2E2720;
+    --hero-text: #F4EEE4;
+    --hero-soft: rgba(244,238,228,0.55);
   }
 }
 
@@ -367,15 +387,28 @@ body {
   .premium-blur {
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
-    background: rgba(255,252,247,0.82);
+    background: var(--glass-bg-soft);
   }
 
   .glass-island {
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
-    background: rgba(255,252,247,0.82);
+    background: var(--glass-bg-soft);
     border-radius: 999px;
-    border: 1px solid rgba(255,255,255,0.6);
+    border: 1px solid var(--glass-border);
     box-shadow: var(--sh-lg);
+  }
+
+  .ot-glass-nav {
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--sh-lg);
+  }
+
+  .hero-card {
+    background: var(--hero-bg);
+    color: var(--hero-text);
   }
 }

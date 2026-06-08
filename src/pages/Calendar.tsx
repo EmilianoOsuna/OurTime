@@ -117,8 +117,8 @@ export default function Calendar({ onOpenPlan }: { onOpenPlan?: (p: PlanType) =>
               return (
                 <button key={i} onClick={() => setSel(day)} style={{
                   aspectRatio: '1', border: 'none', cursor: 'pointer', borderRadius: 12,
-                  background: isSel ? 'var(--ink)' : 'transparent',
-                  color: isSel ? '#FBF6EE' : 'var(--ink)',
+                  background: isSel ? 'var(--orange)' : 'transparent',
+                  color: isSel ? '#fff' : 'var(--ink)',
                   display: 'flex', flexDirection: 'column', alignItems: 'center',
                   justifyContent: 'center', gap: 3, position: 'relative',
                   fontFamily: 'var(--font-ui)', transition: 'background .18s',
@@ -131,7 +131,7 @@ export default function Calendar({ onOpenPlan }: { onOpenPlan?: (p: PlanType) =>
                     {ps.slice(0, 3).map((p, j) => (
                       <span key={j} className="dot" style={{
                         width: 5, height: 5,
-                        background: isSel ? '#FBF6EE'
+                        background: isSel ? 'rgba(255,255,255,0.8)'
                           : (p.status === 'completado' ? 'var(--done)' : 'var(--orange)'),
                       }} />
                     ))}

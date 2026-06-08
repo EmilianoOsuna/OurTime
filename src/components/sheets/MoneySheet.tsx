@@ -7,6 +7,7 @@ import { supabase } from '../../lib/supabase'
 import { toRoman } from '../../lib/chapterUtils'
 import { Icon } from '../ui/Icon'
 import type { PlanType } from '../../lib/supabase'
+import { sendPushToStoryMembers } from '../../lib/usePushNotifications'
 
 const CATS_OUT = [
   { id: 'cena',   label: 'Gastronomía', icon: 'utensils' },
@@ -68,6 +69,9 @@ export const MoneySheet: React.FC<Props> = ({ onClose, onCreated }) => {
     push({ icon: 'check', eyebrow: 'Movimiento guardado',
       title: (kind === 'ingreso' ? '+' : '–') + sym + (+amt).toLocaleString('es-ES'),
       body: label.trim() })
+    if (user?.id && kind === 'gasto') {
+      sendPushToStoryMembers(activeStoryId, user.id, 'Nuevo gasto registrado', `${sym}${(+amt).toLocaleString('es-ES')} · ${label.trim()}`)
+    }
     onCreated()
     onClose()
   }

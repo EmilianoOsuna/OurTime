@@ -18,6 +18,7 @@ import { NewMemorySheet } from './sheets/NewMemorySheet'
 import { NewStorySheet } from './sheets/NewStorySheet'
 import { Icon } from './ui/Icon'
 import { Avatar } from './ui/Avatar'
+import { usePushNotifications } from '../lib/usePushNotifications'
 
 const CAT_COLOR: Record<string, string> = {
   pareja:  'var(--orange)',
@@ -41,6 +42,7 @@ function getInitialTab(): Tab {
 
 export default function AppShell() {
   const { activeStoryId, stories, setActiveStoryId, profile, user } = useAuth()
+  usePushNotifications()
   const [tab, setTab] = useState<Tab>(getInitialTab)
   const [overlay, setOverlay] = useState<Overlay>(null)
   const [notifsVisible, setNotifsVisible] = useState(false)
@@ -159,6 +161,33 @@ export default function AppShell() {
       .order('created_at', { ascending: false })
       .then(({ data }) => data && setMemories(data))
   }
+  const refreshTransactions = () => {
+    if (!activeStoryId) return
+    supabase.from('transactions').select('*').eq('story_id', activeStoryId)
+      .order('created_at', { ascending: false })
+      .then(({ data }) => data && setTransactions(data))
+  }
+
+  // Realtime subscriptions
+  useEffect(() => {
+    if (!activeStoryId) return
+    const channel = supabase
+      .channel('story-changes:' + activeStoryId)
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'plans', filter: `story_id=eq.${activeStoryId}` },
+        () => refreshPlans()
+      )
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'memories', filter: `story_id=eq.${activeStoryId}` },
+        () => refreshMemories()
+      )
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'transactions', filter: `story_id=eq.${activeStoryId}` },
+        () => refreshTransactions()
+      )
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [activeStoryId])
 
   const screen = {
     home: <Dashboard plans={plans} go={go}
@@ -192,7 +221,7 @@ export default function AppShell() {
         onNewMoney={() => setOverlay({ type: 'money' })}
         onNewMemory={() => setOverlay({ type: 'memory' })} />}
       {overlay?.type === 'newplan' && <NewPlanSheet onClose={closeOverlay} onCreated={() => { closeOverlay(); refreshPlans() }} />}
-      {overlay?.type === 'money' && <MoneySheet onClose={closeOverlay} onCreated={() => closeOverlay()} />}
+      {overlay?.type === 'money' && <MoneySheet onClose={closeOverlay} onCreated={() => { closeOverlay(); refreshTransactions() }} />}
       {overlay?.type === 'memory' && <NewMemorySheet onClose={closeOverlay} onCreated={() => { closeOverlay(); refreshMemories() }} />}
       {overlay?.type === 'newstory' && <NewStorySheet onClose={closeOverlay} onCreated={() => { closeOverlay(); go('home') }} />}
       {notifsVisible && <NotificationsPanel onClose={closeNotifs} items={NOTIFS} />}
@@ -209,7 +238,6 @@ export default function AppShell() {
 
       <NavBar tab={tab} setTab={go} onFab={() => setOverlay({ type: 'action' })}
         me={me} onProfileOpen={() => setOverlay({ type: 'profile' })}
-        onBell={() => setNotifsVisible(true)}
         stories={stories} activeStoryId={activeStoryId}
         onStorySwitcher={() => setStorySwitcherOpen(true)} />
     </div>
@@ -231,13 +259,12 @@ function Lightbox({ url, onClose }: { url: string; onClose: () => void }) {
   )
 }
 
-function NavBar({ tab, setTab, onFab, me, onProfileOpen, onBell, stories, activeStoryId, onStorySwitcher }: {
+function NavBar({ tab, setTab, onFab, me, onProfileOpen, stories, activeStoryId, onStorySwitcher }: {
   tab: Tab
   setTab: (t: Tab) => void
   onFab: () => void
   me: PersonDisplay
   onProfileOpen: () => void
-  onBell: () => void
   stories: StoryType[]
   activeStoryId: string | null
   onStorySwitcher: () => void
@@ -258,12 +285,10 @@ function NavBar({ tab, setTab, onFab, me, onProfileOpen, onBell, stories, active
 
       {/* Stories switcher pill — only shown when >1 story */}
       {stories.length > 1 && (
-        <button onClick={onStorySwitcher} style={{
-          pointerEvents: 'auto', border: '1px solid rgba(255,255,255,0.6)', cursor: 'pointer',
+        <button onClick={onStorySwitcher} className="ot-glass-nav" style={{
+          pointerEvents: 'auto', cursor: 'pointer',
           display: 'flex', alignItems: 'center', gap: 7,
-          background: 'rgba(255,252,247,0.9)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
           borderRadius: 999, padding: '6px 14px 6px 8px',
-          boxShadow: '0 2px 12px rgba(0,0,0,0.12)',
         }}>
           <div style={{ width: 20, height: 20, borderRadius: '50%', background: catColor, flexShrink: 0 }} />
           <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--ink)', fontFamily: 'var(--font-ui)', maxWidth: 120,
@@ -274,24 +299,20 @@ function NavBar({ tab, setTab, onFab, me, onProfileOpen, onBell, stories, active
         </button>
       )}
 
-      <div style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: 2,
-        background: 'rgba(255,252,247,0.88)',
-        backdropFilter: 'blur(20px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-        borderRadius: 999, padding: '8px 10px',
-        boxShadow: 'var(--sh-lg)', border: '1px solid rgba(255,255,255,0.6)' }}>
+      <div className="ot-glass-nav" style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: 2,
+        borderRadius: 999, padding: '6px 8px' }}>
 
         {/* Avatar — izquierda del todo */}
         <button onClick={onProfileOpen} style={{
           border: 'none', background: 'transparent', cursor: 'pointer',
-          width: 50, height: 50, borderRadius: 18, padding: 4,
-          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3,
+          width: 44, height: 46, borderRadius: 15, padding: 3,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
         }}>
           <div style={{ borderRadius: '50%', padding: 2,
             border: `2px solid ${catColor}`, display: 'inline-flex', transition: 'border-color .3s' }}>
-            <Avatar person={me} size={26} />
+            <Avatar person={me} size={22} />
           </div>
-          <span style={{ fontSize: 9.5, fontWeight: 700, fontFamily: 'var(--font-ui)',
+          <span style={{ fontSize: 9, fontWeight: 700, fontFamily: 'var(--font-ui)',
             letterSpacing: '0.02em', color: 'var(--ink-faint)' }}>Yo</span>
         </button>
 
@@ -299,32 +320,20 @@ function NavBar({ tab, setTab, onFab, me, onProfileOpen, onBell, stories, active
         <NavBtn {...items[1]} active={tab === items[1].key} onClick={() => setTab(items[1].key)} />
 
         <button onClick={onFab} style={{
-          width: 54, height: 54, borderRadius: '50%', border: 'none',
-          background: catColor, color: '#fff', cursor: 'pointer', margin: '0 4px',
+          width: 48, height: 48, borderRadius: '50%', border: 'none',
+          background: catColor, color: '#fff', cursor: 'pointer', margin: '0 2px',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: `0 6px 18px color-mix(in srgb, ${catColor} 50%, transparent)`,
+          boxShadow: `0 4px 14px color-mix(in srgb, ${catColor} 50%, transparent)`,
           transition: 'background .3s, transform .15s', flexShrink: 0,
         }}
           onMouseDown={e => (e.currentTarget.style.transform = 'scale(0.9)')}
           onMouseUp={e => (e.currentTarget.style.transform = 'none')}
           onMouseLeave={e => (e.currentTarget.style.transform = 'none')}>
-          <Icon name="plus" size={26} stroke={2.4} />
+          <Icon name="plus" size={23} stroke={2.4} />
         </button>
 
         <NavBtn {...items[2]} active={tab === items[2].key} onClick={() => setTab(items[2].key)} />
         <NavBtn {...items[3]} active={tab === items[3].key} onClick={() => setTab(items[3].key)} />
-
-        {/* Bell — derecha del todo */}
-        <button onClick={onBell} style={{
-          border: 'none', background: 'transparent', cursor: 'pointer',
-          width: 50, height: 50, borderRadius: 18, padding: 4,
-          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3,
-          color: 'var(--ink-faint)',
-        }}>
-          <Icon name="bell" size={22} stroke={1.9} />
-          <span style={{ fontSize: 9.5, fontWeight: 600, fontFamily: 'var(--font-ui)',
-            letterSpacing: '0.02em' }}>Avisos</span>
-        </button>
       </div>
     </nav>
   )
@@ -394,12 +403,12 @@ function NavBtn({ icon, label, active, onClick }: { icon: string; label: string;
   return (
     <button onClick={onClick} style={{
       border: 'none', background: 'transparent', cursor: 'pointer',
-      width: 58, height: 50, borderRadius: 18,
-      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3,
+      width: 52, height: 46, borderRadius: 15,
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
       color: active ? 'var(--orange-deep)' : 'var(--ink-faint)', transition: 'color .2s',
     }}>
-      <Icon name={icon} size={22} stroke={active ? 2.3 : 1.9} />
-      <span style={{ fontSize: 9.5, fontWeight: active ? 700 : 600,
+      <Icon name={icon} size={20} stroke={active ? 2.3 : 1.9} />
+      <span style={{ fontSize: 9, fontWeight: active ? 700 : 600,
         fontFamily: 'var(--font-ui)', letterSpacing: '0.02em' }}>{label}</span>
     </button>
   )

@@ -6,6 +6,7 @@ import { supabase } from '../../lib/supabase'
 import { CAT_META } from '../../lib/chapterUtils'
 import { Icon } from '../ui/Icon'
 import { DatePicker } from '../ui/DatePicker'
+import { sendPushToStoryMembers } from '../../lib/usePushNotifications'
 
 const CAT_ICON: Record<string, string> = {
   cena: 'utensils', viaje: 'plane', cine: 'film', cafe: 'coffee',
@@ -30,6 +31,7 @@ export const NewPlanSheet: React.FC<Props> = ({ onClose, onCreated, parentPlanId
   const submit = async () => {
     if (!ok || !activeStoryId) return
     setSaving(true)
+    const { data: { user } } = await supabase.auth.getUser()
     const { error } = await supabase.from('plans').insert({
       story_id: activeStoryId,
       title: title.trim(),
@@ -43,6 +45,9 @@ export const NewPlanSheet: React.FC<Props> = ({ onClose, onCreated, parentPlanId
     setSaving(false)
     if (error) { alert(error.message); return }
     push({ icon: 'sparkle', eyebrow: 'Momento creado', title: `«${title.trim()}»`, body: parentPlanId ? 'Añadido como sub-momento' : 'Añadido a tu historia' })
+    if (user && !parentPlanId) {
+      sendPushToStoryMembers(activeStoryId, user.id, '¡Nuevo momento!', `«${title.trim()}» fue añadido a la historia`)
+    }
     onCreated()
     onClose()
   }

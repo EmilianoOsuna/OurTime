@@ -7,6 +7,9 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
       registerType: 'autoUpdate',
       devOptions: {
         enabled: true,
@@ -20,89 +23,8 @@ export default defineConfig({
         'pwa-512x512.png',
         'pwa-maskable-512x512.png',
       ],
-      // Workbox config for offline support
-      workbox: {
-        // Cache all static assets
+      injectManifest: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2,ttf}'],
-        // Skip waiting so new SW takes over immediately
-        skipWaiting: true,
-        clientsClaim: true,
-        // Runtime caching for external resources
-        runtimeCaching: [
-          // Supabase API - Network First (always try fresh, fallback to cache)
-          {
-            urlPattern: /^https:\/\/.+\.supabase\.co\/.*/i,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'supabase-api-cache',
-              networkTimeoutSeconds: 10,
-              expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24, // 24 hours
-              },
-              cacheableResponse: {
-                statuses: [0, 200],
-              },
-            },
-          },
-          // Google Fonts stylesheets - Stale While Revalidate
-          {
-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-            handler: 'StaleWhileRevalidate',
-            options: {
-              cacheName: 'google-fonts-stylesheets',
-              expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
-              },
-            },
-          },
-          // Google Fonts files - Cache First
-          {
-            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'google-fonts-webfonts',
-              expiration: {
-                maxEntries: 30,
-                maxAgeSeconds: 60 * 60 * 24 * 365,
-              },
-              cacheableResponse: {
-                statuses: [0, 200],
-              },
-            },
-          },
-          // Unsplash images - Cache First (they don't change)
-          {
-            urlPattern: /^https:\/\/images\.unsplash\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'unsplash-images',
-              expiration: {
-                maxEntries: 60,
-                maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days
-              },
-              cacheableResponse: {
-                statuses: [0, 200],
-              },
-            },
-          },
-          // Supabase Storage (user photos) - Cache First
-          {
-            urlPattern: /^https:\/\/.+\.supabase\.co\/storage\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'supabase-storage',
-              expiration: {
-                maxEntries: 200,
-                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
-              },
-              cacheableResponse: {
-                statuses: [0, 200],
-              },
-            },
-          },
-        ],
       },
       manifest: {
         name: 'Our Time',
