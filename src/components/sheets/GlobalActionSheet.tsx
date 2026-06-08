@@ -2,11 +2,11 @@ import { BottomSheet } from '../ui/BottomSheet'
 import { Icon } from '../ui/Icon'
 
 const ITEMS = [
-  { id: 'newplan',    icon: 'feather', tint: 'var(--orange-tint)', col: 'var(--orange-deep)',
-    title: 'Nuevo capítulo', body: 'Un plan, una cita, una aventura' },
-  { id: 'newmemory',  icon: 'camera',  tint: 'var(--blue-tint)',   col: 'var(--blue-deep)',
+  { id: 'newplan',    icon: 'calendarCheck', tint: 'var(--orange-tint)', col: 'var(--orange-deep)',
+    title: 'Nuevo momento', body: 'Un plan, una cita, una aventura' },
+  { id: 'newmemory',  icon: 'camera',        tint: 'var(--blue-tint)',   col: 'var(--blue-deep)',
     title: 'Nuevo recuerdo', body: 'Sube una foto a la galería' },
-  { id: 'money',      icon: 'wallet',  tint: 'var(--done-tint)',   col: 'var(--done)',
+  { id: 'money',      icon: 'wallet',        tint: 'var(--done-tint)',   col: 'var(--done)',
     title: 'Nuevo movimiento', body: 'Un ingreso o gasto del fondo común' },
 ] as const
 

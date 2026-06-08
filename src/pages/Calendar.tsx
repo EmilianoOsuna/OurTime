@@ -1,6 +1,4 @@
-import { useState, useEffect } from 'react'
-import { useAuth } from '../context/AuthContext'
-import { supabase } from '../lib/supabase'
+import { useState } from 'react'
 import { CatMedallion } from '../components/ui/CatMedallion'
 import { CatTag } from '../components/ui/CatTag'
 import { Icon } from '../components/ui/Icon'
@@ -25,26 +23,15 @@ function CircBtn({ icon, onClick }: { icon: string; onClick: () => void }) {
   )
 }
 
-export default function Calendar({ onOpenPlan }: { onOpenPlan?: (p: PlanType) => void }) {
-  const { activeStoryId } = useAuth()
-  const [plans, setPlans] = useState<PlanType[]>([])
-  const [loading, setLoading] = useState(true)
+export default function Calendar({ plans, onOpenPlan }: { plans: PlanType[]; onOpenPlan?: (p: PlanType) => void }) {
   const today = new Date()
   const [ym, setYm] = useState({ y: today.getFullYear(), m: today.getMonth() })
   const [sel, setSel] = useState(todayStr)
 
-  useEffect(() => {
-    if (!activeStoryId) return
-    supabase.from('plans').select('*').eq('story_id', activeStoryId)
-      .neq('status', 'cancelado')
-      .order('plan_date', { ascending: true }).then(({ data }) => {
-        if (data) setPlans(data as PlanType[])
-        setLoading(false)
-      })
-  }, [activeStoryId])
+  const visiblePlans = plans.filter(p => p.status !== 'cancelado')
 
   const byDate: Record<string, PlanType[]> = {}
-  plans.forEach(p => {
+  visiblePlans.forEach(p => {
     const d = p.plan_date.slice(0, 10)
     ;(byDate[d] = byDate[d] || []).push(p)
   })
@@ -67,15 +54,6 @@ export default function Calendar({ onOpenPlan }: { onOpenPlan?: (p: PlanType) =>
   })
 
   const selPlans = byDate[sel] || []
-
-  if (loading) {
-    return (
-      <div style={{ minHeight: '50vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: 32, height: 32, borderRadius: '50%', border: '3px solid var(--orange)',
-          borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite' }} />
-      </div>
-    )
-  }
 
   return (
     <div className="ot-scroll page-enter" style={{ paddingBottom: 130 }}>
@@ -176,8 +154,8 @@ export default function Calendar({ onOpenPlan }: { onOpenPlan?: (p: PlanType) =>
         )}
       </div>
 
-      {/* ── Todos los capítulos ── */}
-      {plans.length > 0 && <ChapterList plans={plans} onOpen={p => onOpenPlan?.(p)} />}
+      {/* ── Todos los momentos ── */}
+      {visiblePlans.length > 0 && <ChapterList plans={visiblePlans} onOpen={p => onOpenPlan?.(p)} />}
     </div>
   )
 }

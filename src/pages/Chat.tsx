@@ -117,15 +117,14 @@ export default function Chat({ me, partner, storyName, onBack }: Props) {
 
   return (
     <div style={{
+      position: 'fixed', inset: 0, zIndex: 10,
       display: 'flex', flexDirection: 'column',
-      height: '100dvh',
       background: 'var(--paper)',
     }}>
       {/* ── Header ── */}
       <div style={{
         flexShrink: 0,
-        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 10px)',
-        padding: 'calc(env(safe-area-inset-top, 0px) + 10px) 14px 12px',
+        padding: 'calc(env(safe-area-inset-top, 0px) + 12px) 14px 12px',
         background: 'var(--card)',
         borderBottom: '1px solid var(--line)',
         display: 'flex', alignItems: 'center', gap: 10,

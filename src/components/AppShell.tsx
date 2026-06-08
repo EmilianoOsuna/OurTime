@@ -312,7 +312,7 @@ export default function AppShell() {
             onNewPlan={() => setOverlay({ type: 'newplan' })}
             onStorySwitcher={() => setStorySwitcherOpen(true)}
             me={me} partner={partnerDisplay} />,
-    calendar: <Calendar onOpenPlan={openPlan} />,
+    calendar: <Calendar plans={plans} onOpenPlan={openPlan} />,
     gallery: <Gallery memories={memories} setMemories={setMemories}
                onImageClick={(url: string) => setLightbox(url)} me={me} />,
     finance: <Finances />,
@@ -408,23 +408,31 @@ function NavBar({ tab, setTab, onFab, me, onProfileOpen, stories, activeStoryId,
   ]
 
   return (
-    <nav style={{ position: 'fixed', bottom: 22, left: 0, right: 0, zIndex: 70,
-      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, pointerEvents: 'none' }}>
+    <nav style={{
+      position: 'fixed', bottom: 'max(20px, env(safe-area-inset-bottom, 20px))',
+      left: 0, right: 0, zIndex: 70,
+      display: 'flex', flexDirection: 'column', alignItems: 'center',
+      pointerEvents: 'none', padding: '0 16px',
+    }}>
+      <div className="ot-glass-nav" style={{
+        pointerEvents: 'auto',
+        display: 'flex', alignItems: 'center', gap: 0,
+        borderRadius: 999, padding: '6px 10px',
+        width: '100%', maxWidth: 480,
+      }}>
 
-      <div className="ot-glass-nav" style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: 0,
-        borderRadius: 999, padding: '5px 6px' }}>
-
-        {/* Avatar — izquierda del todo */}
+        {/* Avatar */}
         <button onClick={onProfileOpen} style={{
           border: 'none', background: 'transparent', cursor: 'pointer',
-          width: 40, height: 44, borderRadius: 14, padding: 3,
-          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
+          width: 48, height: 50, borderRadius: 16, padding: 4,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3,
+          flexShrink: 0,
         }}>
           <div style={{ borderRadius: '50%', padding: 2,
             border: `2px solid ${catColor}`, display: 'inline-flex', transition: 'border-color .3s' }}>
-            <Avatar person={me} size={20} />
+            <Avatar person={me} size={22} />
           </div>
-          <span style={{ fontSize: 8.5, fontWeight: 700, fontFamily: 'var(--font-ui)',
+          <span style={{ fontSize: 9, fontWeight: 700, fontFamily: 'var(--font-ui)',
             letterSpacing: '0.02em', color: 'var(--ink-faint)' }}>Yo</span>
         </button>
 
@@ -432,16 +440,16 @@ function NavBar({ tab, setTab, onFab, me, onProfileOpen, stories, activeStoryId,
         <NavBtn {...items[1]} active={tab === items[1].key} onClick={() => setTab(items[1].key)} />
 
         <button onClick={onFab} style={{
-          width: 44, height: 44, borderRadius: '50%', border: 'none',
-          background: catColor, color: '#fff', cursor: 'pointer', margin: '0 2px',
+          width: 48, height: 48, borderRadius: '50%', border: 'none',
+          background: catColor, color: '#fff', cursor: 'pointer', margin: '0 4px',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: `0 4px 14px color-mix(in srgb, ${catColor} 50%, transparent)`,
+          boxShadow: `0 4px 16px color-mix(in srgb, ${catColor} 55%, transparent)`,
           transition: 'background .3s, transform .15s', flexShrink: 0,
         }}
-          onMouseDown={e => (e.currentTarget.style.transform = 'scale(0.9)')}
+          onMouseDown={e => (e.currentTarget.style.transform = 'scale(0.88)')}
           onMouseUp={e => (e.currentTarget.style.transform = 'none')}
           onMouseLeave={e => (e.currentTarget.style.transform = 'none')}>
-          <Icon name="plus" size={21} stroke={2.4} />
+          <Icon name="plus" size={22} stroke={2.4} />
         </button>
 
         <NavBtn {...items[2]} active={tab === items[2].key} onClick={() => setTab(items[2].key)} />
@@ -528,26 +536,26 @@ function NavBtn({ icon, label, active, onClick, badge }: { icon: string; label: 
   return (
     <button onClick={onClick} style={{
       border: 'none', background: 'transparent', cursor: 'pointer',
-      width: 46, height: 44, borderRadius: 14, position: 'relative',
-      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
+      flex: 1, minWidth: 44, height: 50, borderRadius: 16, position: 'relative',
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3,
       color: active ? 'var(--orange-deep)' : 'var(--ink-faint)', transition: 'color .2s',
     }}>
       <div style={{ position: 'relative' }}>
-        <Icon name={icon} size={19} stroke={active ? 2.3 : 1.9} />
+        <Icon name={icon} size={21} stroke={active ? 2.3 : 1.8} />
         {badge != null && badge > 0 && (
           <span style={{
-            position: 'absolute', top: -4, right: -6,
+            position: 'absolute', top: -4, right: -7,
             background: 'var(--orange)', color: '#fff',
             borderRadius: 99, fontSize: 9, fontWeight: 800,
-            minWidth: 14, height: 14, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            minWidth: 15, height: 15, display: 'flex', alignItems: 'center', justifyContent: 'center',
             padding: '0 3px', fontFamily: 'var(--font-ui)', lineHeight: 1,
           }}>
             {badge > 9 ? '9+' : badge}
           </span>
         )}
       </div>
-      <span style={{ fontSize: 8.5, fontWeight: active ? 700 : 600,
-        fontFamily: 'var(--font-ui)', letterSpacing: '0.02em' }}>{label}</span>
+      <span style={{ fontSize: 9.5, fontWeight: active ? 700 : 600,
+        fontFamily: 'var(--font-ui)', letterSpacing: '0.01em' }}>{label}</span>
     </button>
   )
 }

@@ -1,7 +1,5 @@
-import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useAuth } from '../context/AuthContext'
-import { supabase } from '../lib/supabase'
 import { CatMedallion } from '../components/ui/CatMedallion'
 import { CatTag } from '../components/ui/CatTag'
 import { Avatar, CoupleAvatars } from '../components/ui/Avatar'
@@ -30,42 +28,17 @@ export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpe
 }) {
   const { activeStoryId, stories, profile } = useAuth()
   const activeStory = stories.find(s => s.id === activeStoryId) ?? null
-  const [allPlans, setAllPlans] = useState<PlanType[]>([])
-  const [loading, setLoading] = useState(true)
 
   const since = (activeStory?.start_date || profile?.anniversary_date) || ''
 
-  useEffect(() => {
-    if (activeStoryId && plans.length === 0) {
-      supabase.from('plans').select('*').eq('story_id', activeStoryId)
-        .order('plan_date', { ascending: true })
-        .then(({ data }) => {
-          if (data) setAllPlans(data as PlanType[])
-          setLoading(false)
-        })
-    } else {
-      setAllPlans(plans)
-      setLoading(false)
-    }
-  }, [activeStoryId, plans])
-
-  const upcoming = allPlans.filter(p => p.status === 'pendiente').sort((a, b) => a.plan_date.localeCompare(b.plan_date))
-  const past = allPlans.filter(p => p.status === 'completado').sort((a, b) => b.plan_date.localeCompare(a.plan_date))
+  const upcoming = plans.filter(p => p.status === 'pendiente').sort((a, b) => a.plan_date.localeCompare(b.plan_date))
+  const past = plans.filter(p => p.status === 'completado').sort((a, b) => b.plan_date.localeCompare(a.plan_date))
   const next = upcoming[0]
-  const numbered = [...allPlans].filter(p => p.status !== 'cancelado').sort((a, b) => a.plan_date.localeCompare(b.plan_date))
+  const numbered = [...plans].filter(p => p.status !== 'cancelado').sort((a, b) => a.plan_date.localeCompare(b.plan_date))
   const chapterNo = (id: string) => numbered.findIndex(p => p.id === id) + 1
   const isPareja = activeStory?.category === 'pareja'
   const days = (isPareja && since) ? daysTogether(since) : null
   const partnerName = partner?.name || 'Tu pareja'
-
-  if (loading) {
-    return (
-      <div style={{ minHeight: '50vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: 32, height: 32, borderRadius: '50%', border: '3px solid var(--orange)',
-          borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite' }} />
-      </div>
-    )
-  }
 
   return (
     <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
@@ -135,7 +108,7 @@ export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpe
           <div className="eyebrow" style={{ marginBottom: 12, color: 'var(--orange-deep)' }}>· Su próximo momento ·</div>
           <NextHero plan={next} no={chapterNo(next.id)} onClick={() => onPlanClick(next)} />
         </div>
-      ) : !loading && allPlans.length === 0 && <EmptyDashboard onNewPlan={onNewPlan} />}
+      ) : plans.length === 0 && <EmptyDashboard onNewPlan={onNewPlan} />}
 
       {/* Upcoming plans beyond the hero */}
       {upcoming.length > 1 && (
@@ -207,7 +180,7 @@ export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpe
       )}
 
       {/* Quick links */}
-      {past.length === 0 && allPlans.length > 0 && (
+      {past.length === 0 && plans.length > 0 && (
         <div style={{ marginTop: 28, display: 'flex', gap: 12 }}>
           <button onClick={() => go('gallery')} className="ot-card" style={{
             flex: 1, border: 'none', cursor: 'pointer', padding: '18px 16px',
