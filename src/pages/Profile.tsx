@@ -29,9 +29,8 @@ interface StoryMember {
   isMe: boolean
 }
 
-export function ProfileScreen({ plans, transactions, memories, onClose, onGoToFinance, onOpenPlan, partner, storyCode, onNewStory, onStorySwitcher, onEditStory }: {
+export function ProfileScreen({ plans, memories, onClose, onGoToFinance, onOpenPlan, partner, storyCode, onNewStory, onStorySwitcher, onEditStory }: {
   plans: PlanType[]
-  transactions: { id: string; type: 'ingreso' | 'gasto'; amount: number }[]
   memories: { id: string }[]
   onClose: () => void
   onGoToFinance: () => void
@@ -47,7 +46,8 @@ export function ProfileScreen({ plans, transactions, memories, onClose, onGoToFi
 
   const [editing, setEditing] = useState(false)
   const [editName, setEditName] = useState(profile?.full_name || '')
-  const [editAnniversary, setEditAnniversary] = useState(profile?.anniversary_date || '')
+  const [editBirthday, setEditBirthday] = useState(profile?.birthday || '')
+  const [editNickname, setEditNickname] = useState(profile?.nickname || '')
   const [saving, setSaving] = useState(false)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [codeCopied, setCodeCopied] = useState(false)
@@ -58,9 +58,9 @@ export function ProfileScreen({ plans, transactions, memories, onClose, onGoToFi
   const [members, setMembers] = useState<StoryMember[]>([])
 
   const activeStory = stories.find(s => s.id === activeStoryId) ?? null
-  const spent = transactions.filter(t => t.type === 'gasto').reduce((s, t) => s + t.amount, 0)
+  const spent = plans.reduce((s, p) => s + (p.actual_amount ?? 0), 0)
   const budget = activeStory?.budget ?? null
-  const since = profile?.anniversary_date || ''
+  const storyStartDate = activeStory?.start_date || ''
 
   const me: PersonDisplay = {
     name: profile?.full_name || 'Tú',
@@ -113,7 +113,8 @@ export function ProfileScreen({ plans, transactions, memories, onClose, onGoToFi
     try {
       const { error } = await supabase.from('profiles').update({
         full_name: editName.trim() || null,
-        anniversary_date: editAnniversary || null,
+        birthday: editBirthday || null,
+        nickname: editNickname.trim() || null,
       }).eq('id', user.id)
       if (error) throw error
       await refreshProfile()
@@ -246,14 +247,14 @@ export function ProfileScreen({ plans, transactions, memories, onClose, onGoToFi
                 </div>
               )}
 
-              {/* Invite code */}
-              {since && (
+              {/* Story start date */}
+              {storyStartDate && (
                 <div style={{ borderTop: '1px solid var(--line-soft)', paddingTop: 12, marginBottom: 12 }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-faint)', fontFamily: 'var(--font-ui)',
                     textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
                     Desde
                   </div>
-                  <div style={{ fontSize: 14, color: 'var(--ink-soft)' }}>{fmtDate(since)}</div>
+                  <div style={{ fontSize: 14, color: 'var(--ink-soft)' }}>{fmtDate(storyStartDate)}</div>
                 </div>
               )}
 
@@ -283,7 +284,7 @@ export function ProfileScreen({ plans, transactions, memories, onClose, onGoToFi
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
             <span className="eyebrow">Tu perfil</span>
             {!editing && (
-              <button onClick={() => { setEditName(profile?.full_name || ''); setEditAnniversary(profile?.anniversary_date || ''); setEditing(true) }}
+              <button onClick={() => { setEditName(profile?.full_name || ''); setEditBirthday(profile?.birthday || ''); setEditNickname(profile?.nickname || ''); setEditing(true) }}
                 style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, fontWeight: 600,
                   color: 'var(--orange)', padding: 0, fontFamily: 'var(--font-ui)' }}>
                 Editar
@@ -314,10 +315,12 @@ export function ProfileScreen({ plans, transactions, memories, onClose, onGoToFi
 
               {!editing && (
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: 17 }}>{me.name}</div>
-                  {since
-                    ? <div style={{ fontSize: 13, color: 'var(--ink-soft)', marginTop: 3 }}>Aniversario: {fmtDate(since)}</div>
-                    : <div style={{ fontSize: 13, color: 'var(--ink-faint)', fontStyle: 'italic', marginTop: 3 }}>Sin aniversario</div>
+                  <div style={{ fontWeight: 700, fontSize: 17 }}>
+                    {me.name}{profile?.nickname ? ` · ${profile.nickname}` : ''}
+                  </div>
+                  {profile?.birthday
+                    ? <div style={{ fontSize: 13, color: 'var(--ink-soft)', marginTop: 3 }}>Cumpleaños: {fmtDate(profile.birthday)}</div>
+                    : <div style={{ fontSize: 13, color: 'var(--ink-faint)', fontStyle: 'italic', marginTop: 3 }}>Sin cumpleaños</div>
                   }
                 </div>
               )}
@@ -328,8 +331,11 @@ export function ProfileScreen({ plans, transactions, memories, onClose, onGoToFi
                 <label className="field-label">Tu nombre</label>
                 <input className="field" value={editName} onChange={e => setEditName(e.target.value)}
                   placeholder="Tu nombre" style={{ marginBottom: 14 }} autoFocus />
-                <label className="field-label">Aniversario</label>
-                <input className="field" type="date" value={editAnniversary} onChange={e => setEditAnniversary(e.target.value)} />
+                <label className="field-label">Apodo (opcional)</label>
+                <input className="field" value={editNickname} onChange={e => setEditNickname(e.target.value)}
+                  placeholder="Tu apodo" style={{ marginBottom: 14 }} />
+                <label className="field-label">Cumpleaños</label>
+                <input className="field" type="date" value={editBirthday} onChange={e => setEditBirthday(e.target.value)} />
                 <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
                   <button onClick={() => setEditing(false)} className="btn btn-ghost" style={{ flex: 1 }}>Cancelar</button>
                   <button onClick={saveProfile} className="btn btn-primary" style={{ flex: 1 }} disabled={saving}>
@@ -337,60 +343,6 @@ export function ProfileScreen({ plans, transactions, memories, onClose, onGoToFi
                   </button>
                 </div>
               </>
-            )}
-          </div>
-        </div>
-
-        {/* ── SECCIÓN: MIS HISTORIAS ── */}
-        <div style={{ padding: '18px 22px 0' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-            <span className="eyebrow">Mis Historias</span>
-            {onStorySwitcher && stories.length > 1 && (
-              <button onClick={onStorySwitcher} style={{ border: 'none', background: 'transparent', cursor: 'pointer',
-                fontSize: 13, fontWeight: 600, color: 'var(--orange)', padding: 0, fontFamily: 'var(--font-ui)' }}>
-                Ver todas
-              </button>
-            )}
-          </div>
-
-          <div className="card" style={{ overflow: 'hidden' }}>
-            {stories.map((s, i) => {
-              const color = CAT_COLOR[s.category] || 'var(--ink-faint)'
-              const active = s.id === activeStoryId
-              return (
-                <button key={s.id} onClick={() => setActiveStoryId(s.id)} style={{
-                  width: '100%', border: 'none', background: 'transparent', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', gap: 13, padding: '13px 18px', textAlign: 'left',
-                  borderBottom: i < stories.length - 1 ? '1px solid var(--line-soft)' : 'none',
-                  color: 'var(--ink)',
-                }}>
-                  <div style={{ width: 34, height: 34, borderRadius: 10, background: color, flexShrink: 0,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Icon name={CAT_ICON[s.category] || 'tag'} size={17} style={{ color: '#fff' }} />
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: active ? 700 : 600, fontSize: 14.5,
-                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name}</div>
-                    <div style={{ fontSize: 12, color: 'var(--ink-faint)', marginTop: 1 }}>{CAT_LABEL[s.category]}</div>
-                  </div>
-                  {active && <div style={{ width: 8, height: 8, borderRadius: '50%', background: color, flexShrink: 0 }} />}
-                </button>
-              )
-            })}
-
-            {/* Crear nueva Historia */}
-            {onNewStory && (
-              <button onClick={onNewStory} style={{
-                width: '100%', border: 'none', background: 'transparent', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', gap: 13, padding: '13px 18px', textAlign: 'left',
-                borderTop: '1px solid var(--line-soft)', color: 'var(--orange)',
-              }}>
-                <div style={{ width: 34, height: 34, borderRadius: 10, background: 'var(--orange-tint)', flexShrink: 0,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Icon name="plus" size={17} stroke={2.2} style={{ color: 'var(--orange-deep)' }} />
-                </div>
-                <span style={{ fontWeight: 600, fontSize: 14.5, fontFamily: 'var(--font-ui)' }}>Nueva Historia</span>
-              </button>
             )}
           </div>
         </div>

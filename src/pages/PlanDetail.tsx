@@ -40,7 +40,7 @@ function RoundBtn({ icon, onClick }: { icon: string; onClick?: () => void }) {
   return (
     <button onClick={onClick} style={{
       width: 42, height: 42, borderRadius: '50%', border: 'none',
-      background: 'rgba(255,252,247,0.9)', cursor: 'pointer',
+      background: 'var(--card)', cursor: 'pointer',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       boxShadow: 'var(--sh-sm)', color: 'var(--ink)',
     }}>
@@ -80,6 +80,12 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
 
   // Memory lightbox
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null)
+
+  // Spending confirmation
+  const [confirmingAmount, setConfirmingAmount] = useState(false)
+  const [actualAmountInput, setActualAmountInput] = useState('')
+  const [savingActual, setSavingActual] = useState(false)
+  const [amountDismissed, setAmountDismissed] = useState(false)
 
   // Cover photo
   const [coverUrl, setCoverUrl] = useState<string | null>(initialPlan.cover_url)
@@ -176,6 +182,18 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
     onClose()
   }
 
+  const saveActualAmount = async () => {
+    const val = parseFloat(actualAmountInput)
+    if (isNaN(val) || val < 0) return
+    setSavingActual(true)
+    await supabase.from('plans').update({ actual_amount: val }).eq('id', plan.id)
+    setPlan(p => ({ ...p, actual_amount: val }))
+    setSavingActual(false)
+    setConfirmingAmount(false)
+    push({ icon: '✓', eyebrow: 'Gasto confirmado', title: `${val.toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} registrado` })
+    onUpdated?.()
+  }
+
   const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -266,7 +284,7 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
         {/* Close */}
         <button onClick={onClose} style={{
           position: 'absolute', top: 56, left: 18, width: 42, height: 42,
-          borderRadius: '50%', border: 'none', background: 'rgba(255,252,247,0.9)',
+          borderRadius: '50%', border: 'none', background: 'var(--card)',
           cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
           boxShadow: 'var(--sh-sm)', color: 'var(--ink)',
         }}>
@@ -428,6 +446,66 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
             )}
           </div>
         </div>
+
+        {/* Spending confirmation banner */}
+        {!editing && !isFuture && plan.budget_amount != null && plan.actual_amount == null && !amountDismissed && (
+          <div className="card anim-up" style={{ marginTop: 14, padding: '16px 18px', border: '1.5px solid var(--orange-tint)' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 12 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--orange-tint)',
+                color: 'var(--orange-deep)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Icon name="wallet" size={18} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 700, fontSize: 14.5, marginBottom: 3 }}>¿Cuánto gastaron?</div>
+                <div style={{ fontSize: 13, color: 'var(--ink-soft)', lineHeight: 1.4 }}>
+                  Tenían estimado <strong>{plan.budget_amount.toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</strong>.
+                  Confirma el gasto real para mantener el presupuesto al día.
+                </div>
+              </div>
+            </div>
+            {confirmingAmount ? (
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <input value={actualAmountInput} onChange={e => setActualAmountInput(e.target.value.replace(/[^0-9.]/g, ''))}
+                  placeholder={String(plan.budget_amount)} inputMode="decimal" autoFocus
+                  style={{ ...INPUT_STYLE, flex: 1 }} />
+                <button onClick={saveActualAmount} disabled={savingActual || !actualAmountInput}
+                  className="btn btn-orange" style={{ flexShrink: 0, padding: '10px 16px', borderRadius: 12, fontSize: 14 }}>
+                  {savingActual ? '…' : 'OK'}
+                </button>
+                <button onClick={() => setConfirmingAmount(false)} style={{
+                  border: 'none', background: 'transparent', cursor: 'pointer',
+                  color: 'var(--ink-faint)', padding: '8px', flexShrink: 0,
+                }}>
+                  <Icon name="x" size={16} />
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button onClick={() => { setActualAmountInput(String(plan.budget_amount ?? '')); setConfirmingAmount(true) }}
+                  className="btn btn-orange" style={{ flex: 2, padding: '10px', fontSize: 13.5, borderRadius: 12 }}>
+                  Confirmar gasto
+                </button>
+                <button onClick={() => setAmountDismissed(true)} style={{
+                  flex: 1, border: '1.5px solid var(--line)', background: 'transparent', cursor: 'pointer',
+                  borderRadius: 12, padding: '10px', fontSize: 13, fontWeight: 600, color: 'var(--ink-faint)',
+                  fontFamily: 'var(--font-ui)',
+                }}>
+                  Después
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Actual amount badge (when confirmed) */}
+        {!editing && plan.actual_amount != null && (
+          <div style={{ marginTop: 10, display: 'inline-flex', alignItems: 'center', gap: 7,
+            background: 'var(--done-tint)', borderRadius: 10, padding: '7px 12px',
+            fontSize: 13, color: 'var(--done-deep)', fontWeight: 600 }}>
+            <Icon name="checkCircle" size={14} />
+            Gasto confirmado: {plan.actual_amount.toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+          </div>
+        )}
 
         {/* Sub-momentos — hidden in edit mode */}
         {!editing && (

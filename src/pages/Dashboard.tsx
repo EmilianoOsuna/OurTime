@@ -8,7 +8,6 @@ import { Avatar, CoupleAvatars } from '../components/ui/Avatar'
 import { PresenceDot } from '../components/ui/PresenceDot'
 import { Icon } from '../components/ui/Icon'
 import { toRoman, fmtDate, fmtDateShort, countdown, CAT_META } from '../lib/chapterUtils'
-import { useCurrency } from '../context/CurrencyContext'
 import type { PlanType, PersonDisplay } from '../lib/supabase'
 import type { Tab } from '../components/AppShell'
 
@@ -24,11 +23,8 @@ const CAT_COLOR: Record<string, string> = {
   otro:    'var(--ink-faint)',
 }
 
-interface Tx { id: string; type: 'ingreso' | 'gasto'; amount: number }
-
-export default function Dashboard({ plans, transactions, go, onBell, onPlanClick, onProfileOpen, me, partner, onStorySwitcher }: {
+export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpen, me, partner, onStorySwitcher }: {
   plans: PlanType[]
-  transactions: Tx[]
   go: (t: Tab) => void
   onBell: () => void
   onPlanClick: (p: PlanType) => void
@@ -38,14 +34,10 @@ export default function Dashboard({ plans, transactions, go, onBell, onPlanClick
   partner: PersonDisplay | null
 }) {
   const { activeStoryId, stories, setActiveStoryId, profile } = useAuth()
-  const { fmt } = useCurrency()
   const [allPlans, setAllPlans] = useState<PlanType[]>([])
   const [loading, setLoading] = useState(true)
 
   const since = profile?.anniversary_date || ''
-  const activeStory = stories.find(s => s.id === activeStoryId)
-  const budget = activeStory?.budget ?? null
-  const spent = transactions.filter(t => t.type === 'gasto').reduce((s, t) => s + t.amount, 0)
 
   useEffect(() => {
     if (activeStoryId && plans.length === 0) {
@@ -161,36 +153,6 @@ export default function Dashboard({ plans, transactions, go, onBell, onPlanClick
         </div>
       )}
 
-      {/* Finance summary strip */}
-      {(budget !== null || spent > 0) && (
-        <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
-          {budget !== null && (
-            <div className="ot-card" style={{ flex: 1, padding: '14px 12px', textAlign: 'center' }}>
-              <div className="display" style={{ fontSize: 22, color: (budget - spent) >= 0 ? 'var(--done)' : 'var(--orange-deep)', lineHeight: 1 }}>
-                {fmt(budget - spent)}
-              </div>
-              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase',
-                color: 'var(--ink-faint)', marginTop: 5 }}>Saldo disponible</div>
-            </div>
-          )}
-          <div className="ot-card" style={{ flex: 1, padding: '14px 12px', textAlign: 'center' }}>
-            <div className="display" style={{ fontSize: 22, color: 'var(--orange-deep)', lineHeight: 1 }}>
-              {fmt(spent)}
-            </div>
-            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase',
-              color: 'var(--ink-faint)', marginTop: 5 }}>Total gastado</div>
-          </div>
-          {budget !== null && (
-            <div className="ot-card" style={{ flex: 1, padding: '14px 12px', textAlign: 'center' }}>
-              <div className="display" style={{ fontSize: 22, color: 'var(--ink)', lineHeight: 1 }}>
-                {budget > 0 ? Math.round((spent / budget) * 100) : 0}%
-              </div>
-              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase',
-                color: 'var(--ink-faint)', marginTop: 5 }}>Del presupuesto</div>
-            </div>
-          )}
-        </div>
-      )}
 
       {/* Next chapter hero */}
       {next ? (
@@ -290,7 +252,7 @@ function NextHero({ plan, no, onClick }: { plan: PlanType; no: number; onClick: 
         }
         <div style={{ position: 'absolute', top: 14, left: 14 }}><CatTag cat={plan.type} /></div>
         <div style={{ position: 'absolute', top: 12, right: 14, display: 'flex', alignItems: 'center', gap: 6,
-          background: 'rgba(255,252,247,0.9)', borderRadius: 999, padding: '6px 11px',
+          background: 'var(--card)', borderRadius: 999, padding: '6px 11px',
           fontSize: 12.5, fontWeight: 700, color: 'var(--ink)' }}>
           <Icon name="clock" size={14} /> {countdown(plan.plan_date)}
         </div>

@@ -12,6 +12,8 @@ const CATEGORIES = [
   { key: 'otro',    label: 'Otro',    icon: 'tag',       color: 'var(--ink-faint)', bg: 'var(--card-2)' },
 ]
 
+const FAMILY_ROLES = ['Papá', 'Mamá', 'Hijo/a', 'Hermano/a', 'Abuelo/a', 'Tío/a', 'Primo/a', 'Otro']
+
 function randomCode(len = 6) {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
   return Array.from({ length: len }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
@@ -20,10 +22,14 @@ function randomCode(len = 6) {
 interface Props { onClose: () => void; onCreated: () => void }
 
 export const NewStorySheet: React.FC<Props> = ({ onClose, onCreated }) => {
-  const { user, refreshStories, setActiveStoryId } = useAuth()
+  const { user, refreshStories, setActiveStoryId, refreshProfile } = useAuth()
   const { push } = useToast()
   const [name, setName] = useState('')
   const [category, setCategory] = useState('pareja')
+  const [startDate, setStartDate] = useState('')
+  const [originPlace, setOriginPlace] = useState('')
+  const [familyRole, setFamilyRole] = useState('')
+  const [userBirthday, setUserBirthday] = useState('')
   const [saving, setSaving] = useState(false)
 
   const ok = name.trim().length >= 2
@@ -33,9 +39,31 @@ export const NewStorySheet: React.FC<Props> = ({ onClose, onCreated }) => {
     setSaving(true)
     try {
       const invite_code = randomCode()
+
+      // Build contextual story fields
+      let storyOriginPlace: string | null = null
+      let storyStartDate: string | null = null
+
+      if (category === 'pareja') {
+        storyStartDate = startDate || null
+        storyOriginPlace = originPlace.trim() || null
+      } else if (category === 'amigos') {
+        storyStartDate = startDate || null
+        storyOriginPlace = originPlace.trim() || null
+      } else if (category === 'familia') {
+        storyOriginPlace = familyRole || null
+      }
+
       const { data: story, error: storyErr } = await supabase
         .from('stories')
-        .insert({ name: name.trim(), category, invite_code, created_by: user.id })
+        .insert({
+          name: name.trim(),
+          category,
+          invite_code,
+          created_by: user.id,
+          start_date: storyStartDate,
+          origin_place: storyOriginPlace,
+        })
         .select('id')
         .single()
       if (storyErr) throw storyErr
@@ -44,6 +72,12 @@ export const NewStorySheet: React.FC<Props> = ({ onClose, onCreated }) => {
         .from('story_members')
         .insert({ story_id: story.id, user_id: user.id, role: 'admin' })
       if (memberErr) throw memberErr
+
+      // Save birthday to profile for familia
+      if (category === 'familia' && userBirthday) {
+        await supabase.from('profiles').update({ birthday: userBirthday }).eq('id', user.id)
+        await refreshProfile()
+      }
 
       await refreshStories()
       setActiveStoryId(story.id)
@@ -92,6 +126,77 @@ export const NewStorySheet: React.FC<Props> = ({ onClose, onCreated }) => {
             )
           })}
         </div>
+
+        {/* ── Contextual fields: Pareja ── */}
+        {category === 'pareja' && (
+          <div className="anim-up" style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ fontSize: 13, color: 'var(--ink-soft)', lineHeight: 1.5, padding: '10px 14px',
+              background: 'var(--orange-tint)', borderRadius: 12 }}>
+              <Icon name="heartFill" size={13} style={{ color: 'var(--orange)', marginRight: 6, verticalAlign: 'middle' }} />
+              Cuéntanos un poco sobre su historia de amor
+            </div>
+            <div>
+              <label className="field-label">Fecha de aniversario</label>
+              <input className="field" type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
+            </div>
+            <div>
+              <label className="field-label">¿Dónde se conocieron? <span style={{ color: 'var(--ink-faint)', fontWeight: 400 }}>(opcional)</span></label>
+              <input className="field" placeholder="Ej. En la universidad, en un café…" value={originPlace}
+                onChange={e => setOriginPlace(e.target.value)} />
+            </div>
+          </div>
+        )}
+
+        {/* ── Contextual fields: Amigos ── */}
+        {category === 'amigos' && (
+          <div className="anim-up" style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ fontSize: 13, color: 'var(--ink-soft)', lineHeight: 1.5, padding: '10px 14px',
+              background: 'var(--blue-tint)', borderRadius: 12 }}>
+              <Icon name="users" size={13} style={{ color: 'var(--blue)', marginRight: 6, verticalAlign: 'middle' }} />
+              Cuéntanos cómo inició esta amistad
+            </div>
+            <div>
+              <label className="field-label">¿Desde cuándo se conocen?</label>
+              <input className="field" type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
+            </div>
+            <div>
+              <label className="field-label">Apodo del grupo <span style={{ color: 'var(--ink-faint)', fontWeight: 400 }}>(opcional)</span></label>
+              <input className="field" placeholder="Ej. Los de siempre, La banda…" value={originPlace}
+                onChange={e => setOriginPlace(e.target.value)} />
+            </div>
+          </div>
+        )}
+
+        {/* ── Contextual fields: Familia ── */}
+        {category === 'familia' && (
+          <div className="anim-up" style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ fontSize: 13, color: 'var(--ink-soft)', lineHeight: 1.5, padding: '10px 14px',
+              background: 'var(--done-tint)', borderRadius: 12 }}>
+              <Icon name="home" size={13} style={{ color: 'var(--done)', marginRight: 6, verticalAlign: 'middle' }} />
+              Un poco sobre ti en esta familia
+            </div>
+            <div>
+              <label className="field-label">¿Cuál es tu rol?</label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginTop: 4 }}>
+                {FAMILY_ROLES.map(r => (
+                  <button key={r} onClick={() => setFamilyRole(r)} style={{
+                    border: familyRole === r ? '2px solid var(--done)' : '2px solid var(--line)',
+                    borderRadius: 10, background: familyRole === r ? 'var(--done-tint)' : 'var(--card)',
+                    padding: '10px 8px', cursor: 'pointer', fontSize: 13, fontWeight: 600,
+                    color: familyRole === r ? 'var(--done)' : 'var(--ink)', transition: 'all .15s',
+                    fontFamily: 'var(--font-ui)',
+                  }}>
+                    {r}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="field-label">Tu fecha de cumpleaños <span style={{ color: 'var(--ink-faint)', fontWeight: 400 }}>(opcional)</span></label>
+              <input className="field" type="date" value={userBirthday} onChange={e => setUserBirthday(e.target.value)} />
+            </div>
+          </div>
+        )}
 
         <button className="btn btn-orange btn-block" style={{ marginTop: 24 }}
           disabled={!ok || saving} onClick={submit}>

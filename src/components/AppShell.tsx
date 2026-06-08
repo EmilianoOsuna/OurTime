@@ -225,7 +225,7 @@ export default function AppShell() {
   const unreadCount = useUnreadCount(activeStoryId, user?.id)
 
   const screen = {
-    home: <Dashboard plans={plans} transactions={transactions} go={go}
+    home: <Dashboard plans={plans} go={go}
             onBell={() => setNotifsVisible(true)} onPlanClick={openPlan}
             onProfileOpen={() => setOverlay({ type: 'profile' })}
             onStorySwitcher={() => setStorySwitcherOpen(true)}
@@ -233,7 +233,7 @@ export default function AppShell() {
     calendar: <Calendar onOpenPlan={openPlan} />,
     gallery: <Gallery memories={memories} setMemories={setMemories}
                onImageClick={(url: string) => setLightbox(url)} me={me} />,
-    finance: <Finances me={me} partner={partnerDisplay} />,
+    finance: <Finances />,
     chat: <Chat me={me} partner={partnerDisplay} />,
   }[tab]
 
@@ -244,7 +244,7 @@ export default function AppShell() {
       {overlay?.type === 'plan' && <PlanDetail plan={overlay.data} onClose={closeOverlay} chapterNo={chapterNo(overlay.data.id)} onUpdated={refreshPlans} />}
       {overlay?.type === 'profile' && (
         <ProfileScreen
-          plans={plans} transactions={transactions} memories={memories}
+          plans={plans} memories={memories}
           onClose={closeOverlay}
           onGoToFinance={() => { closeOverlay(); go('finance') }}
           onOpenPlan={openPlan}

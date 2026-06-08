@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Icon } from '../components/ui/Icon'
 import { Avatar } from '../components/ui/Avatar'
 import { fmtDateShort } from '../lib/chapterUtils'
@@ -92,6 +92,17 @@ function AlbumCard({ album, coverUrl, count, onClick }: {
   )
 }
 
+function useColCount() {
+  const get = () => window.innerWidth >= 1200 ? 4 : window.innerWidth >= 768 ? 3 : 2
+  const [cols, setCols] = useState(get)
+  useEffect(() => {
+    const fn = () => setCols(get())
+    window.addEventListener('resize', fn)
+    return () => window.removeEventListener('resize', fn)
+  }, [])
+  return cols
+}
+
 export default function Gallery({ memories, setMemories, onImageClick, me }: {
   memories: Memory[]
   setMemories: (m: Memory[]) => void
@@ -149,11 +160,12 @@ export default function Gallery({ memories, setMemories, onImageClick, me }: {
     return true
   })
 
-  const makeCols = (arr: Memory[]) => {
-    const cols: Memory[][] = [[], []]
-    arr.forEach((m, i) => cols[i % 2].push(m))
+  const colCount = useColCount()
+  const makeCols = useCallback((arr: Memory[]) => {
+    const cols: Memory[][] = Array.from({ length: colCount }, () => [])
+    arr.forEach((m, i) => cols[i % colCount].push(m))
     return cols
-  }
+  }, [colCount])
 
   // ── Album detail view ──
   if (activeAlbumId !== null) {

@@ -21,6 +21,9 @@ export type StoryType = {
   created_by: string
   created_at: string
   budget: number | null
+  budget_period: 'mensual' | 'semanal' | null
+  start_date: string | null
+  origin_place: string | null
 }
 
 export type StoryMemberType = {
@@ -43,6 +46,7 @@ export type PlanType = {
   parent_plan_id: string | null
   place: string | null
   budget_amount: number | null
+  actual_amount: number | null
   created_at: string
 }
 

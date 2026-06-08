@@ -9,6 +9,8 @@ export type ProfileType = {
   username: string | null
   avatar_url: string | null
   anniversary_date: string | null
+  birthday: string | null
+  nickname: string | null
 }
 
 type AuthContextType = {
