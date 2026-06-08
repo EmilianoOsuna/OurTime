@@ -1,4 +1,5 @@
 import React from 'react'
+import { imageUrl } from '../../lib/supabase'
 
 interface Person {
   name: string
@@ -21,7 +22,7 @@ export function Avatar({ person, size = 40, ring = true, style = {} }: {
         overflow: 'hidden', flexShrink: 0, boxShadow: shadow, ...style,
       }}>
         <img
-          src={person.avatar_url}
+          src={imageUrl(person.avatar_url, size * 2) ?? ''}
           alt={person.name}
           loading="lazy"
           decoding="async"

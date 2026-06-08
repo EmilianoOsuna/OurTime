@@ -5,6 +5,8 @@ import { fmtDateShort } from '../lib/chapterUtils'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import type { PersonDisplay, AlbumType } from '../lib/supabase'
+import { useToast } from '../context/ToastContext'
+import { useConfirm } from '../components/ui/ConfirmDialog'
 
 interface Memory {
   id: string
@@ -34,6 +36,7 @@ function MemoryCard({ m, onOpen, delay, me }: { m: Memory; onOpen: () => void; d
       border: 'none', cursor: 'pointer', padding: 0,
       borderRadius: 16, overflow: 'hidden', background: 'var(--card)',
       boxShadow: 'var(--sh-sm)', animationDelay: delay + 's', display: 'block', width: '100%',
+      contentVisibility: 'auto', containIntrinsicSize: 220,
     }}>
       <div style={{ width: '100%', aspectRatio: '1 / ' + ratio.toFixed(1), position: 'relative', overflow: 'hidden' }}>
         <img src={m.image_url} alt="" loading="lazy" decoding="async"
@@ -110,6 +113,8 @@ export default function Gallery({ memories, setMemories, onImageClick, me }: {
   me: PersonDisplay
 }) {
   const { activeStoryId } = useAuth()
+  const { push: toast } = useToast()
+  const confirm = useConfirm()
   const [view, setView] = useState<'albums' | 'all'>('all')
   const [albums, setAlbums] = useState<AlbumType[]>([])
   const [activeAlbumId, setActiveAlbumId] = useState<string | null>(null)
@@ -140,11 +145,13 @@ export default function Gallery({ memories, setMemories, onImageClick, me }: {
       if (data) setAlbums(prev => [data as AlbumType, ...prev])
       setNewAlbumName('')
       setCreatingAlbum(false)
-    } catch (e: any) { alert(e.message) }
+    } catch (e: any) { toast({ icon: 'x', title: 'Error', body: e.message }) }
     finally { setSavingAlbum(false) }
   }
 
   const deleteAlbum = async (albumId: string) => {
+    const ok = await confirm({ title: 'Eliminar álbum', body: 'Las fotos se conservan.', danger: true, confirmLabel: 'Eliminar' })
+    if (!ok) return
     await supabase.from('albums').delete().eq('id', albumId)
     setAlbums(prev => prev.filter(a => a.id !== albumId))
     if (activeAlbumId === albumId) setActiveAlbumId(null)
@@ -167,7 +174,7 @@ export default function Gallery({ memories, setMemories, onImageClick, me }: {
       setMemories(memories.map(m => ids.includes(m.id) ? { ...m, album_id: activeAlbumId } : m))
       setPickerSelected(new Set())
       setPickerOpen(false)
-    } catch (e: any) { alert(e.message) }
+    } catch (e: any) { toast({ icon: 'x', title: 'Error', body: e.message }) }
     finally { setAssigningPhotos(false) }
   }
 
@@ -220,7 +227,7 @@ export default function Gallery({ memories, setMemories, onImageClick, me }: {
                 display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <Icon name="plus" size={20} stroke={2.3} />
             </button>
-            <button onClick={() => { if (confirm('¿Eliminar este álbum? Las fotos se conservan.')) deleteAlbum(activeAlbumId) }}
+            <button onClick={() => deleteAlbum(activeAlbumId)}
               style={{ border: 'none', background: 'transparent', cursor: 'pointer',
                 color: 'var(--ink-faint)', padding: 4 }}>
               <Icon name="trash" size={18} />
@@ -283,8 +290,8 @@ export default function Gallery({ memories, setMemories, onImageClick, me }: {
                           <button key={m.id} onClick={() => togglePickerSelection(m.id)} style={{
                             border: 'none', padding: 0, cursor: 'pointer', borderRadius: 12,
                             overflow: 'hidden', position: 'relative', display: 'block', width: '100%',
-                            outline: pickerSelected.has(m.id) ? '3px solid var(--orange)' : '3px solid transparent',
-                            transition: 'outline .15s',
+                            boxShadow: pickerSelected.has(m.id) ? '0 0 0 3px var(--orange)' : '0 0 0 3px transparent',
+                            transition: 'boxShadow .15s',
                           }}>
                             <img src={m.image_url} alt="" loading="lazy" style={{
                               width: '100%', aspectRatio: '1', objectFit: 'cover', display: 'block' }} />

@@ -65,7 +65,7 @@ export const MoneySheet: React.FC<Props> = ({ onClose, onCreated }) => {
       transaction_date: new Date().toISOString().slice(0, 10),
     })
     setSaving(false)
-    if (error) { alert(error.message); return }
+    if (error) { push({ icon: 'x', title: 'Error', body: error.message }); return }
     push({ icon: 'check', eyebrow: 'Movimiento guardado',
       title: (kind === 'ingreso' ? '+' : '–') + sym + (+amt).toLocaleString('es-ES'),
       body: label.trim() })

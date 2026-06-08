@@ -9,6 +9,8 @@ import { DatePicker } from '../components/ui/DatePicker'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import type { PlanType, PersonDisplay, StoryType } from '../lib/supabase'
+import { useToast } from '../context/ToastContext'
+import { useConfirm } from '../components/ui/ConfirmDialog'
 
 const CAT_COLOR: Record<string, string> = {
   pareja:  'var(--orange)',
@@ -28,6 +30,8 @@ interface StoryMember {
   name: string
   avatar_url: string | null
   isMe: boolean
+  role: string | null
+  joinedAt: string | null
 }
 
 export function ProfileScreen({ plans, memories, onClose, onGoToFinance, onOpenPlan, partner, storyCode, onNewStory, onStorySwitcher, onEditStory }: {
@@ -44,6 +48,8 @@ export function ProfileScreen({ plans, memories, onClose, onGoToFinance, onOpenP
 }) {
   const { profile, user, signOut, refreshProfile, refreshStories, stories, activeStoryId, setActiveStoryId } = useAuth()
   const { currency, setCurrency, fmt } = useCurrency()
+  const { push: toast } = useToast()
+  const confirm = useConfirm()
 
   const [editing, setEditing] = useState(false)
   const [editName, setEditName] = useState(profile?.full_name || '')
@@ -57,6 +63,10 @@ export function ProfileScreen({ plans, memories, onClose, onGoToFinance, onOpenP
   const [joinError, setJoinError] = useState('')
   const [joinSuccess, setJoinSuccess] = useState(false)
   const [members, setMembers] = useState<StoryMember[]>([])
+  const [editingRole, setEditingRole] = useState(false)
+  const [roleInput, setRoleInput] = useState('')
+  const [savingRole, setSavingRole] = useState(false)
+  const [selectedMember, setSelectedMember] = useState<StoryMember | null>(null)
 
   const activeStory = stories.find(s => s.id === activeStoryId) ?? null
   const spent = plans.reduce((s, p) => s + (p.actual_amount ?? 0), 0)
@@ -73,19 +83,35 @@ export function ProfileScreen({ plans, memories, onClose, onGoToFinance, onOpenP
   useEffect(() => {
     if (!activeStoryId || !user) return
     supabase.from('story_members')
-      .select('user_id, profiles(full_name, avatar_url)')
+      .select('user_id, role, joined_at, profiles(full_name, avatar_url)')
       .eq('story_id', activeStoryId)
       .then(({ data }) => {
         if (!data) return
         const list: StoryMember[] = data.map((m: any) => ({
           userId: m.user_id,
-          name: (m.profiles?.full_name) || 'Miembro',
+          name: m.profiles?.full_name || 'Miembro',
           avatar_url: m.profiles?.avatar_url || null,
           isMe: m.user_id === user.id,
+          role: m.role || null,
+          joinedAt: m.joined_at || null,
         }))
         setMembers(list)
+        const me = list.find(m => m.isMe)
+        if (me) setRoleInput(me.role || '')
       })
   }, [activeStoryId, user])
+
+  const saveRole = async () => {
+    if (!activeStoryId || !user) return
+    setSavingRole(true)
+    await supabase.from('story_members')
+      .update({ role: roleInput.trim() || null })
+      .eq('story_id', activeStoryId)
+      .eq('user_id', user.id)
+    setMembers(ms => ms.map(m => m.isMe ? { ...m, role: roleInput.trim() || null } : m))
+    setSavingRole(false)
+    setEditingRole(false)
+  }
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -101,7 +127,7 @@ export function ProfileScreen({ plans, memories, onClose, onGoToFinance, onOpenP
       await supabase.from('profiles').update({ avatar_url: url }).eq('id', user.id)
       await refreshProfile()
     } catch (e: any) {
-      alert('Error subiendo foto: ' + e.message)
+      toast({ icon: 'x', title: 'Error subiendo foto', body: e.message })
     } finally {
       setUploadingAvatar(false)
       e.target.value = ''
@@ -121,7 +147,7 @@ export function ProfileScreen({ plans, memories, onClose, onGoToFinance, onOpenP
       await refreshProfile()
       setEditing(false)
     } catch (e: any) {
-      alert('Error: ' + e.message)
+      toast({ icon: 'x', title: 'Error', body: e.message })
     } finally {
       setSaving(false)
     }
@@ -220,13 +246,52 @@ export function ProfileScreen({ plans, memories, onClose, onGoToFinance, onOpenP
               {/* Members */}
               {members.length > 0 && (
                 <div style={{ borderTop: '1px solid var(--line-soft)', paddingTop: 14, marginBottom: 14 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-faint)', fontFamily: 'var(--font-ui)',
-                    textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>
-                    Miembros · {members.length}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-faint)', fontFamily: 'var(--font-ui)',
+                      textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                      Miembros · {members.length}
+                    </div>
+                    {!editingRole && (
+                      <button onClick={() => setEditingRole(true)} style={{
+                        border: 'none', background: 'transparent', cursor: 'pointer',
+                        fontSize: 12, fontWeight: 600, color: 'var(--orange)', fontFamily: 'var(--font-ui)', padding: 0,
+                        display: 'flex', alignItems: 'center', gap: 3,
+                      }}>
+                        <Icon name="edit" size={12} /> Mi rol
+                      </button>
+                    )}
                   </div>
+                  {editingRole && (
+                    <div style={{ marginBottom: 14, display: 'flex', gap: 8, alignItems: 'center' }}>
+                      <input
+                        className="field"
+                        placeholder="Tu rol en esta historia…"
+                        value={roleInput}
+                        onChange={e => setRoleInput(e.target.value)}
+                        autoFocus
+                        style={{ flex: 1 }}
+                        maxLength={32}
+                      />
+                      <button onClick={saveRole} disabled={savingRole} className="btn btn-primary"
+                        style={{ flexShrink: 0, padding: '10px 14px', borderRadius: 12, fontSize: 13 }}>
+                        {savingRole ? '…' : <Icon name="check" size={15} />}
+                      </button>
+                      <button onClick={() => setEditingRole(false)} style={{
+                        border: 'none', background: 'transparent', cursor: 'pointer',
+                        color: 'var(--ink-faint)', padding: 6, flexShrink: 0,
+                      }}>
+                        <Icon name="x" size={15} />
+                      </button>
+                    </div>
+                  )}
                   <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                     {members.map(m => (
-                      <div key={m.userId} style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                      <button key={m.userId}
+                        onClick={() => !m.isMe && setSelectedMember(m)}
+                        style={{
+                          border: 'none', background: 'transparent', cursor: m.isMe ? 'default' : 'pointer',
+                          padding: 0, display: 'flex', alignItems: 'center', gap: 9, textAlign: 'left',
+                        }}>
                         <div style={{ position: 'relative' }}>
                           <Avatar
                             person={{ name: m.name, initial: m.name[0]?.toUpperCase() || '?', color: m.isMe ? '#0474BA' : '#F17720', avatar_url: m.avatar_url }}
@@ -240,9 +305,12 @@ export function ProfileScreen({ plans, memories, onClose, onGoToFinance, onOpenP
                         </div>
                         <div>
                           <div style={{ fontSize: 13.5, fontWeight: 700 }}>{m.name}</div>
-                          <div style={{ fontSize: 11.5, color: 'var(--ink-faint)' }}>{m.isMe ? 'Tú' : 'Miembro'}</div>
+                          <div style={{ fontSize: 11.5, color: 'var(--ink-faint)' }}>
+                            {m.isMe ? (m.role || 'Tú') : (m.role || 'Miembro')}
+                          </div>
                         </div>
-                      </div>
+                        {!m.isMe && <Icon name="chevR" size={13} style={{ color: 'var(--ink-faint)', marginLeft: 2 }} />}
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -451,6 +519,51 @@ export function ProfileScreen({ plans, memories, onClose, onGoToFinance, onOpenP
           <div style={{ fontSize: 11.5, color: 'var(--ink-faint)' }}>Su historia, siempre</div>
         </div>
       </div>
+
+      {/* ── Mini-perfil de miembro ── */}
+      {selectedMember && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 100,
+          display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
+        }}>
+          <div onClick={() => setSelectedMember(null)} style={{
+            position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)',
+            animation: 'fadeIn .18s both',
+          }} />
+          <div style={{
+            position: 'relative', background: 'var(--card)',
+            borderRadius: '24px 24px 0 0', padding: '24px 22px 40px',
+            animation: 'sheetUp .32s cubic-bezier(.2,.9,.2,1) both',
+          }}>
+            <div style={{ width: 36, height: 4, borderRadius: 2, background: 'var(--line)', margin: '0 auto 20px' }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
+              <Avatar
+                person={{ name: selectedMember.name, initial: selectedMember.name[0]?.toUpperCase() || '?', color: '#F17720', avatar_url: selectedMember.avatar_url }}
+                size={60}
+              />
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 18 }}>{selectedMember.name}</div>
+                <div style={{ fontSize: 13, color: 'var(--ink-faint)', marginTop: 3 }}>
+                  {selectedMember.role || 'Miembro de la historia'}
+                </div>
+              </div>
+            </div>
+            {selectedMember.joinedAt && (
+              <div style={{ fontSize: 13, color: 'var(--ink-soft)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Icon name="calendar" size={14} />
+                Se unió el {new Date(selectedMember.joinedAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
+              </div>
+            )}
+            <button onClick={() => setSelectedMember(null)} style={{
+              marginTop: 20, width: '100%', border: '1.5px solid var(--line)', background: 'transparent',
+              borderRadius: 14, padding: '13px', fontFamily: 'var(--font-ui)', fontWeight: 600,
+              fontSize: 14.5, color: 'var(--ink-soft)', cursor: 'pointer',
+            }}>
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -459,14 +572,19 @@ const GCAL_SCOPE = 'https://www.googleapis.com/auth/calendar.events'
 
 function GoogleCalendarSection() {
   const { user } = useAuth()
+  const { push: toast } = useToast()
   const [connected, setConnected] = useState(false)
+  const [gcalLoading, setGcalLoading] = useState(true)
   const [syncing, setSyncing] = useState(false)
 
-  useState(() => {
+  useEffect(() => {
     if (!user) return
-    supabase.from('profiles').select('google_calendar_enabled').eq('id', user.id).single()
-      .then(({ data }) => { if (data?.google_calendar_enabled) setConnected(true) })
-  })
+    ;(async () => {
+      const { data } = await supabase.from('profiles').select('google_calendar_enabled').eq('id', user.id).single()
+      if (data?.google_calendar_enabled) setConnected(true)
+      setGcalLoading(false)
+    })()
+  }, [user])
 
   const connect = async () => {
     setSyncing(true)
@@ -478,7 +596,7 @@ function GoogleCalendarSection() {
         queryParams: { access_type: 'offline', prompt: 'consent' },
       },
     })
-    if (error) { alert(error.message); setSyncing(false) }
+    if (error) { toast({ icon: 'x', title: 'Error al conectar', body: error.message }); setSyncing(false) }
   }
 
   const disconnect = async () => {

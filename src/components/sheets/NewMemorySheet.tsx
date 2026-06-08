@@ -60,7 +60,7 @@ export const NewMemorySheet: React.FC<Props> = ({ onClose, onCreated, initialAlb
       if (user) {
         sendPushToStoryMembers(
           activeStoryId, user.id,
-          '📸 Nuevo recuerdo',
+          'Nuevo recuerdo',
           caption ? `«${caption}»` : 'Se añadió una nueva foto a la galería',
           '/?shortcut=gallery'
         )
@@ -68,7 +68,7 @@ export const NewMemorySheet: React.FC<Props> = ({ onClose, onCreated, initialAlb
       onCreated()
       onClose()
     } catch (e: any) {
-      alert('Error: ' + e.message)
+      push({ icon: 'x', title: 'Error', body: e.message })
     } finally {
       setSaving(false)
     }

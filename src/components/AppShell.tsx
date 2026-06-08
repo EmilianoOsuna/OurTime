@@ -1,8 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { motion, animate, useMotionValue, useTransform } from 'framer-motion'
 import { useAuth } from '../context/AuthContext'
 import type { ProfileType } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { buildPerson, type PersonDisplay, type StoryType } from '../lib/supabase'
+import { setBackHandler, isNative } from '../lib/native'
+import { invokeTopBack, consumeIgnorePop } from '../lib/backStack'
 
 import Dashboard from '../pages/Dashboard'
 import Calendar from '../pages/Calendar'
@@ -11,7 +14,7 @@ import Finances from '../pages/Finances'
 import Chat from '../pages/Chat'
 import { PlanDetail } from '../pages/PlanDetail'
 import { ProfileScreen } from '../pages/Profile'
-import { NotificationsPanel } from './NotificationsPanel'
+import { NotificationsPanel, type NotifItem } from './NotificationsPanel'
 import { GlobalActionSheet } from './sheets/GlobalActionSheet'
 import { NewPlanSheet } from './sheets/NewPlanSheet'
 import { MoneySheet } from './sheets/MoneySheet'
@@ -40,8 +43,8 @@ const CAT_COLOR_STABLE: Record<string, string> = {
 export type Tab = 'home' | 'calendar' | 'gallery' | 'finance' | 'chat'
 type Overlay = { type: 'plan'; data: any } | { type: 'action' } | { type: 'newplan' } | { type: 'money' } | { type: 'memory' } | { type: 'profile' } | { type: 'newstory' } | { type: 'editstory'; story: StoryType } | null
 
-const NOTIFS = [
-  { icon: 'sparkle', text: <><strong>Bienvenidos a OurTime</strong> 💛</>, time: 'Ahora', read: false },
+const NOTIFS: (NotifItem & { id: string })[] = [
+  { id: 'welcome', icon: 'sparkle', text: <><strong>Bienvenidos a OurTime</strong></>, time: 'Ahora', read: false },
 ]
 
 function getInitialTab(): Tab {
@@ -51,22 +54,20 @@ function getInitialTab(): Tab {
 }
 
 // Unread message count badge
-function useUnreadCount(activeStoryId: string | null, userId: string | undefined): number {
+function useUnreadCount(activeStoryId: string | null, userId: string | undefined, refreshKey?: number): number {
   const [count, setCount] = useState(0)
   useEffect(() => {
     if (!activeStoryId || !userId) return
-    supabase.from('messages').select('id', { count: 'exact', head: true })
-      .eq('story_id', activeStoryId).neq('sender_id', userId).is('read_at', null)
-      .then(({ count: n }) => setCount(n ?? 0))
+    const fetchCount = () =>
+      supabase.from('messages').select('id', { count: 'exact', head: true })
+        .eq('story_id', activeStoryId).neq('sender_id', userId).is('read_at', null)
+        .then(({ count: n }) => setCount(n ?? 0))
+    fetchCount()
     const ch = supabase.channel('unread:' + activeStoryId)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages', filter: `story_id=eq.${activeStoryId}` }, () => {
-        supabase.from('messages').select('id', { count: 'exact', head: true })
-          .eq('story_id', activeStoryId).neq('sender_id', userId).is('read_at', null)
-          .then(({ count: n }) => setCount(n ?? 0))
-      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages', filter: `story_id=eq.${activeStoryId}` }, fetchCount)
       .subscribe()
     return () => { supabase.removeChannel(ch) }
-  }, [activeStoryId, userId])
+  }, [activeStoryId, userId, refreshKey])
   return count
 }
 
@@ -94,6 +95,30 @@ export default function AppShell() {
   const [lightbox, setLightbox] = useState<string | null>(null)
   const [partner, setPartner] = useState<ProfileType | null>(null)
   const [storyCode, setStoryCode] = useState<string | null>(null)
+  const [unreadRefreshKey, setUnreadRefreshKey] = useState(0)
+
+  // Native back button/gesture
+  useEffect(() => {
+    if (!isNative) return
+    setBackHandler(() => {
+      if (lightbox) { setLightbox(null); return true }
+      if (storySwitcherOpen) { setStorySwitcherOpen(false); return true }
+      if (invokeTopBack()) return true
+      if (overlay) { setOverlay(null); return true }
+      if (notifsVisible) { setNotifsVisible(false); return true }
+      if (tabRef.current === 'chat') {
+        setTab('home')
+        sessionStorage.setItem('activeTab', 'home')
+        return true
+      }
+      if (tabRef.current !== 'home') {
+        setTab('home')
+        sessionStorage.setItem('activeTab', 'home')
+        return true
+      }
+      return false
+    })
+  }, [lightbox, storySwitcherOpen, overlay, notifsVisible])
 
   useEffect(() => {
     if (!activeStoryId || !user) return
@@ -152,6 +177,13 @@ export default function AppShell() {
   useEffect(() => {
     const handlePop = () => {
       if (ignorePop.current) { ignorePop.current = false; return }
+      if (consumeIgnorePop()) return
+      if (invokeTopBack()) {
+        // Sub-overlay handled the back. Re-push a history entry so the parent overlay
+        // can still be closed via back on next press.
+        window.history.pushState({ ot: 'modal' }, '')
+        return
+      }
       historyPushed.current = false
       if (overlayRef.current !== null) setOverlay(null)
       else if (notifsRef.current)      setNotifsVisible(false)
@@ -185,12 +217,23 @@ export default function AppShell() {
   const leaveChat = useCallback(() => {
     setTab('home')
     sessionStorage.setItem('activeTab', 'home')
+    // Mark messages as read and then refresh the unread count
+    if (activeStoryId && user) {
+      supabase.from('messages')
+        .update({ read_at: new Date().toISOString() })
+        .eq('story_id', activeStoryId)
+        .neq('sender_id', user.id)
+        .is('read_at', null)
+        .then(() => setUnreadRefreshKey(k => k + 1))
+    } else {
+      setUnreadRefreshKey(k => k + 1)
+    }
     if (historyPushed.current) {
       historyPushed.current = false
       ignorePop.current = true
       window.history.back()
     }
-  }, [])
+  }, [activeStoryId, user])
 
   const go = useCallback((t: Tab) => {
     // Push history when entering chat so device back gesture exits it
@@ -303,7 +346,7 @@ export default function AppShell() {
     return () => { supabase.removeChannel(channel) }
   }, [activeStoryId])
 
-  const unreadCount = useUnreadCount(activeStoryId, user?.id)
+  const unreadCount = useUnreadCount(activeStoryId, user?.id, unreadRefreshKey)
 
   const screen = {
     home: <Dashboard plans={plans} go={go}
@@ -316,8 +359,9 @@ export default function AppShell() {
     gallery: <Gallery memories={memories} setMemories={setMemories}
                onImageClick={(url: string) => setLightbox(url)} me={me} />,
     finance: <Finances />,
-    chat: <Chat me={me} partner={partnerDisplay}
+    chat: <Chat key={activeStoryId} me={me} partner={partnerDisplay}
              storyName={stories.find(s => s.id === activeStoryId)?.name}
+             storyCoverUrl={stories.find(s => s.id === activeStoryId)?.cover_url ?? null}
              onBack={leaveChat} />,
   }[tab]
 
@@ -342,7 +386,8 @@ export default function AppShell() {
       {overlay?.type === 'action' && <GlobalActionSheet onClose={closeOverlay}
         onNewPlan={() => setOverlay({ type: 'newplan' })}
         onNewMoney={() => setOverlay({ type: 'money' })}
-        onNewMemory={() => setOverlay({ type: 'memory' })} />}
+        onNewMemory={() => setOverlay({ type: 'memory' })}
+        onNewStory={() => setOverlay({ type: 'newstory' })} />}
       {overlay?.type === 'newplan' && <NewPlanSheet onClose={closeOverlay} onCreated={() => { closeOverlay(); refreshPlans() }} />}
       {overlay?.type === 'money' && <MoneySheet onClose={closeOverlay} onCreated={() => { closeOverlay(); refreshTransactions() }} />}
       {overlay?.type === 'memory' && <NewMemorySheet onClose={closeOverlay} onCreated={() => { closeOverlay(); refreshMemories() }} />}
@@ -468,13 +513,70 @@ function StorySwitcherSheet({ stories, activeStoryId, onSelect, onNewStory, onEd
   onEditStory: (s: StoryType) => void
   onClose: () => void
 }) {
+  const y = useMotionValue(0)
+  const backdropOpacity = useTransform(y, [0, 500], [1, 0])
+  const dragState = useRef({
+    startY: 0, dragging: false,
+    lastY: 0, lastTime: 0, velocity: 0,
+  })
+
+  const dragPointerDown = (e: React.PointerEvent) => {
+    dragState.current.startY = e.clientY
+    dragState.current.dragging = false
+    dragState.current.lastY = e.clientY
+    dragState.current.lastTime = performance.now()
+    dragState.current.velocity = 0
+  }
+  const dragPointerMove = (e: React.PointerEvent) => {
+    const dy = e.clientY - dragState.current.startY
+    if (dy > 5) dragState.current.dragging = true
+    if (dragState.current.dragging) {
+      e.preventDefault()
+      const resisted = dy > 200 ? 200 + (dy - 200) * 0.25 : Math.max(0, dy)
+      y.set(resisted)
+      const now = performance.now()
+      if (now - dragState.current.lastTime > 20) {
+        dragState.current.velocity = (e.clientY - dragState.current.lastY) / (now - dragState.current.lastTime) * 1000
+        dragState.current.lastY = e.clientY
+        dragState.current.lastTime = now
+      }
+    }
+  }
+  const dragPointerUp = () => {
+    if (dragState.current.dragging) {
+      const vy = Math.min(Math.max(dragState.current.velocity, -3000), 3000)
+      if (y.get() > 120 || vy > 800) {
+        const h = window.innerHeight
+        animate(y, h, {
+          type: 'spring', damping: 30, stiffness: 250, mass: 0.8,
+          velocity: vy,
+        }).then(() => onClose())
+      } else {
+        animate(y, 0, {
+          type: 'spring', damping: 35, stiffness: 300, mass: 0.6,
+          velocity: vy,
+        })
+      }
+    }
+    dragState.current.dragging = false
+  }
+
+  const dragProps = {
+    onPointerDown: dragPointerDown, onPointerMove: dragPointerMove,
+    onPointerUp: dragPointerUp, onPointerLeave: dragPointerUp,
+  }
+
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 85, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}
-      onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)',
-        WebkitBackdropFilter: 'blur(4px)', animation: 'fadeIn .2s both' }} onClick={onClose} />
-      <div style={{ position: 'relative', background: 'var(--card)', borderRadius: '24px 24px 0 0',
-        padding: '20px 20px 40px', animation: 'sheetUp .38s cubic-bezier(.2,.9,.2,1) both' }}>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 85, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+      <motion.div style={{ position: 'absolute', inset: 0, opacity: backdropOpacity,
+        background: 'rgba(0,0,0,0.4)', }} onClick={() => {
+          const h = window.innerHeight
+          animate(y, h, { type: 'spring', damping: 30, stiffness: 250, mass: 0.8 }).then(() => onClose())
+        }} />
+      <motion.div
+        style={{ y, touchAction: 'none', position: 'relative', background: 'var(--card)',
+          borderRadius: '24px 24px 0 0', padding: '20px 20px 40px', willChange: 'transform' }}
+        {...dragProps}>
         <div style={{ width: 36, height: 4, borderRadius: 2, background: 'var(--line)',
           margin: '0 auto 20px', flexShrink: 0 }} />
         <div className="eyebrow" style={{ marginBottom: 14, color: 'var(--ink-soft)' }}>Tus Historias</div>
@@ -527,7 +629,7 @@ function StorySwitcherSheet({ stories, activeStoryId, onSelect, onNewStory, onEd
           </div>
           Nueva Historia
         </button>
-      </div>
+      </motion.div>
     </div>
   )
 }

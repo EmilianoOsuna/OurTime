@@ -18,7 +18,7 @@ export function CatMedallion({ cat, size = 46, active = true }: { cat: string; s
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       background: active ? (blue ? 'var(--blue)' : 'var(--orange)') : 'var(--card-2)',
       color: active ? '#fff' : 'var(--ink-faint)',
-      boxShadow: active ? (blue ? '0 4px 12px rgba(4,116,186,0.3)' : '0 4px 12px rgba(241,119,32,0.3)') : 'inset 0 0 0 1.5px var(--line)',
+      boxShadow: active ? (blue ? '0 4px 12px color-mix(in srgb, var(--blue) 30%, transparent)' : '0 4px 12px color-mix(in srgb, var(--orange) 30%, transparent)') : 'inset 0 0 0 1.5px var(--line)',
       flexShrink: 0,
     }}>
       <Icon name={icon} size={size * 0.45} />

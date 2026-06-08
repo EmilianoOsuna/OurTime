@@ -8,16 +8,19 @@ const ITEMS = [
     title: 'Nuevo recuerdo', body: 'Sube una foto a la galería' },
   { id: 'money',      icon: 'wallet',        tint: 'var(--done-tint)',   col: 'var(--done)',
     title: 'Nuevo movimiento', body: 'Un ingreso o gasto del fondo común' },
+  { id: 'newstory',   icon: 'users',         tint: 'var(--card-2)',      col: 'var(--ink-soft)',
+    title: 'Nueva historia', body: 'Crea un grupo nuevo con alguien' },
 ] as const
 
-export function GlobalActionSheet({ onClose, onNewPlan, onNewMoney, onNewMemory }: {
+export function GlobalActionSheet({ onClose, onNewPlan, onNewMoney, onNewMemory, onNewStory }: {
   onClose: () => void
   onNewPlan: () => void
   onNewMoney: () => void
   onNewMemory: () => void
+  onNewStory: () => void
 }) {
   const handlers: Record<string, () => void> = {
-    newplan: onNewPlan, money: onNewMoney, newmemory: onNewMemory,
+    newplan: onNewPlan, money: onNewMoney, newmemory: onNewMemory, newstory: onNewStory,
   }
   return (
     <BottomSheet onClose={onClose}>

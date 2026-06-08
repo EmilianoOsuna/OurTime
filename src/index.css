@@ -6,6 +6,12 @@
    ─────────────────────────────────────────────────────────── */
 
 :root {
+  /* Safe area (notches, status bar, nav bar) */
+  --sat: env(safe-area-inset-top, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+
   /* Type */
   --font-display: 'Newsreader', Georgia, serif;
   --font-ui: 'Hanken Grotesk', system-ui, sans-serif;
@@ -77,15 +83,18 @@
 
 * { box-sizing: border-box; }
 
+html { overscroll-behavior: none; }
 body {
   margin: 0;
-  padding: 0;
+  padding: var(--sat) var(--sar) var(--sab) var(--sal);
   min-height: 100vh;
+  min-height: 100dvh;
   background: var(--paper);
   color: var(--ink);
   font-family: var(--font-ui);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior: none;
 }
 
 /* ── Typography helpers ──────────────────────────────── */
@@ -177,6 +186,8 @@ body {
   background: var(--card);
   border-radius: var(--r-md);
   box-shadow: var(--sh-sm);
+  content-visibility: auto;
+  contain-intrinsic-size: 80px;
 }
 
 /* ── Placeholder imagery (warm striped) ────────────── */
@@ -202,6 +213,7 @@ body {
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  overscroll-behavior: contain;
 }
 .ot-scroll::-webkit-scrollbar { display: none; }
 
@@ -420,6 +432,11 @@ body {
   }
 
 }
+
+/* Safe area helpers */
+.safe-top  { padding-top: var(--sat); }
+.safe-bot  { padding-bottom: var(--sab); }
+.safe-y    { padding-top: var(--sat); padding-bottom: var(--sab); }
 
 /* hero-card must live outside @layer so it beats the unlayered .card rule */
 .hero-card {

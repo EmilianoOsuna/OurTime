@@ -87,7 +87,7 @@ export const NewStorySheet: React.FC<Props> = ({ onClose, onCreated }) => {
       onCreated()
       onClose()
     } catch (e: any) {
-      alert(e.message)
+      push({ icon: 'x', title: 'Error', body: e.message })
     } finally {
       setSaving(false)
     }

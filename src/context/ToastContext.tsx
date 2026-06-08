@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from 'react'
+import { Icon } from '../components/ui/Icon'
 
 export type Toast = {
   id: string
@@ -42,7 +43,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             <div style={{ width: 38, height: 38, borderRadius: 12, background: 'var(--orange-tint)',
               color: 'var(--orange-deep)', display: 'flex', alignItems: 'center',
               justifyContent: 'center', flexShrink: 0, fontSize: 20 }}>
-              {t.icon === 'sparkle' ? '✦' : t.icon === 'check' ? '✓' : t.icon === 'image' ? '🖼' : '✦'}
+              <Icon name={t.icon || 'sparkle'} size={20} />
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               {t.eyebrow && <div className="eyebrow" style={{ fontSize: 9.5, marginBottom: 2 }}>{t.eyebrow}</div>}

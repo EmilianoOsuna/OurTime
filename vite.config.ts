@@ -3,10 +3,16 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
+const isCapacitor = process.env.VITE_CAPACITOR === 'true'
+
 export default defineConfig({
+  base: isCapacitor ? './' : '/',
+  build: {
+    modulePreload: false,
+  },
   plugins: [
     react(),
-    VitePWA({
+    ...(isCapacitor ? [] : [VitePWA({
       strategies: 'injectManifest',
       srcDir: 'src',
       filename: 'sw.ts',
@@ -15,7 +21,6 @@ export default defineConfig({
         enabled: true,
         type: 'module',
       },
-      // Assets to precache
       includeAssets: [
         'favicon.png',
         'apple-touch-icon.png',
@@ -87,6 +92,5 @@ export default defineConfig({
           },
         ],
       },
-    }),
-  ],
+    })])],
 })

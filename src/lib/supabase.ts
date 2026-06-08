@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { Capacitor } from '@capacitor/core'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -7,10 +8,20 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.warn("⚠️ Supabase Credentials Missing: Please ensure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set in your .env file.")
 }
 
+const isNative = Capacitor.isNativePlatform()
+
 export const supabase = createClient(
   supabaseUrl || '',
-  supabaseAnonKey || ''
+  supabaseAnonKey || '',
+  {
+    auth: {
+      detectSessionInUrl: !isNative,
+      flowType: isNative ? 'pkce' : 'implicit',
+    },
+  }
 )
+
+export const nativeRedirectUrl = 'ourtime://callback'
 
 export type StoryType = {
   id: string
@@ -106,6 +117,14 @@ export type PersonDisplay = {
   initial: string
   color: string
   avatar_url?: string | null
+}
+
+export function imageUrl(url: string | null | undefined, width = 400): string | null {
+  if (!url) return null
+  if (url.includes('/storage/v1/object/public/')) {
+    return url.replace('/object/public/', '/render/image/public/') + `?width=${width}&quality=80&format=webp`
+  }
+  return url
 }
 
 export function buildPerson(

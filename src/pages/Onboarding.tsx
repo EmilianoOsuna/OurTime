@@ -393,7 +393,7 @@ function StepShell({ no, eyebrow, title, sub, children }: {
   no: string; eyebrow: string; title: React.ReactNode; sub: string; children: React.ReactNode
 }) {
   return (
-    <div className="page-enter" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', padding: '96px 30px 38px' }}>
+    <div className="page-enter" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', padding: '60px 30px 38px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
         <span className="chapter-no" style={{ fontSize: 30, color: 'var(--ink-faint)', lineHeight: 1 }}>{no}</span>
         <span className="eyebrow" style={{ whiteSpace: 'nowrap' }}>{eyebrow}</span>

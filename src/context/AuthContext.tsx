@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
+import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react'
 import type { Session, User } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import type { StoryType } from '../lib/supabase'
@@ -140,11 +140,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await supabase.auth.signOut()
   }
 
+  const value = useMemo(() => ({
+    session, user, activeStoryId, setActiveStoryId,
+    stories, profile, isLoading, signOut, refreshProfile, refreshStories,
+  }), [session, user, activeStoryId, stories, profile, isLoading, signOut, refreshProfile, refreshStories])
+
   return (
-    <AuthContext.Provider value={{
-      session, user, activeStoryId, setActiveStoryId,
-      stories, profile, isLoading, signOut, refreshProfile, refreshStories,
-    }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   )

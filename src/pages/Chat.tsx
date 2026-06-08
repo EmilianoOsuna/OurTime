@@ -4,16 +4,15 @@ import { useAuth } from '../context/AuthContext'
 import { sendPushToStoryMembers } from '../lib/usePushNotifications'
 import { Icon } from '../components/ui/Icon'
 import { Avatar } from '../components/ui/Avatar'
-import { PresenceDot } from '../components/ui/PresenceDot'
 import type { MessageType, PersonDisplay } from '../lib/supabase'
 
 function fmtTime(iso: string): string {
   const d = new Date(iso)
   const now = new Date()
-  const diffDays = Math.floor((now.getTime() - d.getTime()) / 86400000)
-  if (diffDays === 0) return d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
-  if (diffDays === 1) return 'Ayer'
-  if (diffDays < 7) return d.toLocaleDateString('es-ES', { weekday: 'short' })
+  if (d.toDateString() === now.toDateString()) return d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+  const yesterday = new Date(now); yesterday.setDate(yesterday.getDate() - 1)
+  if (d.toDateString() === yesterday.toDateString()) return 'Ayer'
+  if (now.getTime() - d.getTime() < 7 * 86400000) return d.toLocaleDateString('es-ES', { weekday: 'short' })
   return d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })
 }
 
@@ -25,9 +24,11 @@ function shouldShowDate(msgs: MessageType[], idx: number): boolean {
 function fmtDateLabel(iso: string): string {
   const d = new Date(iso)
   const now = new Date()
-  const diffDays = Math.floor((now.getTime() - d.getTime()) / 86400000)
-  if (diffDays === 0) return 'Hoy'
-  if (diffDays === 1) return 'Ayer'
+  const dStr = d.toDateString()
+  const nowStr = now.toDateString()
+  if (dStr === nowStr) return 'Hoy'
+  const yesterday = new Date(now); yesterday.setDate(yesterday.getDate() - 1)
+  if (dStr === yesterday.toDateString()) return 'Ayer'
   return d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })
 }
 
@@ -35,15 +36,17 @@ interface Props {
   me: PersonDisplay
   partner: PersonDisplay | null
   storyName?: string
+  storyCoverUrl?: string | null
   onBack: () => void
 }
 
-export default function Chat({ me, partner, storyName, onBack }: Props) {
+export default function Chat({ me, partner, storyName, storyCoverUrl, onBack }: Props) {
   const { activeStoryId, user } = useAuth()
   const [messages, setMessages] = useState<MessageType[]>([])
   const [text, setText] = useState('')
   const [sending, setSending] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [members, setMembers] = useState<PersonDisplay[]>([])
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
@@ -61,6 +64,19 @@ export default function Chat({ me, partner, storyName, onBack }: Props) {
         if (data) setMessages(data as MessageType[])
         setLoading(false)
         scrollToBottom('instant' as ScrollBehavior)
+      })
+
+    supabase.from('story_members')
+      .select('user_id, profiles!inner(id, full_name, avatar_url)')
+      .eq('story_id', activeStoryId)
+      .then(({ data }) => {
+        if (data) {
+          setMembers(data.map((m: any) => ({
+            name: m.profiles?.full_name || 'Anónimo',
+            initial: (m.profiles?.full_name?.[0] || '?').toUpperCase(),
+            color: 'var(--orange)',
+          })))
+        }
       })
 
     const channel = supabase.channel('chat:' + activeStoryId)
@@ -139,10 +155,14 @@ export default function Chat({ me, partner, storyName, onBack }: Props) {
         </button>
 
         <div style={{ position: 'relative', flexShrink: 0 }}>
-          <Avatar person={partner ?? { name: title, initial: title[0]?.toUpperCase() || '?', color: 'var(--orange)' }} size={36} />
-          <span style={{ position: 'absolute', bottom: -1, right: -1 }}>
-            <PresenceDot size={10} />
-          </span>
+          {storyCoverUrl ? (
+            <img src={storyCoverUrl} alt="" style={{ width: 40, height: 40, borderRadius: 12, objectFit: 'cover' }} />
+          ) : (
+            <div style={{ width: 40, height: 40, borderRadius: 12, background: 'var(--orange-tint)',
+              color: 'var(--orange-deep)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Icon name="chat" size={20} />
+            </div>
+          )}
         </div>
 
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -150,8 +170,8 @@ export default function Chat({ me, partner, storyName, onBack }: Props) {
             fontWeight: 700, fontSize: 15.5, lineHeight: 1.1,
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
           }}>{title}</div>
-          <div style={{ fontSize: 11.5, color: 'var(--orange)', fontWeight: 600, marginTop: 1 }}>
-            En línea
+          <div style={{ fontSize: 11.5, color: 'var(--ink-soft)', fontWeight: 500, marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {members.filter(m => m.name !== me.name).map(m => m.name).join(', ') || 'Solo tú'}
           </div>
         </div>
       </div>

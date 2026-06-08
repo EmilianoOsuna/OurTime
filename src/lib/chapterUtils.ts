@@ -28,8 +28,9 @@ export function fmtDate(iso: string) {
   return `${d.getDate()} ${MESES[d.getMonth()]} ${d.getFullYear()}`
 }
 export function countdown(iso: string) {
-  const ms = new Date(iso.slice(0, 10) + 'T00:00:00').getTime() - Date.now()
-  const d = Math.round(ms / 86400000)
+  const today = new Date(); today.setHours(0, 0, 0, 0)
+  const target = new Date(iso.slice(0, 10) + 'T00:00:00')
+  const d = Math.round((target.getTime() - today.getTime()) / 86400000)
   if (d < 0) return 'pasado'
   if (d === 0) return 'hoy'
   if (d === 1) return 'mañana'

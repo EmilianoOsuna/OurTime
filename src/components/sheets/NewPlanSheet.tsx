@@ -43,7 +43,7 @@ export const NewPlanSheet: React.FC<Props> = ({ onClose, onCreated, parentPlanId
       status: 'pendiente',
     }).select('id').single()
     setSaving(false)
-    if (error) { alert(error.message); return }
+    if (error) { push({ icon: 'x', title: 'Error', body: error.message }); return }
     push({ icon: 'sparkle', eyebrow: 'Momento creado', title: `«${title.trim()}»`, body: parentPlanId ? 'Añadido como sub-momento' : 'Añadido a tu historia' })
     if (user && !parentPlanId) {
       sendPushToStoryMembers(activeStoryId, user.id, '¡Nuevo momento!', `«${title.trim()}» fue añadido a la historia`)
@@ -90,7 +90,7 @@ export const NewPlanSheet: React.FC<Props> = ({ onClose, onCreated, parentPlanId
 
         <button className="btn btn-orange btn-block" style={{ marginTop: 24 }}
           disabled={!ok || saving} onClick={submit}>
-          <Icon name="feather" size={18} /> {saving ? 'Guardando…' : 'Crear momento'}
+          <Icon name="check" size={18} /> {saving ? 'Guardando…' : 'Crear momento'}
         </button>
       </div>
     </BottomSheet>

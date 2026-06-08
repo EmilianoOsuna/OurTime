@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { supabase } from '../lib/supabase'
+import { supabase, nativeRedirectUrl } from '../lib/supabase'
+import { isNative } from '../lib/native'
 import { Icon } from '../components/ui/Icon'
+import { useToast } from '../context/ToastContext'
 
 type Flow = 'welcome' | 'register' | 'login' | 'forgot'
 
@@ -86,7 +88,9 @@ export default function Auth({ onAuth }: { onAuth: () => void }) {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: window.location.origin },
+        options: {
+          redirectTo: isNative ? nativeRedirectUrl : window.location.origin,
+        },
       })
       if (error) throw error
     } catch (e: any) { setError(e.message); setLoading(false) }

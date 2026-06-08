@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Our Time</string>
+    <string name="title_activity_main">Our Time</string>
+    <string name="package_name">com.ourtime.app</string>
+    <string name="custom_url_scheme">com.ourtime.app</string>
+</resources>

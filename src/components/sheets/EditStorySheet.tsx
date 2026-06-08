@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase'
 import { compressToWebP } from '../../lib/imageUtils'
 import { Icon } from '../ui/Icon'
 import type { StoryType } from '../../lib/supabase'
+import { useToast } from '../../context/ToastContext'
 
 const CAT_OPTIONS: { id: StoryType['category']; label: string; icon: string; color: string }[] = [
   { id: 'pareja',  label: 'Pareja',   icon: 'heartFill', color: 'var(--orange)' },
@@ -21,6 +22,7 @@ interface Props {
 
 export const EditStorySheet: React.FC<Props> = ({ story, onClose, onUpdated }) => {
   const { refreshStories } = useAuth()
+  const { push: toast } = useToast()
   const [name, setName] = useState(story.name)
   const [category, setCategory] = useState<StoryType['category']>(story.category)
   const [coverPreview, setCoverPreview] = useState<string | null>(story.cover_url)
@@ -62,7 +64,7 @@ export const EditStorySheet: React.FC<Props> = ({ story, onClose, onUpdated }) =
         .eq('id', story.id)
       if (error) throw error
     } catch (e: any) {
-      alert(e.message)
+      toast({ icon: 'x', title: 'Error', body: e.message })
       setSaving(false)
       return
     }

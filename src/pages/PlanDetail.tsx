@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { pushBack, removeBack, scheduleIgnorePop } from '../lib/backStack'
 import { supabase } from '../lib/supabase'
 import { CatTag } from '../components/ui/CatTag'
 import { Icon } from '../components/ui/Icon'
@@ -77,6 +78,25 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
   const [subPlans, setSubPlans] = useState<PlanType[]>([])
   const [addingSubPlan, setAddingSubPlan] = useState(false)
   const [activeSubPlan, setActiveSubPlan] = useState<PlanType | null>(null)
+  const subPlanByBack = useRef(false)
+  const unmounting = useRef(false)
+
+  useEffect(() => { return () => { unmounting.current = true } }, [])
+
+  useEffect(() => {
+    if (!activeSubPlan) return
+    window.history.pushState({ ot: 'subplan' }, '')
+    const handler = () => { subPlanByBack.current = true; setActiveSubPlan(null) }
+    pushBack(handler)
+    return () => {
+      removeBack(handler)
+      if (!subPlanByBack.current && !unmounting.current) {
+        scheduleIgnorePop()
+        window.history.back()
+      }
+      subPlanByBack.current = false
+    }
+  }, [!!activeSubPlan])
 
   // Memory lightbox
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null)
@@ -125,14 +145,14 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
 
   const complete = async () => {
     if (isFuture) {
-      push({ icon: '⏰', eyebrow: 'Aún no es el día', title: `Este momento es el ${fmtDate(plan.plan_date)}` })
+      push({ icon: 'clock', eyebrow: 'Aún no es el día', title: `Este momento es el ${fmtDate(plan.plan_date)}` })
       return
     }
     setDone(true)
     setBurst(true)
     await supabase.from('plans').update({ status: 'completado' }).eq('id', plan.id)
     setPlan(p => ({ ...p, status: 'completado' }))
-    push({ icon: '🎉', eyebrow: 'Momento', title: '¡Momento vivido!', body: `"${plan.title}" ya forma parte de su historia.` })
+    push({ icon: 'sparkle', eyebrow: 'Momento', title: '¡Momento vivido!', body: `"${plan.title}" ya forma parte de su historia.` })
     setTimeout(() => setBurst(false), 2600)
     onUpdated?.()
   }
@@ -141,7 +161,7 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
     setDone(false)
     await supabase.from('plans').update({ status: 'pendiente' }).eq('id', plan.id)
     setPlan(p => ({ ...p, status: 'pendiente' }))
-    push({ icon: '↩️', eyebrow: 'Momento', title: 'Marcado como pendiente' })
+    push({ icon: 'rotateCw', eyebrow: 'Momento', title: 'Marcado como pendiente' })
     onUpdated?.()
   }
 
@@ -171,13 +191,13 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
     setPlan(p => ({ ...p, ...updates }))
     setSaving(false)
     setEditing(false)
-    push({ icon: '✏️', eyebrow: 'Momento', title: 'Cambios guardados' })
+    push({ icon: 'edit', eyebrow: 'Momento', title: 'Cambios guardados' })
     onUpdated?.()
   }
 
   const cancelPlan = async () => {
     await supabase.from('plans').update({ status: 'cancelado' }).eq('id', plan.id)
-    push({ icon: '🗑️', eyebrow: 'Momento', title: 'Momento cancelado' })
+    push({ icon: 'x', eyebrow: 'Momento', title: 'Momento cancelado' })
     onUpdated?.()
     onClose()
   }
@@ -190,7 +210,7 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
     setPlan(p => ({ ...p, actual_amount: val }))
     setSavingActual(false)
     setConfirmingAmount(false)
-    push({ icon: '✓', eyebrow: 'Gasto confirmado', title: `${val.toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} registrado` })
+    push({ icon: 'check', eyebrow: 'Gasto confirmado', title: `${val.toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} registrado` })
     onUpdated?.()
   }
 
@@ -201,7 +221,6 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
     try {
       const webp = await compressToWebP(file, 1920, 0.82)
       const path = `plans/${plan.id}.webp`
-      // Remove first to ensure re-upload always works regardless of storage policy
       await supabase.storage.from('Fotos').remove([path])
       const { error } = await supabase.storage.from('Fotos').upload(path, webp, { contentType: 'image/webp' })
       if (error) throw error
@@ -212,7 +231,7 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
       setPlan(p => ({ ...p, cover_url: url }))
       onUpdated?.()
     } catch {
-      push({ icon: '⚠️', eyebrow: 'Error', title: 'No se pudo subir la foto' })
+      push({ icon: 'x', eyebrow: 'Error', title: 'No se pudo subir la foto' })
     } finally {
       setUploadingCover(false)
       e.target.value = ''
@@ -234,9 +253,9 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
         .select().single()
       if (insErr) throw insErr
       if (mem) setMemories(ms => [mem as Memory, ...ms])
-      push({ icon: '📷', eyebrow: 'Recuerdo', title: 'Foto añadida al momento' })
+      push({ icon: 'camera', eyebrow: 'Recuerdo', title: 'Foto añadida al momento' })
     } catch {
-      push({ icon: '⚠️', eyebrow: 'Error', title: 'No se pudo subir la foto' })
+      push({ icon: 'x', eyebrow: 'Error', title: 'No se pudo subir la foto' })
     } finally {
       setUploadingMemory(false)
       e.target.value = ''
@@ -512,13 +531,15 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
           <div style={{ marginTop: 26 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
               <span className="eyebrow">Momentos dentro de este plan</span>
-              <button onClick={() => setAddingSubPlan(true)} style={{
-                border: 'none', background: 'transparent', cursor: 'pointer',
-                fontSize: 12.5, fontWeight: 700, color: 'var(--orange)', fontFamily: 'var(--font-ui)', padding: 0,
-                display: 'flex', alignItems: 'center', gap: 4,
-              }}>
-                <Icon name="plus" size={14} stroke={2.5} /> Añadir
-              </button>
+              {subPlans.length > 0 && (
+                <button onClick={() => setAddingSubPlan(true)} style={{
+                  border: 'none', background: 'transparent', cursor: 'pointer',
+                  fontSize: 12.5, fontWeight: 700, color: 'var(--orange)', fontFamily: 'var(--font-ui)', padding: 0,
+                  display: 'flex', alignItems: 'center', gap: 4,
+                }}>
+                  <Icon name="plus" size={14} stroke={2.5} /> Añadir
+                </button>
+              )}
             </div>
 
             {subPlans.length > 0 ? (

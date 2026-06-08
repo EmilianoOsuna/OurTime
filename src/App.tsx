@@ -1,10 +1,22 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { ToastProvider } from './context/ToastContext'
 import { CurrencyProvider } from './context/CurrencyContext'
-import Auth from './pages/Auth'
-import Onboarding from './pages/Onboarding'
-import AppShell from './components/AppShell'
+import { ConfirmProvider } from './components/ui/ConfirmDialog'
+
+const Auth = lazy(() => import('./pages/Auth'))
+const Onboarding = lazy(() => import('./pages/Onboarding'))
+const AppShell = lazy(() => import('./components/AppShell'))
+
+function Spinner() {
+  return (
+    <div style={{ minHeight: '100vh', background: 'var(--paper)', display: 'flex',
+      alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ width: 32, height: 32, borderRadius: '50%', border: '3px solid var(--orange)',
+        borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite' }} />
+    </div>
+  )
+}
 
 function AppInner() {
   const { session, user, profile, stories, isLoading, refreshProfile, refreshStories } = useAuth()
@@ -29,19 +41,13 @@ function AppInner() {
     await refreshStories()
   }, [user, refreshProfile, refreshStories])
 
-  if (stateLoading || isLoading) {
-    return (
-      <div style={{ minHeight: '100vh', background: 'var(--paper)', display: 'flex',
-        alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: 32, height: 32, borderRadius: '50%', border: '3px solid var(--orange)',
-          borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite' }} />
-      </div>
-    )
-  }
+  if (stateLoading || isLoading) return <Spinner />
 
-  if (!session) return <Auth onAuth={handleAuth} />
-  if (needsOnboarding) return <Onboarding onComplete={handleOnboarded} />
-  return <AppShell />
+  return (
+    <Suspense fallback={<Spinner />}>
+      {!session ? <Auth onAuth={handleAuth} /> : needsOnboarding ? <Onboarding onComplete={handleOnboarded} /> : <AppShell />}
+    </Suspense>
+  )
 }
 
 function App() {
@@ -49,7 +55,9 @@ function App() {
     <AuthProvider>
       <ToastProvider>
         <CurrencyProvider>
-          <AppInner />
+          <ConfirmProvider>
+            <AppInner />
+          </ConfirmProvider>
         </CurrencyProvider>
       </ToastProvider>
     </AuthProvider>
