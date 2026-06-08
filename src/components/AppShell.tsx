@@ -15,8 +15,8 @@ import { GlobalActionSheet } from './sheets/GlobalActionSheet'
 import { NewPlanSheet } from './sheets/NewPlanSheet'
 import { MoneySheet } from './sheets/MoneySheet'
 import { NewMemorySheet } from './sheets/NewMemorySheet'
-import { LiveEditBadge } from './ui/LiveEditBadge'
 import { Icon } from './ui/Icon'
+import { Avatar } from './ui/Avatar'
 
 export type Tab = 'home' | 'calendar' | 'gallery' | 'finance'
 type Overlay = { type: 'plan'; data: any } | { type: 'action' } | { type: 'newplan' } | { type: 'money' } | { type: 'memory' } | { type: 'profile' } | null
@@ -25,61 +25,67 @@ const NOTIFS = [
   { icon: 'sparkle', text: <><strong>Bienvenidos a OurTime</strong> 💛</>, time: 'Ahora', read: false },
 ]
 
+function getInitialTab(): Tab {
+  const saved = sessionStorage.getItem('activeTab')
+  if (saved === 'home' || saved === 'calendar' || saved === 'gallery' || saved === 'finance') return saved
+  return 'home'
+}
+
 export default function AppShell() {
-  const { coupleId, profile, user } = useAuth()
-  const [tab, setTab] = useState<Tab>('home')
+  const { activeStoryId, profile, user } = useAuth()
+  const [tab, setTab] = useState<Tab>(getInitialTab)
   const [overlay, setOverlay] = useState<Overlay>(null)
   const [notifsVisible, setNotifsVisible] = useState(false)
-  const [partnerEditing, setPartnerEditing] = useState(false)
   const [plans, setPlans] = useState<any[]>([])
   const [memories, setMemories] = useState<any[]>([])
   const [transactions, setTransactions] = useState<any[]>([])
   const [lightbox, setLightbox] = useState<string | null>(null)
   const [partner, setPartner] = useState<ProfileType | null>(null)
-  const [coupleCode, setCoupleCode] = useState<string | null>(null)
+  const [storyCode, setStoryCode] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!coupleId || !user) return
+    if (!activeStoryId || !user) return
 
-    supabase.from('plans').select('*').eq('couple_id', coupleId).order('plan_date', { ascending: false }).then(({ data }) => {
-      if (data) setPlans(data)
-    })
-    supabase.from('memories').select('*').eq('couple_id', coupleId).order('created_at', { ascending: false }).then(({ data }) => {
-      if (data) setMemories(data)
-    })
-    supabase.from('transactions').select('*').eq('couple_id', coupleId).order('created_at', { ascending: false }).then(({ data }) => {
-      if (data) setTransactions(data)
-    })
-    supabase.from('profiles').select('*').eq('couple_id', coupleId).neq('id', user.id).maybeSingle().then(({ data }) => {
-      if (data) setPartner(data as ProfileType)
-    })
-    supabase.from('couples').select('invite_code').eq('id', coupleId).single().then(({ data }) => {
-      if (data?.invite_code) setCoupleCode(data.invite_code)
-    })
-  }, [coupleId, user])
+    supabase.from('plans').select('*').eq('story_id', activeStoryId)
+      .order('plan_date', { ascending: false })
+      .then(({ data }) => { if (data) setPlans(data) })
 
-  // Partner editing simulation
-  useEffect(() => {
-    if (!partner) return
-    const iv = setInterval(() => {
-      if (Math.random() < 0.08) {
-        setPartnerEditing(true)
-        setTimeout(() => setPartnerEditing(false), 4000)
-      }
-    }, 5000)
-    return () => clearInterval(iv)
-  }, [partner])
+    supabase.from('memories').select('*').eq('story_id', activeStoryId)
+      .order('created_at', { ascending: false })
+      .then(({ data }) => { if (data) setMemories(data) })
+
+    supabase.from('transactions').select('*').eq('story_id', activeStoryId)
+      .order('created_at', { ascending: false })
+      .then(({ data }) => { if (data) setTransactions(data) })
+
+    // Find co-members of this story
+    supabase.from('story_members')
+      .select('user_id')
+      .eq('story_id', activeStoryId)
+      .neq('user_id', user.id)
+      .then(async ({ data: coMembers }) => {
+        if (coMembers && coMembers.length > 0) {
+          const { data: coProfile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', coMembers[0].user_id)
+            .single()
+          if (coProfile) setPartner(coProfile as ProfileType)
+        }
+      })
+
+    supabase.from('stories').select('invite_code').eq('id', activeStoryId).single()
+      .then(({ data }) => { if (data?.invite_code) setStoryCode(data.invite_code) })
+  }, [activeStoryId, user])
 
   // ── Back gesture / hardware back button ──
   const historyPushed = useRef(false)
   const ignorePop = useRef(false)
-  // Refs so the popstate handler always reads current state without re-registering
   const overlayRef = useRef(overlay)
   const notifsRef  = useRef(notifsVisible)
   useEffect(() => { overlayRef.current = overlay },       [overlay])
   useEffect(() => { notifsRef.current = notifsVisible },  [notifsVisible])
 
-  // Push a history entry whenever a modal opens for the first time
   useEffect(() => {
     const open = overlay !== null || notifsVisible
     if (open && !historyPushed.current) {
@@ -89,7 +95,6 @@ export default function AppShell() {
     if (!open) historyPushed.current = false
   }, [overlay, notifsVisible])
 
-  // Handle the browser/OS back gesture — close the topmost modal
   useEffect(() => {
     const handlePop = () => {
       if (ignorePop.current) { ignorePop.current = false; return }
@@ -99,7 +104,7 @@ export default function AppShell() {
     }
     window.addEventListener('popstate', handlePop)
     return () => window.removeEventListener('popstate', handlePop)
-  }, []) // empty — reads state via refs
+  }, [])
 
   const closeOverlay = useCallback(() => {
     setOverlay(null)
@@ -119,7 +124,11 @@ export default function AppShell() {
     }
   }, [])
 
-  const go = useCallback((t: Tab) => { setTab(t); window.scrollTo({ top: 0, behavior: 'smooth' }) }, [])
+  const go = useCallback((t: Tab) => {
+    setTab(t)
+    sessionStorage.setItem('activeTab', t)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [])
 
   const sortedPlans = [...plans].sort((a, b) => a.plan_date.localeCompare(b.plan_date))
   const chapterNo = (id: string) => sortedPlans.findIndex(p => p.id === id) + 1
@@ -130,30 +139,32 @@ export default function AppShell() {
   const partnerDisplay: PersonDisplay | null = partner ? buildPerson(partner, false) : null
 
   const refreshPlans = () => {
-    if (!coupleId) return
-    supabase.from('plans').select('*').eq('couple_id', coupleId).order('plan_date', { ascending: true }).then(({ data }) => data && setPlans(data))
+    if (!activeStoryId) return
+    supabase.from('plans').select('*').eq('story_id', activeStoryId)
+      .order('plan_date', { ascending: true })
+      .then(({ data }) => data && setPlans(data))
   }
   const refreshMemories = () => {
-    if (!coupleId) return
-    supabase.from('memories').select('*').eq('couple_id', coupleId).order('created_at', { ascending: false }).then(({ data }) => data && setMemories(data))
+    if (!activeStoryId) return
+    supabase.from('memories').select('*').eq('story_id', activeStoryId)
+      .order('created_at', { ascending: false })
+      .then(({ data }) => data && setMemories(data))
   }
 
   const screen = {
-    home: <Dashboard partnerEditing={partnerEditing} plans={plans} go={go}
+    home: <Dashboard plans={plans} go={go}
             onBell={() => setNotifsVisible(true)} onPlanClick={openPlan}
             onProfileOpen={() => setOverlay({ type: 'profile' })}
             me={me} partner={partnerDisplay} />,
     calendar: <Calendar onOpenPlan={openPlan} />,
-    gallery: <Gallery coupleId={coupleId} memories={memories} setMemories={setMemories}
+    gallery: <Gallery memories={memories} setMemories={setMemories}
                onImageClick={(url: string) => setLightbox(url)} me={me} />,
-    finance: <Finances coupleId={coupleId} me={me} partner={partnerDisplay} />,
+    finance: <Finances me={me} partner={partnerDisplay} />,
   }[tab]
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--paper)', position: 'relative' }}>
       {screen}
-
-      {partnerEditing && <LiveEditBadge />}
 
       {overlay?.type === 'plan' && <PlanDetail plan={overlay.data} onClose={closeOverlay} chapterNo={chapterNo(overlay.data.id)} onUpdated={refreshPlans} />}
       {overlay?.type === 'profile' && (
@@ -163,7 +174,7 @@ export default function AppShell() {
           onGoToFinance={() => { closeOverlay(); go('finance') }}
           onOpenPlan={openPlan}
           partner={partnerDisplay}
-          coupleCode={coupleCode}
+          storyCode={storyCode}
         />
       )}
       {overlay?.type === 'action' && <GlobalActionSheet onClose={closeOverlay}
@@ -176,7 +187,9 @@ export default function AppShell() {
       {notifsVisible && <NotificationsPanel onClose={closeNotifs} items={NOTIFS} />}
       {lightbox && <Lightbox url={lightbox} onClose={() => setLightbox(null)} />}
 
-      <NavBar tab={tab} setTab={go} onFab={() => setOverlay({ type: 'action' })} />
+      <NavBar tab={tab} setTab={go} onFab={() => setOverlay({ type: 'action' })}
+        me={me} onProfileOpen={() => setOverlay({ type: 'profile' })}
+        onBell={() => setNotifsVisible(true)} />
     </div>
   )
 }
@@ -196,12 +209,19 @@ function Lightbox({ url, onClose }: { url: string; onClose: () => void }) {
   )
 }
 
-function NavBar({ tab, setTab, onFab }: { tab: Tab; setTab: (t: Tab) => void; onFab: () => void }) {
+function NavBar({ tab, setTab, onFab, me, onProfileOpen, onBell }: {
+  tab: Tab
+  setTab: (t: Tab) => void
+  onFab: () => void
+  me: PersonDisplay
+  onProfileOpen: () => void
+  onBell: () => void
+}) {
   const items: { key: Tab; icon: string; label: string }[] = [
-    { key: 'home', icon: 'home', label: 'Historia' },
-    { key: 'calendar', icon: 'calendar', label: 'Agenda' },
-    { key: 'gallery', icon: 'image', label: 'Recuerdos' },
-    { key: 'finance', icon: 'wallet', label: 'Cuentas' },
+    { key: 'home',     icon: 'home',     label: 'Inicio'       },
+    { key: 'calendar', icon: 'calendar', label: 'Agenda'       },
+    { key: 'gallery',  icon: 'image',    label: 'Recuerdos'    },
+    { key: 'finance',  icon: 'wallet',   label: 'Presupuesto'  },
   ]
 
   return (
@@ -213,8 +233,24 @@ function NavBar({ tab, setTab, onFab }: { tab: Tab; setTab: (t: Tab) => void; on
         WebkitBackdropFilter: 'blur(20px) saturate(180%)',
         borderRadius: 999, padding: '8px 10px',
         boxShadow: 'var(--sh-lg)', border: '1px solid rgba(255,255,255,0.6)' }}>
+
+        {/* Avatar — izquierda del todo */}
+        <button onClick={onProfileOpen} style={{
+          border: 'none', background: 'transparent', cursor: 'pointer',
+          width: 50, height: 50, borderRadius: 18, padding: 4,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3,
+        }}>
+          <div style={{ borderRadius: '50%', padding: 2,
+            border: '2px solid var(--orange)', display: 'inline-flex' }}>
+            <Avatar person={me} size={26} />
+          </div>
+          <span style={{ fontSize: 9.5, fontWeight: 700, fontFamily: 'var(--font-ui)',
+            letterSpacing: '0.02em', color: 'var(--ink-faint)' }}>Yo</span>
+        </button>
+
         <NavBtn {...items[0]} active={tab === items[0].key} onClick={() => setTab(items[0].key)} />
         <NavBtn {...items[1]} active={tab === items[1].key} onClick={() => setTab(items[1].key)} />
+
         <button onClick={onFab} style={{
           width: 54, height: 54, borderRadius: '50%', border: 'none',
           background: 'var(--orange)', color: '#fff', cursor: 'pointer', margin: '0 4px',
@@ -226,8 +262,21 @@ function NavBar({ tab, setTab, onFab }: { tab: Tab; setTab: (t: Tab) => void; on
           onMouseLeave={e => (e.currentTarget.style.transform = 'none')}>
           <Icon name="plus" size={26} stroke={2.4} />
         </button>
+
         <NavBtn {...items[2]} active={tab === items[2].key} onClick={() => setTab(items[2].key)} />
         <NavBtn {...items[3]} active={tab === items[3].key} onClick={() => setTab(items[3].key)} />
+
+        {/* Bell — derecha del todo */}
+        <button onClick={onBell} style={{
+          border: 'none', background: 'transparent', cursor: 'pointer',
+          width: 50, height: 50, borderRadius: 18, padding: 4,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3,
+          color: 'var(--ink-faint)',
+        }}>
+          <Icon name="bell" size={22} stroke={1.9} />
+          <span style={{ fontSize: 9.5, fontWeight: 600, fontFamily: 'var(--font-ui)',
+            letterSpacing: '0.02em' }}>Avisos</span>
+        </button>
       </div>
     </nav>
   )

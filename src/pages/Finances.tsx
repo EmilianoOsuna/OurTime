@@ -25,25 +25,24 @@ const CAT_ICONS: Record<string, string> = {
   salida: 'coffee', otro: 'tag', hogar: 'home',
 }
 
-export default function Finances({ coupleId, me, partner }: {
-  coupleId: string | null
+export default function Finances({ me, partner }: {
   me: PersonDisplay
   partner: PersonDisplay | null
 }) {
   const { fmt } = useCurrency()
-  const { user } = useAuth()
+  const { user, activeStoryId } = useAuth()
   const [txs, setTxs] = useState<Tx[]>([])
   const [seg, setSeg] = useState(0)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!coupleId) return
-    supabase.from('transactions').select('*').eq('couple_id', coupleId)
+    if (!activeStoryId) return
+    supabase.from('transactions').select('*').eq('story_id', activeStoryId)
       .order('created_at', { ascending: false }).then(({ data }) => {
         if (data) setTxs(data as Tx[])
         setLoading(false)
       })
-  }, [coupleId])
+  }, [activeStoryId])
 
   const income = txs.filter(t => t.type === 'ingreso').reduce((s, t) => s + t.amount, 0)
   const spent = txs.filter(t => t.type === 'gasto').reduce((s, t) => s + t.amount, 0)
@@ -70,7 +69,7 @@ export default function Finances({ coupleId, me, partner }: {
       {/* Header */}
       <div style={{ padding: '8px 22px 0' }}>
         <div className="eyebrow" style={{ marginBottom: 7 }}>Fondo común</div>
-        <h1 className="display" style={{ fontSize: 32, margin: 0 }}>Nuestras cuentas</h1>
+        <h1 className="display" style={{ fontSize: 32, margin: 0 }}>Presupuesto</h1>
       </div>
 
       {/* Balance hero card */}

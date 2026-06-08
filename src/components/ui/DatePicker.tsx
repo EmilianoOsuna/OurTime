@@ -115,7 +115,7 @@ export function DatePicker({ value, onChange, label, minDate }: {
                   style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     height: 36, width: '100%', border: 'none', cursor: disabled ? 'default' : 'pointer',
-                    borderRadius: '50%', fontSize: 14,
+                    borderRadius: 8, fontSize: 14,
                     background: isSelected ? 'var(--orange)' : 'transparent',
                     color: disabled ? 'var(--ink-faint)' : isSelected ? '#fff' : isToday ? 'var(--orange)' : 'var(--ink)',
                     fontWeight: isSelected || isToday ? 700 : 400,

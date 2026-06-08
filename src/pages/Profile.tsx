@@ -16,7 +16,7 @@ function daysTogether(since: string) {
   return Math.floor((Date.now() - new Date(since + 'T00:00:00').getTime()) / 86400000)
 }
 
-export function ProfileScreen({ plans, transactions, memories, onClose, onGoToFinance, onOpenPlan, partner, coupleCode }: {
+export function ProfileScreen({ plans, transactions, memories, onClose, onGoToFinance, onOpenPlan, partner, storyCode }: {
   plans: PlanType[]
   transactions: Tx[]
   memories: { id: string }[]
@@ -24,7 +24,7 @@ export function ProfileScreen({ plans, transactions, memories, onClose, onGoToFi
   onGoToFinance: () => void
   onOpenPlan: (p: PlanType) => void
   partner: PersonDisplay | null
-  coupleCode: string | null
+  storyCode: string | null
 }) {
   const { profile, user, signOut, refreshProfile } = useAuth()
   const { currency, setCurrency, fmt } = useCurrency()
@@ -90,8 +90,8 @@ export function ProfileScreen({ plans, transactions, memories, onClose, onGoToFi
   }
 
   const copyCode = () => {
-    if (!coupleCode) return
-    navigator.clipboard.writeText(coupleCode)
+    if (!storyCode) return
+    navigator.clipboard.writeText(storyCode)
     setCodeCopied(true)
     setTimeout(() => setCodeCopied(false), 1800)
   }
@@ -348,7 +348,7 @@ export function ProfileScreen({ plans, transactions, memories, onClose, onGoToFi
                 fontFamily: 'var(--font-display)',
                 color: codeCopied ? 'var(--done)' : 'var(--orange-deep)',
               }}>
-                {codeCopied ? '¡Copiado!' : (coupleCode || '—')}
+                {codeCopied ? '¡Copiado!' : (storyCode || '—')}
               </span>
               <Icon name={codeCopied ? 'check' : 'copy'} size={15} style={{ color: 'var(--ink-faint)' }} />
             </button>

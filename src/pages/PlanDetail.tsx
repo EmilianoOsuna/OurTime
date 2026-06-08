@@ -54,7 +54,7 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
   chapterNo?: number
   onUpdated?: () => void
 }) {
-  const { coupleId } = useAuth()
+  const { activeStoryId } = useAuth()
   const { push } = useToast()
   const [plan, setPlan] = useState(initialPlan)
   const [done, setDone] = useState(initialPlan.status === 'completado')
@@ -86,24 +86,24 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
   const isFuture = plan.plan_date > todayStr
 
   useEffect(() => {
-    if (!coupleId) return
+    if (!activeStoryId) return
     supabase.from('memories').select('*')
-      .eq('couple_id', coupleId)
+      .eq('story_id', activeStoryId)
       .eq('plan_id', plan.id)
       .order('created_at', { ascending: false })
       .then(({ data }) => { if (data) setMemories(data as Memory[]) })
-  }, [coupleId, plan.id])
+  }, [activeStoryId, plan.id])
 
   const complete = async () => {
     if (isFuture) {
-      push({ icon: '⏰', eyebrow: 'Aún no es el día', title: `Este capítulo es el ${fmtDate(plan.plan_date)}` })
+      push({ icon: '⏰', eyebrow: 'Aún no es el día', title: `Este momento es el ${fmtDate(plan.plan_date)}` })
       return
     }
     setDone(true)
     setBurst(true)
     await supabase.from('plans').update({ status: 'completado' }).eq('id', plan.id)
     setPlan(p => ({ ...p, status: 'completado' }))
-    push({ icon: '🎉', eyebrow: 'Capítulo', title: '¡Capítulo vivido!', body: `"${plan.title}" ya forma parte de su historia.` })
+    push({ icon: '🎉', eyebrow: 'Momento', title: '¡Momento vivido!', body: `"${plan.title}" ya forma parte de su historia.` })
     setTimeout(() => setBurst(false), 2600)
     onUpdated?.()
   }
@@ -112,7 +112,7 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
     setDone(false)
     await supabase.from('plans').update({ status: 'pendiente' }).eq('id', plan.id)
     setPlan(p => ({ ...p, status: 'pendiente' }))
-    push({ icon: '↩️', eyebrow: 'Capítulo', title: 'Marcado como pendiente' })
+    push({ icon: '↩️', eyebrow: 'Momento', title: 'Marcado como pendiente' })
     onUpdated?.()
   }
 
@@ -138,13 +138,13 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
     setPlan(p => ({ ...p, ...updates }))
     setSaving(false)
     setEditing(false)
-    push({ icon: '✏️', eyebrow: 'Capítulo', title: 'Cambios guardados' })
+    push({ icon: '✏️', eyebrow: 'Momento', title: 'Cambios guardados' })
     onUpdated?.()
   }
 
   const cancelPlan = async () => {
     await supabase.from('plans').update({ status: 'cancelado' }).eq('id', plan.id)
-    push({ icon: '🗑️', eyebrow: 'Capítulo', title: 'Capítulo cancelado' })
+    push({ icon: '🗑️', eyebrow: 'Momento', title: 'Momento cancelado' })
     onUpdated?.()
     onClose()
   }
@@ -176,20 +176,20 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
 
   const handleMemoryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (!file || !coupleId) return
+    if (!file || !activeStoryId) return
     setUploadingMemory(true)
     try {
       const webp = await compressToWebP(file, 1920, 0.82)
-      const path = `${coupleId}/${Date.now()}.webp`
+      const path = `${activeStoryId}/${Date.now()}.webp`
       const { error: upErr } = await supabase.storage.from('Fotos').upload(path, webp, { contentType: 'image/webp' })
       if (upErr) throw upErr
       const { data: { publicUrl } } = supabase.storage.from('Fotos').getPublicUrl(path)
       const { data: mem, error: insErr } = await supabase.from('memories')
-        .insert({ couple_id: coupleId, plan_id: plan.id, image_url: publicUrl, caption: null })
+        .insert({ story_id: activeStoryId, plan_id: plan.id, image_url: publicUrl, caption: null })
         .select().single()
       if (insErr) throw insErr
       if (mem) setMemories(ms => [mem as Memory, ...ms])
-      push({ icon: '📷', eyebrow: 'Recuerdo', title: 'Foto añadida al capítulo' })
+      push({ icon: '📷', eyebrow: 'Recuerdo', title: 'Foto añadida al momento' })
     } catch {
       push({ icon: '⚠️', eyebrow: 'Error', title: 'No se pudo subir la foto' })
     } finally {
@@ -220,7 +220,7 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
         )}
         {!coverUrl && (
           <span className="ph-label" style={{ position: 'absolute', bottom: 20, right: 16 }}>
-            foto del capítulo
+            foto del momento
           </span>
         )}
 
@@ -264,7 +264,7 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
           <div className="card" style={{ padding: '20px 18px 22px', boxShadow: 'var(--sh-md)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <span className="eyebrow" style={{ color: blue ? 'var(--blue-deep)' : 'var(--orange-deep)' }}>
-                · Capítulo {toRoman(no)} ·
+                · Momento {toRoman(no)} ·
               </span>
               {editing
                 ? <span className="chip-tag" style={{ background: 'var(--blue-tint)', color: 'var(--blue-deep)' }}>Editando</span>
@@ -285,7 +285,7 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
                     Título
                   </label>
                   <input value={editTitle} onChange={e => setEditTitle(e.target.value)}
-                    style={INPUT_STYLE} placeholder="Nombre del capítulo" />
+                    style={INPUT_STYLE} placeholder="Nombre del momento" />
                 </div>
 
                 <DatePicker label="Fecha" value={editDate} onChange={setEditDate} />
@@ -326,7 +326,7 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
                       fontSize: 13.5, fontWeight: 600, color: 'var(--ink-faint)', padding: '8px 0',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                     }}>
-                      <Icon name="trash" size={15} /> Cancelar capítulo
+                      <Icon name="trash" size={15} /> Cancelar momento
                     </button>
                   ) : (
                     <div style={{ borderRadius: 14, background: 'rgba(192,57,43,0.06)', padding: '14px 16px' }}>
@@ -377,7 +377,7 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
         {!editing && (
           <div style={{ marginTop: 26 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-              <span className="eyebrow">Recuerdos de este capítulo</span>
+              <span className="eyebrow">Recuerdos de este momento</span>
               {memories.length > 0 && (
                 <span style={{ fontSize: 13, color: 'var(--ink-faint)', fontWeight: 600 }}>{memories.length}</span>
               )}
@@ -426,7 +426,7 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 700, fontSize: 15 }}>Aún sin recuerdos</div>
                   <div style={{ fontSize: 13, color: 'var(--ink-soft)' }}>
-                    Añade la primera foto de este capítulo
+                    Añade la primera foto de este momento
                   </div>
                 </div>
                 <Icon name="plus" size={20} style={{ color: 'var(--ink-faint)' }} />
@@ -457,7 +457,7 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
           <button onClick={uncomplete} className="btn btn-block"
             style={{ background: 'var(--done-tint)', color: 'var(--done)', border: 'none', gap: 10 }}>
             <Icon name="checkCircle" size={19} />
-            <span>Capítulo vivido</span>
+            <span>Momento vivido</span>
             <span style={{ opacity: 0.6, fontSize: 13, fontWeight: 500 }}>· Deshacer</span>
           </button>
         ) : (

@@ -11,7 +11,7 @@ import type { PlanType } from '../../lib/supabase'
 interface Props { onClose: () => void; onCreated: () => void }
 
 export const NewMemorySheet: React.FC<Props> = ({ onClose, onCreated }) => {
-  const { coupleId } = useAuth()
+  const { activeStoryId } = useAuth()
   const { push } = useToast()
   const [file, setFile]     = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
@@ -21,11 +21,11 @@ export const NewMemorySheet: React.FC<Props> = ({ onClose, onCreated }) => {
   const [saving, setSaving]   = useState(false)
 
   useEffect(() => {
-    if (!coupleId) return
-    supabase.from('plans').select('*').eq('couple_id', coupleId)
+    if (!activeStoryId) return
+    supabase.from('plans').select('*').eq('story_id', activeStoryId)
       .order('plan_date', { ascending: true })
       .then(({ data }) => { if (data) setPlans(data as PlanType[]) })
-  }, [coupleId])
+  }, [activeStoryId])
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0]
@@ -35,16 +35,16 @@ export const NewMemorySheet: React.FC<Props> = ({ onClose, onCreated }) => {
   }
 
   const submit = async () => {
-    if (!file || !coupleId) return
+    if (!file || !activeStoryId) return
     setSaving(true)
     try {
       const webp = await compressToWebP(file, 1920, 0.82)
-      const path = `${coupleId}/${Date.now()}.webp`
+      const path = `${activeStoryId}/${Date.now()}.webp`
       const { error: upErr } = await supabase.storage.from('Fotos').upload(path, webp, { contentType: 'image/webp' })
       if (upErr) throw upErr
       const { data: { publicUrl } } = supabase.storage.from('Fotos').getPublicUrl(path)
       const { error: insErr } = await supabase.from('memories').insert({
-        couple_id: coupleId, plan_id: planId || null,
+        story_id: activeStoryId, plan_id: planId || null,
         image_url: publicUrl, caption: caption || null,
       })
       if (insErr) throw insErr
@@ -90,14 +90,14 @@ export const NewMemorySheet: React.FC<Props> = ({ onClose, onCreated }) => {
         <label className="field-label" style={{ marginTop: 18 }}>Pie de foto</label>
         <input className="field" placeholder="Un momento especial…" value={caption} onChange={e => setCaption(e.target.value)} />
 
-        <label className="field-label" style={{ marginTop: 18 }}>Capítulo</label>
+        <label className="field-label" style={{ marginTop: 18 }}>Momento</label>
         <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }} className="ot-scroll">
           <button onClick={() => setPlanId('')} className={'chip' + (!planId ? ' active' : '')}
-            style={{ flexShrink: 0 }}>Sin capítulo</button>
+            style={{ flexShrink: 0 }}>Sin momento</button>
           {plans.map((p, i) => (
             <button key={p.id} onClick={() => setPlanId(p.id)}
               className={'chip' + (planId === p.id ? ' active' : '')} style={{ flexShrink: 0 }}>
-              Cap. {toRoman(i + 1)}
+              Mom. {toRoman(i + 1)}
             </button>
           ))}
         </div>

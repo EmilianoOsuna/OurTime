@@ -7,31 +7,27 @@ import Onboarding from './pages/Onboarding'
 import AppShell from './components/AppShell'
 
 function AppInner() {
-  const { session, user, profile, isLoading, refreshProfile } = useAuth()
+  const { session, user, profile, stories, isLoading, refreshProfile, refreshStories } = useAuth()
   const [needsOnboarding, setNeedsOnboarding] = useState(false)
   const [stateLoading, setStateLoading] = useState(true)
 
-  // AuthContext already fetches the profile on session init — no redundant call needed here.
   useEffect(() => {
     if (!isLoading) {
       if (!session) {
         setStateLoading(false)
-      } else if (profile) {
-        setNeedsOnboarding(!profile.couple_id)
-        setStateLoading(false)
-      } else {
-        // session activa pero sin fila en profiles (trigger pendiente o primer login)
-        setNeedsOnboarding(true)
+      } else if (profile || session) {
+        setNeedsOnboarding(stories.length === 0)
         setStateLoading(false)
       }
     }
-  }, [isLoading, session, profile])
+  }, [isLoading, session, profile, stories])
 
   const handleAuth = useCallback(() => setStateLoading(true), [])
   const handleOnboarded = useCallback(async () => {
     setNeedsOnboarding(false)
     if (user) await refreshProfile()
-  }, [user, refreshProfile])
+    await refreshStories()
+  }, [user, refreshProfile, refreshStories])
 
   if (stateLoading || isLoading) {
     return (

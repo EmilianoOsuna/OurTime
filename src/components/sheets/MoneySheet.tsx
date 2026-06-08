@@ -25,7 +25,7 @@ const CATS_IN = [
 interface Props { onClose: () => void; onCreated: () => void }
 
 export const MoneySheet: React.FC<Props> = ({ onClose, onCreated }) => {
-  const { coupleId } = useAuth()
+  const { activeStoryId } = useAuth()
   const { push } = useToast()
   const { currency } = useCurrency()
   const sym = CURRENCIES[currency].symbol
@@ -43,18 +43,18 @@ export const MoneySheet: React.FC<Props> = ({ onClose, onCreated }) => {
   useEffect(() => { setCat(cats[0].id) }, [kind])
 
   useEffect(() => {
-    if (!coupleId) return
-    supabase.from('plans').select('*').eq('couple_id', coupleId)
+    if (!activeStoryId) return
+    supabase.from('plans').select('*').eq('story_id', activeStoryId)
       .order('plan_date', { ascending: true })
       .then(({ data }) => { if (data) setPlans(data as PlanType[]) })
-  }, [coupleId])
+  }, [activeStoryId])
 
   const submit = async () => {
-    if (!ok || !coupleId) return
+    if (!ok || !activeStoryId) return
     setSaving(true)
     const { data: { user } } = await supabase.auth.getUser()
     const { error } = await supabase.from('transactions').insert({
-      couple_id: coupleId,
+      story_id: activeStoryId,
       user_id: user?.id ?? null,
       type: kind,
       amount: +amt,
@@ -122,7 +122,7 @@ export const MoneySheet: React.FC<Props> = ({ onClose, onCreated }) => {
         </div>
 
         <label className="field-label" style={{ marginTop: 18 }}>
-          ¿A qué capítulo? <span style={{ textTransform: 'none', fontWeight: 400, color: 'var(--ink-faint)' }}>(opcional)</span>
+          ¿A qué momento? <span style={{ textTransform: 'none', fontWeight: 400, color: 'var(--ink-faint)' }}>(opcional)</span>
         </label>
         <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }} className="ot-scroll">
           <button onClick={() => setPlanId('')} className={'chip' + (!planId ? ' active' : '')}
@@ -130,7 +130,7 @@ export const MoneySheet: React.FC<Props> = ({ onClose, onCreated }) => {
           {plans.map((p, i) => (
             <button key={p.id} onClick={() => setPlanId(p.id)}
               className={'chip' + (planId === p.id ? ' active' : '')} style={{ flexShrink: 0 }}>
-              Cap. {toRoman(i + 1)}
+              Mom. {toRoman(i + 1)}
             </button>
           ))}
         </div>

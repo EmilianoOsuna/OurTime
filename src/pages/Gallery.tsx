@@ -53,8 +53,7 @@ function MemoryCard({ m, onOpen, delay, me }: { m: Memory; onOpen: () => void; d
   )
 }
 
-export default function Gallery({ coupleId, memories, setMemories, onImageClick, me }: {
-  coupleId: string | null
+export default function Gallery({ memories, setMemories, onImageClick, me }: {
   memories: Memory[]
   setMemories: (m: Memory[]) => void
   onImageClick: (url: string) => void

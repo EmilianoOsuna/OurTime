@@ -26,7 +26,7 @@ function CircBtn({ icon, onClick }: { icon: string; onClick: () => void }) {
 }
 
 export default function Calendar({ onOpenPlan }: { onOpenPlan?: (p: PlanType) => void }) {
-  const { coupleId } = useAuth()
+  const { activeStoryId } = useAuth()
   const [plans, setPlans] = useState<PlanType[]>([])
   const [loading, setLoading] = useState(true)
   const today = new Date()
@@ -34,14 +34,14 @@ export default function Calendar({ onOpenPlan }: { onOpenPlan?: (p: PlanType) =>
   const [sel, setSel] = useState(todayStr)
 
   useEffect(() => {
-    if (!coupleId) return
-    supabase.from('plans').select('*').eq('couple_id', coupleId)
+    if (!activeStoryId) return
+    supabase.from('plans').select('*').eq('story_id', activeStoryId)
       .neq('status', 'cancelado')
       .order('plan_date', { ascending: true }).then(({ data }) => {
         if (data) setPlans(data as PlanType[])
         setLoading(false)
       })
-  }, [coupleId])
+  }, [activeStoryId])
 
   const byDate: Record<string, PlanType[]> = {}
   plans.forEach(p => {
@@ -247,7 +247,7 @@ function ChapterRow({ plan, no, onOpen }: { plan: PlanType; no: number; onOpen: 
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 11, color: 'var(--ink-faint)', fontWeight: 600, marginBottom: 2 }}>
-          Cap. {toRoman(no)}
+          Mom. {toRoman(no)}
         </div>
         <div className="display" style={{ fontSize: 15.5, lineHeight: 1.15 }}>{plan.title}</div>
         <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 6 }}>

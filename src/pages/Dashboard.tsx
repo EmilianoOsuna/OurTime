@@ -15,8 +15,7 @@ function daysTogether(since: string) {
   return Math.floor((Date.now() - new Date(since + 'T00:00:00').getTime()) / 86400000)
 }
 
-export default function Dashboard({ partnerEditing, plans, go, onBell, onPlanClick, onProfileOpen, me, partner }: {
-  partnerEditing: boolean
+export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpen, me, partner }: {
   plans: PlanType[]
   go: (t: Tab) => void
   onBell: () => void
@@ -25,15 +24,15 @@ export default function Dashboard({ partnerEditing, plans, go, onBell, onPlanCli
   me: PersonDisplay
   partner: PersonDisplay | null
 }) {
-  const { coupleId, profile } = useAuth()
+  const { activeStoryId, profile } = useAuth()
   const [allPlans, setAllPlans] = useState<PlanType[]>([])
   const [loading, setLoading] = useState(true)
 
   const since = profile?.anniversary_date || ''
 
   useEffect(() => {
-    if (coupleId && plans.length === 0) {
-      supabase.from('plans').select('*').eq('couple_id', coupleId)
+    if (activeStoryId && plans.length === 0) {
+      supabase.from('plans').select('*').eq('story_id', activeStoryId)
         .order('plan_date', { ascending: true })
         .then(({ data }) => {
           if (data) setAllPlans(data as PlanType[])
@@ -43,7 +42,7 @@ export default function Dashboard({ partnerEditing, plans, go, onBell, onPlanCli
       setAllPlans(plans)
       setLoading(false)
     }
-  }, [coupleId, plans])
+  }, [activeStoryId, plans])
 
   const upcoming = allPlans.filter(p => p.status === 'pendiente').sort((a, b) => a.plan_date.localeCompare(b.plan_date))
   const past = allPlans.filter(p => p.status === 'completado').sort((a, b) => b.plan_date.localeCompare(a.plan_date))
@@ -70,7 +69,7 @@ export default function Dashboard({ partnerEditing, plans, go, onBell, onPlanCli
       <div style={{ padding: '8px 0 6px' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
           <div>
-            <div className="eyebrow" style={{ marginBottom: 7 }}>Nuestra historia</div>
+            <div className="eyebrow" style={{ marginBottom: 7 }}>Nuestra Historia</div>
             <h1 className="display" style={{ fontSize: 34, margin: 0, lineHeight: 0.98 }}>
               {profile?.full_name ? profile.full_name : 'Nuestro espacio'}
             </h1>
@@ -94,7 +93,7 @@ export default function Dashboard({ partnerEditing, plans, go, onBell, onPlanCli
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
-                {partnerEditing ? `${partnerName} está editando…` : `${partnerName} está aquí`}
+                {partnerName} está aquí
               </div>
               <div style={{ fontSize: 12.5, color: 'var(--ink-soft)' }}>Juntos desde {fmtDate(since)}</div>
             </div>
@@ -111,7 +110,7 @@ export default function Dashboard({ partnerEditing, plans, go, onBell, onPlanCli
       {/* Next chapter hero */}
       {next ? (
         <div style={{ marginTop: 20 }}>
-          <div className="eyebrow" style={{ marginBottom: 12, color: 'var(--orange-deep)' }}>· Su próximo capítulo ·</div>
+          <div className="eyebrow" style={{ marginBottom: 12, color: 'var(--orange-deep)' }}>· Su próximo momento ·</div>
           <NextHero plan={next} no={chapterNo(next.id)} onClick={() => onPlanClick(next)} />
         </div>
       ) : !loading && allPlans.length === 0 && <EmptyDashboard />}
@@ -122,7 +121,7 @@ export default function Dashboard({ partnerEditing, plans, go, onBell, onPlanCli
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
             <span className="eyebrow">Lo que han vivido</span>
             <span style={{ flex: 1, height: 1, background: 'var(--line)' }} />
-            <span style={{ fontSize: 13, color: 'var(--ink-faint)', fontWeight: 600 }}>{past.length} capítulos</span>
+            <span style={{ fontSize: 13, color: 'var(--ink-faint)', fontWeight: 600 }}>{past.length} momentos</span>
           </div>
         </div>
       )}
@@ -178,7 +177,7 @@ export default function Dashboard({ partnerEditing, plans, go, onBell, onPlanCli
               <Icon name="feather" size={20} />
             </div>
             <div>
-              <div style={{ fontWeight: 700, fontSize: 15 }}>Capítulos</div>
+              <div style={{ fontWeight: 700, fontSize: 15 }}>Momentos</div>
               <div style={{ fontSize: 12, color: 'var(--ink-soft)' }}>{upcoming.length} por escribir</div>
             </div>
           </button>
@@ -246,7 +245,7 @@ function TimelineRow({ plan, no, onClick, index }: { plan: PlanType; no: number;
       }}>
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
           <span className="chapter-no" style={{ fontSize: 19, color: 'var(--ink-faint)', fontStyle: 'italic' }}>
-            Cap. {toRoman(no)}</span>
+            Mom. {toRoman(no)}</span>
         </div>
         <h3 className="display" style={{ fontSize: 17.5, margin: '6px 0 0', lineHeight: 1.12 }}>{plan.title}</h3>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 9, fontSize: 12.5, color: 'var(--ink-soft)' }}>
@@ -273,12 +272,12 @@ function EmptyDashboard() {
           <Icon name="heartFill" size={44} />
         </div>
       </div>
-      <div className="display" style={{ fontSize: 25, marginBottom: 8, maxWidth: 250 }}>El primer capítulo os espera</div>
+      <div className="display" style={{ fontSize: 25, marginBottom: 8, maxWidth: 250 }}>El primer momento os espera</div>
       <div style={{ fontSize: 15, color: 'var(--ink-soft)', lineHeight: 1.5, maxWidth: 270 }}>
         Su historia empieza con un plan. ¿Cuál será el primero?
       </div>
       <button className="btn btn-orange" style={{ marginTop: 22 }}>
-        Crear primer capítulo
+        Crear primer momento
       </button>
     </div>
   )
