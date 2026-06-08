@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { CatMedallion } from '../components/ui/CatMedallion'
+import { CatTag } from '../components/ui/CatTag'
 import { Icon } from '../components/ui/Icon'
-import { fmtDate } from '../lib/chapterUtils'
+import { fmtDate, fmtDateShort, toRoman, countdown } from '../lib/chapterUtils'
 import type { PlanType } from '../lib/supabase'
 
 const DIAS = ['lun', 'mar', 'mié', 'jue', 'vie', 'sáb', 'dom']
@@ -35,6 +36,7 @@ export default function Calendar({ onOpenPlan }: { onOpenPlan?: (p: PlanType) =>
   useEffect(() => {
     if (!coupleId) return
     supabase.from('plans').select('*').eq('couple_id', coupleId)
+      .neq('status', 'cancelado')
       .order('plan_date', { ascending: true }).then(({ data }) => {
         if (data) setPlans(data as PlanType[])
         setLoading(false)
@@ -154,13 +156,11 @@ export default function Calendar({ onOpenPlan }: { onOpenPlan?: (p: PlanType) =>
             <CatMedallion cat={p.type} size={46} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div className="display" style={{ fontSize: 16.5, lineHeight: 1.1 }}>{p.title}</div>
-              <div style={{ fontSize: 12.5, color: 'var(--ink-soft)', marginTop: 4, display: 'flex', gap: 10 }}>
-                {p.description && (
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <Icon name="pin" size={13} />{p.description}
-                  </span>
-                )}
-              </div>
+              {p.description && (
+                <div style={{ fontSize: 12.5, color: 'var(--ink-soft)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <Icon name="pin" size={13} />{p.description}
+                </div>
+              )}
             </div>
             {p.status === 'completado' && (
               <span style={{ color: 'var(--done)' }}><Icon name="checkCircle" size={20} /></span>
@@ -175,6 +175,93 @@ export default function Calendar({ onOpenPlan }: { onOpenPlan?: (p: PlanType) =>
           </div>
         )}
       </div>
+
+      {/* ── Todos los capítulos ── */}
+      {plans.length > 0 && <ChapterList plans={plans} onOpen={p => onOpenPlan?.(p)} />}
     </div>
+  )
+}
+
+function ChapterList({ plans, onOpen }: { plans: PlanType[]; onOpen: (p: PlanType) => void }) {
+  const upcoming = plans.filter(p => p.status === 'pendiente')
+  const past     = plans.filter(p => p.status === 'completado')
+
+  return (
+    <div style={{ padding: '32px 22px 0' }}>
+      {/* Pending */}
+      {upcoming.length > 0 && (
+        <>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+            <span className="eyebrow">Por vivir</span>
+            <span style={{ flex: 1, height: 1, background: 'var(--line)' }} />
+            <span style={{ fontSize: 12, color: 'var(--ink-faint)', fontWeight: 600 }}>{upcoming.length}</span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {upcoming.map((p, i) => (
+              <ChapterRow key={p.id} plan={p} no={plans.indexOf(p) + 1} onOpen={onOpen} />
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* Lived */}
+      {past.length > 0 && (
+        <>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '28px 0 14px' }}>
+            <span className="eyebrow">Vividos</span>
+            <span style={{ flex: 1, height: 1, background: 'var(--line)' }} />
+            <span style={{ fontSize: 12, color: 'var(--ink-faint)', fontWeight: 600 }}>{past.length}</span>
+          </div>
+          <div style={{ position: 'relative' }}>
+            <div style={{ position: 'absolute', left: 21, top: 10, bottom: 10, width: 2,
+              background: 'linear-gradient(var(--orange), var(--blue))', opacity: 0.4 }} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {past.map(p => (
+                <ChapterRow key={p.id} plan={p} no={plans.indexOf(p) + 1} onOpen={onOpen} />
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+function ChapterRow({ plan, no, onOpen }: { plan: PlanType; no: number; onOpen: (p: PlanType) => void }) {
+  const done = plan.status === 'completado'
+  return (
+    <button onClick={() => onOpen(plan)} className="ot-card" style={{
+      width: '100%', textAlign: 'left', border: 'none', cursor: 'pointer',
+      display: 'flex', alignItems: 'center', gap: 12, padding: '13px 14px',
+    }}>
+      <div style={{ position: 'relative', flexShrink: 0 }}>
+        <CatMedallion cat={plan.type} size={42} />
+        {done && (
+          <span style={{ position: 'absolute', bottom: -3, right: -3, width: 17, height: 17,
+            borderRadius: '50%', background: 'var(--done)', color: '#fff',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 0 0 2px var(--paper)' }}>
+            <Icon name="check" size={10} stroke={3} />
+          </span>
+        )}
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 11, color: 'var(--ink-faint)', fontWeight: 600, marginBottom: 2 }}>
+          Cap. {toRoman(no)}
+        </div>
+        <div className="display" style={{ fontSize: 15.5, lineHeight: 1.15 }}>{plan.title}</div>
+        <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+          <Icon name="calendar" size={12} />
+          {fmtDateShort(plan.plan_date)} {new Date(plan.plan_date + 'T00:00:00').getFullYear()}
+          {!done && <span style={{ color: 'var(--orange-deep)', fontWeight: 600 }}>· {countdown(plan.plan_date)}</span>}
+        </div>
+      </div>
+      <div style={{ flexShrink: 0 }}>
+        {done
+          ? <CatTag cat={plan.type} />
+          : <Icon name="chevR" size={16} style={{ color: 'var(--ink-faint)' }} />
+        }
+      </div>
+    </button>
   )
 }

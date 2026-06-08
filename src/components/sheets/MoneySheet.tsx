@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { BottomSheet } from '../ui/BottomSheet'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
+import { useCurrency, CURRENCIES } from '../../context/CurrencyContext'
 import { supabase } from '../../lib/supabase'
 import { toRoman } from '../../lib/chapterUtils'
 import { Icon } from '../ui/Icon'
@@ -26,6 +27,8 @@ interface Props { onClose: () => void; onCreated: () => void }
 export const MoneySheet: React.FC<Props> = ({ onClose, onCreated }) => {
   const { coupleId } = useAuth()
   const { push } = useToast()
+  const { currency } = useCurrency()
+  const sym = CURRENCIES[currency].symbol
   const [kind, setKind]   = useState<'gasto' | 'ingreso'>('gasto')
   const [amt, setAmt]     = useState('')
   const [label, setLabel] = useState('')
@@ -63,7 +66,7 @@ export const MoneySheet: React.FC<Props> = ({ onClose, onCreated }) => {
     setSaving(false)
     if (error) { alert(error.message); return }
     push({ icon: 'check', eyebrow: 'Movimiento guardado',
-      title: (kind === 'ingreso' ? '+€' : '–€') + (+amt).toLocaleString('es-ES'),
+      title: (kind === 'ingreso' ? '+' : '–') + sym + (+amt).toLocaleString('es-ES'),
       body: label.trim() })
     onCreated()
     onClose()
@@ -87,7 +90,7 @@ export const MoneySheet: React.FC<Props> = ({ onClose, onCreated }) => {
         {/* Importe */}
         <div style={{ textAlign: 'center', padding: '24px 0 10px' }}>
           <div style={{ display: 'inline-flex', alignItems: 'baseline', gap: 4 }}>
-            <span className="display" style={{ fontSize: 34, color: 'var(--ink-faint)' }}>€</span>
+            <span className="display" style={{ fontSize: 34, color: 'var(--ink-faint)' }}>{sym}</span>
             <input value={amt} onChange={e => setAmt(e.target.value.replace(/[^0-9.]/g, ''))}
               placeholder="0" inputMode="decimal"
               style={{ border: 'none', outline: 'none', background: 'transparent',
