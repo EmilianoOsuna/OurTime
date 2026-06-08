@@ -57,15 +57,25 @@ export async function sendPushToStoryMembers(
 }
 
 export async function syncPlanToGoogleCalendar(planId: string) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const [{ data: { user } }, { data: { session } }] = await Promise.all([
+    supabase.auth.getUser(),
+    supabase.auth.getSession(),
+  ])
   if (!user) return
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('google_calendar_enabled, google_calendar_token')
-    .eq('id', user.id)
-    .single()
-  if (!profile?.google_calendar_enabled || !profile?.google_calendar_token) return
+
+  // Prefer session provider_token (fresh), fall back to saved token in profile
+  let token = session?.provider_token ?? null
+  if (!token) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('google_calendar_enabled, google_calendar_token')
+      .eq('id', user.id)
+      .single()
+    if (!profile?.google_calendar_enabled || !profile?.google_calendar_token) return
+    token = profile.google_calendar_token
+  }
+
   await supabase.functions.invoke('sync-google-calendar', {
-    body: { plan_id: planId, provider_token: profile.google_calendar_token },
+    body: { plan_id: planId, provider_token: token },
   })
 }

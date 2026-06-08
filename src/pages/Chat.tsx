@@ -46,7 +46,7 @@ export default function Chat({ me, partner, storyName, storyCoverUrl, onBack }: 
   const [text, setText] = useState('')
   const [sending, setSending] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [members, setMembers] = useState<PersonDisplay[]>([])
+  const [members, setMembers] = useState<(PersonDisplay & { userId?: string })[]>([])
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
@@ -67,11 +67,12 @@ export default function Chat({ me, partner, storyName, storyCoverUrl, onBack }: 
       })
 
     supabase.from('story_members')
-      .select('user_id, profiles!inner(id, full_name, avatar_url)')
+      .select('user_id, profiles(full_name, avatar_url)')
       .eq('story_id', activeStoryId)
       .then(({ data }) => {
         if (data) {
           setMembers(data.map((m: any) => ({
+            userId: m.user_id,
             name: m.profiles?.full_name || 'Anónimo',
             initial: (m.profiles?.full_name?.[0] || '?').toUpperCase(),
             color: 'var(--orange)',
@@ -100,6 +101,7 @@ export default function Chat({ me, partner, storyName, storyCoverUrl, onBack }: 
       .eq('story_id', activeStoryId)
       .neq('sender_id', user.id)
       .is('read_at', null)
+      .then(() => {})
   }, [messages, activeStoryId, user])
 
   const send = async () => {
@@ -129,7 +131,7 @@ export default function Chat({ me, partner, storyName, storyCoverUrl, onBack }: 
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() }
   }
 
-  const title = partner?.name || storyName || 'Chat'
+  const title = storyName || partner?.name || 'Chat'
 
   return (
     <div style={{
@@ -171,7 +173,7 @@ export default function Chat({ me, partner, storyName, storyCoverUrl, onBack }: 
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
           }}>{title}</div>
           <div style={{ fontSize: 11.5, color: 'var(--ink-soft)', fontWeight: 500, marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {members.filter(m => m.name !== me.name).map(m => m.name).join(', ') || 'Solo tú'}
+            {members.filter(m => m.userId !== user?.id).map(m => m.name).join(', ') || 'Solo tú'}
           </div>
         </div>
       </div>

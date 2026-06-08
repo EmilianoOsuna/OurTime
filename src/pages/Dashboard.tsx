@@ -15,7 +15,7 @@ function daysTogether(since: string) {
 }
 
 
-export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpen, onNewPlan, onStorySwitcher, me, partner }: {
+export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpen, onNewPlan, onStorySwitcher, me, partner, unreadNotifs = 0 }: {
   plans: PlanType[]
   go: (t: Tab) => void
   onBell: () => void
@@ -25,6 +25,7 @@ export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpe
   onStorySwitcher?: () => void
   me: PersonDisplay
   partner: PersonDisplay | null
+  unreadNotifs?: number
 }) {
   const { activeStoryId, stories, profile } = useAuth()
   const activeStory = stories.find(s => s.id === activeStoryId) ?? null
@@ -73,6 +74,14 @@ export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpe
               width: 44, height: 44, borderRadius: '50%', boxShadow: 'var(--sh-sm)', position: 'relative',
               display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--ink)', flexShrink: 0 }}>
               <Icon name="bell" size={21} />
+              {unreadNotifs > 0 && (
+                <span style={{
+                  position: 'absolute', top: 6, right: 6,
+                  width: 9, height: 9, borderRadius: '50%',
+                  background: 'var(--orange)',
+                  border: '2px solid var(--card)',
+                }} />
+              )}
             </button>
           </div>
         </div>

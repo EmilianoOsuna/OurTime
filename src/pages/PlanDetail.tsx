@@ -153,6 +153,15 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
     await supabase.from('plans').update({ status: 'completado' }).eq('id', plan.id)
     setPlan(p => ({ ...p, status: 'completado' }))
     push({ icon: 'sparkle', eyebrow: 'Momento', title: '¡Momento vivido!', body: `"${plan.title}" ya forma parte de su historia.` })
+    if (activeStoryId) {
+      supabase.from('notifications').insert({
+        story_id: activeStoryId,
+        type: 'plan_completed',
+        title: '¡Momento vivido!',
+        body: `«${plan.title}» completado`,
+        read: false,
+      })
+    }
     setTimeout(() => setBurst(false), 2600)
     onUpdated?.()
   }

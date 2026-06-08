@@ -17,6 +17,7 @@ export const BottomSheet: React.FC<Props> = ({ onClose, children, maxHeight = '9
   })
 
   const onPointerDown = (e: React.PointerEvent) => {
+    if (e.pointerType === 'mouse') return
     state.current.startY = e.clientY
     state.current.startScroll = scrollRef.current?.scrollTop ?? 0
     state.current.dragging = false

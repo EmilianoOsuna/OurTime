@@ -56,7 +56,7 @@ export default function Calendar({ plans, onOpenPlan }: { plans: PlanType[]; onO
   const selPlans = byDate[sel] || []
 
   return (
-    <div className="ot-scroll page-enter" style={{ paddingBottom: 130 }}>
+    <div className="page-enter" style={{ paddingBottom: 130 }}>
       {/* Header */}
       <div style={{ padding: '8px 22px 0' }}>
         <div className="eyebrow" style={{ marginBottom: 7 }}>Su agenda</div>

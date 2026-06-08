@@ -130,9 +130,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       .map((m: any) => m.stories)
       .filter(Boolean)
     setStories(storyList)
-    if (storyList.length > 0 && !activeStoryId) {
-      _setActiveStoryId(storyList[0].id)
-      localStorage.setItem('activeStoryId', storyList[0].id)
+    if (storyList.length > 0) {
+      const currentStillValid = storyList.some(s => s.id === activeStoryId)
+      if (!currentStillValid) {
+        _setActiveStoryId(storyList[0].id)
+        localStorage.setItem('activeStoryId', storyList[0].id)
+      }
+    } else {
+      _setActiveStoryId(null)
+      localStorage.removeItem('activeStoryId')
     }
   }, [user, activeStoryId])
 

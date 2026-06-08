@@ -43,10 +43,6 @@ const CAT_COLOR_STABLE: Record<string, string> = {
 export type Tab = 'home' | 'calendar' | 'gallery' | 'finance' | 'chat'
 type Overlay = { type: 'plan'; data: any } | { type: 'action' } | { type: 'newplan' } | { type: 'money' } | { type: 'memory' } | { type: 'profile' } | { type: 'newstory' } | { type: 'editstory'; story: StoryType } | null
 
-const NOTIFS: (NotifItem & { id: string })[] = [
-  { id: 'welcome', icon: 'sparkle', text: <><strong>Bienvenidos a OurTime</strong></>, time: 'Ahora', read: false },
-]
-
 function getInitialTab(): Tab {
   const saved = sessionStorage.getItem('activeTab')
   if (saved === 'home' || saved === 'calendar' || saved === 'gallery' || saved === 'finance' || saved === 'chat') return saved
@@ -96,6 +92,8 @@ export default function AppShell() {
   const [partner, setPartner] = useState<ProfileType | null>(null)
   const [storyCode, setStoryCode] = useState<string | null>(null)
   const [unreadRefreshKey, setUnreadRefreshKey] = useState(0)
+  const [notifications, setNotifications] = useState<(NotifItem & { id: string })[]>([])
+  const prevTabRef = useRef<Tab>(tab)
 
   // Native back button/gesture
   useEffect(() => {
@@ -119,6 +117,15 @@ export default function AppShell() {
       return false
     })
   }, [lightbox, storySwitcherOpen, overlay, notifsVisible])
+
+  // Clear previous story data immediately on story switch to avoid limbo state
+  useEffect(() => {
+    setPartner(null)
+    setPlans([])
+    setMemories([])
+    setTransactions([])
+    setStoryCode(null)
+  }, [activeStoryId])
 
   useEffect(() => {
     if (!activeStoryId || !user) return
@@ -154,6 +161,23 @@ export default function AppShell() {
     supabase.from('stories').select('invite_code').eq('id', activeStoryId).single()
       .then(({ data }) => { if (data?.invite_code) setStoryCode(data.invite_code) })
   }, [activeStoryId, user])
+
+  // Mark chat messages as read whenever the user leaves the chat tab (regardless of back method)
+  useEffect(() => {
+    if (prevTabRef.current === 'chat' && tab !== 'chat') {
+      if (activeStoryId && user) {
+        supabase.from('messages')
+          .update({ read_at: new Date().toISOString() })
+          .eq('story_id', activeStoryId)
+          .neq('sender_id', user.id)
+          .is('read_at', null)
+          .then(() => setUnreadRefreshKey(k => k + 1))
+      } else {
+        setUnreadRefreshKey(k => k + 1)
+      }
+    }
+    prevTabRef.current = tab
+  }, [tab, activeStoryId, user])
 
   // ── Back gesture / hardware back button ──
   const historyPushed = useRef(false)
@@ -346,15 +370,52 @@ export default function AppShell() {
     return () => { supabase.removeChannel(channel) }
   }, [activeStoryId])
 
+  // Realtime notifications from DB
+  useEffect(() => {
+    if (!activeStoryId) return
+    const loadNotifs = () =>
+      supabase.from('notifications').select('*')
+        .eq('story_id', activeStoryId)
+        .order('created_at', { ascending: false })
+        .limit(40)
+        .then(({ data }) => {
+          if (!data) return
+          setNotifications(data.map((n: any) => ({
+            id: n.id,
+            icon: n.type === 'plan_created' ? 'calendarCheck'
+                : n.type === 'plan_completed' ? 'checkCircle'
+                : n.type === 'memory_added' ? 'camera'
+                : 'sparkle',
+            text: <><strong>{n.title}</strong>{n.body ? ` — ${n.body}` : ''}</>,
+            time: new Date(n.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+            read: n.read,
+          })))
+        })
+    loadNotifs()
+    const ch = supabase.channel('notifs:' + activeStoryId)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications',
+        filter: `story_id=eq.${activeStoryId}` }, loadNotifs)
+      .subscribe()
+    return () => { supabase.removeChannel(ch) }
+  }, [activeStoryId])
+
   const unreadCount = useUnreadCount(activeStoryId, user?.id, unreadRefreshKey)
+  const unreadNotifs = notifications.filter(n => !n.read).length
+
+  const markNotifsRead = () => {
+    if (!activeStoryId) return
+    supabase.from('notifications').update({ read: true })
+      .eq('story_id', activeStoryId).eq('read', false)
+    setNotifications(ns => ns.map(n => ({ ...n, read: true })))
+  }
 
   const screen = {
     home: <Dashboard plans={plans} go={go}
-            onBell={() => setNotifsVisible(true)} onPlanClick={openPlan}
+            onBell={() => { setNotifsVisible(true); markNotifsRead() }} onPlanClick={openPlan}
             onProfileOpen={() => setOverlay({ type: 'profile' })}
             onNewPlan={() => setOverlay({ type: 'newplan' })}
             onStorySwitcher={() => setStorySwitcherOpen(true)}
-            me={me} partner={partnerDisplay} />,
+            me={me} partner={partnerDisplay} unreadNotifs={unreadNotifs} />,
     calendar: <Calendar plans={plans} onOpenPlan={openPlan} />,
     gallery: <Gallery memories={memories} setMemories={setMemories}
                onImageClick={(url: string) => setLightbox(url)} me={me} />,
@@ -393,7 +454,7 @@ export default function AppShell() {
       {overlay?.type === 'memory' && <NewMemorySheet onClose={closeOverlay} onCreated={() => { closeOverlay(); refreshMemories() }} />}
       {overlay?.type === 'newstory' && <NewStorySheet onClose={closeOverlay} onCreated={() => { closeOverlay(); go('home') }} />}
       {overlay?.type === 'editstory' && <EditStorySheet story={overlay.story} onClose={closeOverlay} onUpdated={() => {}} />}
-      {notifsVisible && <NotificationsPanel onClose={closeNotifs} items={NOTIFS} />}
+      {notifsVisible && <NotificationsPanel onClose={closeNotifs} items={notifications} />}
       {lightbox && <Lightbox url={lightbox} onClose={() => setLightbox(null)} />}
       {storySwitcherOpen && (
         <StorySwitcherSheet
@@ -521,6 +582,7 @@ function StorySwitcherSheet({ stories, activeStoryId, onSelect, onNewStory, onEd
   })
 
   const dragPointerDown = (e: React.PointerEvent) => {
+    if (e.pointerType === 'mouse') return
     dragState.current.startY = e.clientY
     dragState.current.dragging = false
     dragState.current.lastY = e.clientY
