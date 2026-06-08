@@ -48,10 +48,11 @@ export async function sendPushToStoryMembers(
   storyId: string,
   senderId: string,
   title: string,
-  body: string
+  body: string,
+  url = '/'
 ) {
   await supabase.functions.invoke('send-push', {
-    body: { story_id: storyId, sender_id: senderId, title, body },
+    body: { story_id: storyId, sender_id: senderId, title, body, url },
   })
 }
 

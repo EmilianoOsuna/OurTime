@@ -5,6 +5,7 @@ import { useToast } from '../../context/ToastContext'
 import { supabase } from '../../lib/supabase'
 import { toRoman } from '../../lib/chapterUtils'
 import { compressToWebP } from '../../lib/imageUtils'
+import { sendPushToStoryMembers } from '../../lib/usePushNotifications'
 import { Icon } from '../ui/Icon'
 import type { PlanType } from '../../lib/supabase'
 
@@ -49,6 +50,15 @@ export const NewMemorySheet: React.FC<Props> = ({ onClose, onCreated }) => {
       })
       if (insErr) throw insErr
       push({ icon: 'image', eyebrow: 'Recuerdo añadido', title: 'Foto guardada en la galería' })
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        sendPushToStoryMembers(
+          activeStoryId, user.id,
+          '📸 Nuevo recuerdo',
+          caption ? `«${caption}»` : 'Se añadió una nueva foto a la galería',
+          '/?shortcut=gallery'
+        )
+      }
       onCreated()
       onClose()
     } catch (e: any) {

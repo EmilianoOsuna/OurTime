@@ -203,6 +203,23 @@ export default function AppShell() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [])
 
+  // Handle push notification taps — SW sends OT_NAVIGATE when app is already open
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return
+    const handler = (event: MessageEvent) => {
+      if (event.data?.type !== 'OT_NAVIGATE') return
+      const url = new URL(event.data.url, window.location.origin)
+      const shortcut = url.searchParams.get('shortcut')
+      if (shortcut === 'chat')    { go('chat') }
+      else if (shortcut === 'gallery') { go('gallery') }
+      else if (shortcut === 'calendar') { go('calendar') }
+      else if (shortcut === 'newplan') { setOverlay({ type: 'newplan' }) }
+      else if (shortcut === 'memory')  { setOverlay({ type: 'memory' }) }
+    }
+    navigator.serviceWorker.addEventListener('message', handler)
+    return () => navigator.serviceWorker.removeEventListener('message', handler)
+  }, [go])
+
   // Accent color — override --orange* based on active story category
   useEffect(() => {
     const story = stories.find(s => s.id === activeStoryId)

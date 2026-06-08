@@ -10,6 +10,26 @@
   "start_url": "/",
   "lang": "es",
   "categories": ["lifestyle", "social"],
+  "shortcuts": [
+    {
+      "name": "Nuevo momento",
+      "short_name": "Momento",
+      "url": "/?shortcut=newplan",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Chat",
+      "short_name": "Chat",
+      "url": "/?shortcut=chat",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Nuevo recuerdo",
+      "short_name": "Foto",
+      "url": "/?shortcut=memory",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+    }
+  ],
   "icons": [
     {
       "src": "/pwa-192x192.png",

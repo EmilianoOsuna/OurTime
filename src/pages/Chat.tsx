@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
+import { sendPushToStoryMembers } from '../lib/usePushNotifications'
 import { Icon } from '../components/ui/Icon'
 import { Avatar } from '../components/ui/Avatar'
 import { PresenceDot } from '../components/ui/PresenceDot'
@@ -93,7 +94,17 @@ export default function Chat({ me, partner, storyName, onBack }: Props) {
     const { error } = await supabase.from('messages').insert({
       story_id: activeStoryId, sender_id: user.id, text: trimmed,
     })
-    if (error) setText(trimmed)
+    if (error) {
+      setText(trimmed)
+    } else {
+      // fire-and-forget — don't await so send feels instant
+      sendPushToStoryMembers(
+        activeStoryId, user.id,
+        me.name || 'Nuevo mensaje',
+        trimmed.length > 80 ? trimmed.slice(0, 80) + '…' : trimmed,
+        '/?shortcut=chat'
+      )
+    }
     setSending(false)
     inputRef.current?.focus()
   }

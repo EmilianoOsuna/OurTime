@@ -20,7 +20,7 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   try {
-    const { story_id, sender_id, title, body } = await req.json()
+    const { story_id, sender_id, title, body, url } = await req.json()
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
 
@@ -46,7 +46,7 @@ serve(async (req) => {
     // Send push to each subscriber
     const results = await Promise.allSettled(
       profiles.map(p =>
-        webpush.sendNotification(p.push_subscription, JSON.stringify({ title, body, tag: story_id }))
+        webpush.sendNotification(p.push_subscription, JSON.stringify({ title, body, tag: story_id, url: url ?? '/' }))
       )
     )
 

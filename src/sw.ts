@@ -72,11 +72,18 @@ self.addEventListener('push', (event: PushEvent) => {
 
 self.addEventListener('notificationclick', (event: NotificationEvent) => {
   event.notification.close()
+  const targetUrl: string = event.notification.data?.url ?? '/'
+
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
+      // App already open — send postMessage to navigate, then focus
       const existing = clientList.find(c => c.url.startsWith(self.registration.scope))
-      if (existing) return existing.focus()
-      return self.clients.openWindow('/')
+      if (existing) {
+        existing.postMessage({ type: 'OT_NAVIGATE', url: targetUrl })
+        return existing.focus()
+      }
+      // App closed — open with URL so AppShell reads shortcut params
+      return self.clients.openWindow(targetUrl)
     })
   )
 })
