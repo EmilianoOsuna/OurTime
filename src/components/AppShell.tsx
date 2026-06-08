@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useAuth } from '../context/AuthContext'
 import type { ProfileType } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
@@ -70,7 +70,55 @@ export default function AppShell() {
     return () => clearInterval(iv)
   }, [partner])
 
-  const closeOverlay = useCallback(() => setOverlay(null), [])
+  // ── Back gesture / hardware back button ──
+  const historyPushed = useRef(false)
+  const ignorePop = useRef(false)
+  // Refs so the popstate handler always reads current state without re-registering
+  const overlayRef = useRef(overlay)
+  const notifsRef  = useRef(notifsVisible)
+  useEffect(() => { overlayRef.current = overlay },       [overlay])
+  useEffect(() => { notifsRef.current = notifsVisible },  [notifsVisible])
+
+  // Push a history entry whenever a modal opens for the first time
+  useEffect(() => {
+    const open = overlay !== null || notifsVisible
+    if (open && !historyPushed.current) {
+      window.history.pushState({ ot: 'modal' }, '')
+      historyPushed.current = true
+    }
+    if (!open) historyPushed.current = false
+  }, [overlay, notifsVisible])
+
+  // Handle the browser/OS back gesture — close the topmost modal
+  useEffect(() => {
+    const handlePop = () => {
+      if (ignorePop.current) { ignorePop.current = false; return }
+      historyPushed.current = false
+      if (overlayRef.current !== null) setOverlay(null)
+      else if (notifsRef.current)     setNotifsVisible(false)
+    }
+    window.addEventListener('popstate', handlePop)
+    return () => window.removeEventListener('popstate', handlePop)
+  }, []) // empty — reads state via refs
+
+  const closeOverlay = useCallback(() => {
+    setOverlay(null)
+    if (historyPushed.current) {
+      historyPushed.current = false
+      ignorePop.current = true
+      window.history.back()
+    }
+  }, [])
+
+  const closeNotifs = useCallback(() => {
+    setNotifsVisible(false)
+    if (historyPushed.current && overlayRef.current === null) {
+      historyPushed.current = false
+      ignorePop.current = true
+      window.history.back()
+    }
+  }, [])
+
   const go = useCallback((t: Tab) => { setTab(t); window.scrollTo({ top: 0, behavior: 'smooth' }) }, [])
 
   const sortedPlans = [...plans].sort((a, b) => a.plan_date.localeCompare(b.plan_date))
@@ -118,14 +166,14 @@ export default function AppShell() {
           coupleCode={coupleCode}
         />
       )}
-      {overlay?.type === 'action' && <GlobalActionSheet onClose={() => setOverlay(null)}
+      {overlay?.type === 'action' && <GlobalActionSheet onClose={closeOverlay}
         onNewPlan={() => setOverlay({ type: 'newplan' })}
         onNewMoney={() => setOverlay({ type: 'money' })}
         onNewMemory={() => setOverlay({ type: 'memory' })} />}
       {overlay?.type === 'newplan' && <NewPlanSheet onClose={closeOverlay} onCreated={() => { closeOverlay(); refreshPlans() }} />}
       {overlay?.type === 'money' && <MoneySheet onClose={closeOverlay} onCreated={() => closeOverlay()} />}
       {overlay?.type === 'memory' && <NewMemorySheet onClose={closeOverlay} onCreated={() => { closeOverlay(); refreshMemories() }} />}
-      {notifsVisible && <NotificationsPanel onClose={() => setNotifsVisible(false)} items={NOTIFS} />}
+      {notifsVisible && <NotificationsPanel onClose={closeNotifs} items={NOTIFS} />}
       {lightbox && <Lightbox url={lightbox} onClose={() => setLightbox(null)} />}
 
       <NavBar tab={tab} setTab={go} onFab={() => setOverlay({ type: 'action' })} />
@@ -140,7 +188,9 @@ function Lightbox({ url, onClose }: { url: string; onClose: () => void }) {
       WebkitBackdropFilter: 'blur(6px)', animation: 'fadeIn .2s both' }}>
       <div style={{ maxWidth: '92%', maxHeight: '82%', borderRadius: 16, overflow: 'hidden',
         boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }}>
-        <img src={url} style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} alt="" />
+        <img src={url} alt="" decoding="async"
+          onLoad={e => { (e.target as HTMLImageElement).style.opacity = '1' }}
+          style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', opacity: 0, transition: 'opacity 0.3s' }} />
       </div>
     </div>
   )

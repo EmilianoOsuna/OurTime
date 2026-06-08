@@ -23,7 +23,11 @@ export function Avatar({ person, size = 40, ring = true, style = {} }: {
         <img
           src={person.avatar_url}
           alt={person.name}
-          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+          loading="lazy"
+          decoding="async"
+          onLoad={e => { (e.target as HTMLImageElement).style.opacity = '1' }}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block',
+            opacity: 0, transition: 'opacity 0.3s' }}
         />
       </div>
     )

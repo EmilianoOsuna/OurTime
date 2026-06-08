@@ -214,7 +214,9 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
           borderRadius: '0 0 28px 28px' }}
       >
         {coverUrl && (
-          <img src={coverUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.9 }} />
+          <img src={coverUrl} alt="" loading="eager" decoding="async"
+            onLoad={e => { (e.target as HTMLImageElement).style.opacity = '0.9' }}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0, transition: 'opacity 0.4s' }} />
         )}
         {!coverUrl && (
           <span className="ph-label" style={{ position: 'absolute', bottom: 20, right: 16 }}>
@@ -386,7 +388,9 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
                 {memories.slice(0, 8).map((m, i) => (
                   <div key={m.id} style={{ width: 108, height: 134, borderRadius: 14, flexShrink: 0, overflow: 'hidden',
                     background: 'var(--card-2)' }}>
-                    <img src={m.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img src={m.image_url} alt="" loading="lazy" decoding="async"
+                      onLoad={e => { (e.target as HTMLImageElement).style.opacity = '1' }}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0, transition: 'opacity 0.35s' }} />
                   </div>
                 ))}
                 <button onClick={() => memoryInputRef.current?.click()}

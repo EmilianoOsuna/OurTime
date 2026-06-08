@@ -199,7 +199,9 @@ function NextHero({ plan, no, onClick }: { plan: PlanType; no: number; onClick: 
       <div className={plan.cover_url ? '' : ('ph' + (blue ? ' blue' : ''))}
         style={{ height: 150, position: 'relative', background: plan.cover_url ? '#111' : undefined, overflow: 'hidden' }}>
         {plan.cover_url
-          ? <img src={plan.cover_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.9 }} />
+          ? <img src={plan.cover_url} alt="" loading="lazy" decoding="async"
+              onLoad={e => { (e.target as HTMLImageElement).style.opacity = '0.9' }}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0, transition: 'opacity 0.4s' }} />
           : <span className="ph-label" style={{ position: 'absolute', bottom: 12, right: 12 }}>foto del plan</span>
         }
         <div style={{ position: 'absolute', top: 14, left: 14 }}><CatTag cat={plan.type} /></div>

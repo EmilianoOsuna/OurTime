@@ -33,7 +33,10 @@ function MemoryCard({ m, onOpen, delay, me }: { m: Memory; onOpen: () => void; d
       boxShadow: 'var(--sh-sm)', animationDelay: delay + 's', display: 'block', width: '100%',
     }}>
       <div style={{ width: '100%', aspectRatio: '1 / ' + ratio.toFixed(1), position: 'relative', overflow: 'hidden' }}>
-        <img src={m.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+        <img src={m.image_url} alt="" loading="lazy" decoding="async"
+          onLoad={e => { (e.target as HTMLImageElement).style.opacity = '1' }}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block',
+            opacity: 0, transition: 'opacity 0.4s' }} />
       </div>
       <div style={{ padding: '10px 12px 12px', textAlign: 'left' }}>
         {m.caption && (
