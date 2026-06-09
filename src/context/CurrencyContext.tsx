@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState } from 'react'
+import React, { createContext, useContext, useState, useEffect } from 'react'
+import { useAuth } from './AuthContext'
 
 export type CurrencyKey = 'eur' | 'usd' | 'mxn' | 'cop' | 'ars' | 'bob' | 'brl' | 'gbp'
 
@@ -27,15 +28,24 @@ const Ctx = createContext<CurrencyCtx>({
 
 export const useCurrency = () => useContext(Ctx)
 
-const STORAGE_KEY = 'ot_currency'
+function storyKey(storyId: string | null) {
+  return storyId ? `ot_currency_${storyId}` : 'ot_currency'
+}
 
 export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { activeStoryId } = useAuth()
   const [currency, setCurrencyState] = useState<CurrencyKey>(
-    () => (localStorage.getItem(STORAGE_KEY) as CurrencyKey) || 'eur'
+    () => (localStorage.getItem(storyKey(activeStoryId)) as CurrencyKey) || 'eur'
   )
 
+  // When story changes, load that story's saved currency
+  useEffect(() => {
+    const saved = localStorage.getItem(storyKey(activeStoryId)) as CurrencyKey | null
+    setCurrencyState(saved || 'eur')
+  }, [activeStoryId])
+
   const setCurrency = (k: CurrencyKey) => {
-    localStorage.setItem(STORAGE_KEY, k)
+    localStorage.setItem(storyKey(activeStoryId), k)
     setCurrencyState(k)
   }
 

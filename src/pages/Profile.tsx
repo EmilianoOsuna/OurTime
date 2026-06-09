@@ -7,7 +7,8 @@ import { useCurrency, CURRENCIES, type CurrencyKey } from '../context/CurrencyCo
 import { fmtDate } from '../lib/chapterUtils'
 import { DatePicker } from '../components/ui/DatePicker'
 import { useAuth } from '../context/AuthContext'
-import { supabase } from '../lib/supabase'
+import { supabase, nativeRedirectUrl } from '../lib/supabase'
+import { isNative } from '../lib/native'
 import type { PlanType, PersonDisplay, StoryType } from '../lib/supabase'
 import { useToast } from '../context/ToastContext'
 import { useConfirm } from '../components/ui/ConfirmDialog'
@@ -208,8 +209,9 @@ export function ProfileScreen({ plans, memories, onClose, onGoToFinance, onOpenP
       setJoinSuccess(true)
       setJoinCode('')
       setTimeout(() => setJoinSuccess(false), 2500)
-      // Prompt for role in the newly joined story
+      // Switch to the newly joined story and prompt for role
       if (newStoryId) {
+        setActiveStoryId(newStoryId)
         const { data: storyData } = await supabase
           .from('stories').select('id, name').eq('id', newStoryId).single()
         if (storyData) {
@@ -272,7 +274,7 @@ export function ProfileScreen({ plans, memories, onClose, onGoToFinance, onOpenP
           <div className="eyebrow" style={{ marginBottom: 5 }}>Configuración</div>
           <h1 className="display" style={{ fontSize: 28, margin: 0 }}>Perfil</h1>
         </div>
-        <button onClick={onClose} style={{
+        <button data-testid="profile-close-btn" onClick={onClose} style={{
           width: 42, height: 42, borderRadius: '50%', border: 'none',
           background: 'var(--card)', cursor: 'pointer', color: 'var(--ink)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -744,7 +746,7 @@ function GoogleCalendarSection() {
       provider: 'google',
       options: {
         scopes: GCAL_SCOPE,
-        redirectTo: window.location.origin,
+        redirectTo: isNative ? nativeRedirectUrl : window.location.origin,
         queryParams: { access_type: 'offline', prompt: 'consent' },
       },
     })

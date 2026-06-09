@@ -103,7 +103,7 @@ function Onboarding({ onComplete }: { onComplete: () => void }) {
   return (
     <div style={{ minHeight: '100vh', background: 'var(--paper)', position: 'relative' }}>
       {step > 0 && step < 5 && (
-        <div style={{ position: 'fixed', top: 64, left: 24, right: 24, zIndex: 10, display: 'flex', gap: 6 }}>
+        <div style={{ position: 'fixed', top: 'max(44px, env(safe-area-inset-top, 44px))', left: 24, right: 24, zIndex: 10, display: 'flex', gap: 6 }}>
           {[1, 2, 3, 4].map(i => (
             <div key={i} style={{ flex: 1, height: 3, borderRadius: 2,
               background: i <= step ? 'var(--orange)' : 'var(--line)', transition: 'background .4s' }} />
@@ -134,7 +134,7 @@ function Onboarding({ onComplete }: { onComplete: () => void }) {
 
 function Welcome({ onNext }: { onNext: () => void }) {
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', padding: '0 30px 40px', position: 'relative' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', padding: '0 30px max(40px, env(safe-area-inset-bottom, 40px))', position: 'relative' }}>
       <div style={{ flex: 1 }} />
       <div className="anim-up" style={{ position: 'relative' }}>
         <div className="eyebrow" style={{ color: 'var(--orange-deep)', marginBottom: 18 }}>· Bienvenidos a OurTime ·</div>
@@ -366,7 +366,7 @@ function JoinStep({ code, setCode, error, loading, onNext }: {
 function ReadyStep({ name, onComplete }: { name: string; onComplete: () => void }) {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column',
-      alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '40px 32px' }}>
+      alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '40px 32px max(40px, env(safe-area-inset-bottom, 40px))' }}>
       <Confetti show={true} />
       <div className="anim-scale" style={{ marginBottom: 26 }}>
         <div style={{ width: 96, height: 96, borderRadius: '50%', background: 'var(--orange)', color: '#fff',
@@ -393,7 +393,7 @@ function StepShell({ no, eyebrow, title, sub, children }: {
   no: string; eyebrow: string; title: React.ReactNode; sub: string; children: React.ReactNode
 }) {
   return (
-    <div className="page-enter" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', padding: '60px 30px 38px' }}>
+    <div className="page-enter" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', padding: '96px 30px max(38px, env(safe-area-inset-bottom, 38px))' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
         <span className="chapter-no" style={{ fontSize: 30, color: 'var(--ink-faint)', lineHeight: 1 }}>{no}</span>
         <span className="eyebrow" style={{ whiteSpace: 'nowrap' }}>{eyebrow}</span>

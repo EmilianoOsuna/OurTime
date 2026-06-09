@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 
 .env
+e2e/.auth/
+playwright-results/
+playwright-report/

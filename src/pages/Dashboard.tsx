@@ -128,7 +128,7 @@ export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpe
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {upcoming.slice(1).map(p => (
-              <button key={p.id} onClick={() => onPlanClick(p)} className="ot-card" style={{
+              <button key={p.id} data-testid="plan-card" onClick={() => onPlanClick(p)} className="ot-card" style={{
                 border: 'none', cursor: 'pointer', padding: '13px 15px', textAlign: 'left',
                 display: 'flex', alignItems: 'center', gap: 12,
               }}>
@@ -227,7 +227,7 @@ function NextHero({ plan, no, onClick }: { plan: PlanType; no: number; onClick: 
   const meta = CAT_META[plan.type] || { tone: 'orange' as const }
   const blue = meta.tone === 'blue'
   return (
-    <button onClick={onClick} className="ot-card anim-up" style={{
+    <button data-testid="plan-card" onClick={onClick} className="ot-card anim-up" style={{
       width: '100%', textAlign: 'left', border: 'none', cursor: 'pointer', overflow: 'hidden',
       padding: 0, boxShadow: 'var(--sh-md)',
     }}>
@@ -275,7 +275,7 @@ function TimelineRow({ plan, no, onClick, index }: { plan: PlanType; no: number;
             <Icon name="check" size={12} stroke={3} /></span>}
         </div>
       </div>
-      <button onClick={onClick} className="ot-card" style={{
+      <button data-testid="plan-card" onClick={onClick} className="ot-card" style={{
         flex: 1, textAlign: 'left', border: 'none', cursor: 'pointer', padding: '13px 15px',
         minWidth: 0, position: 'relative', overflow: 'hidden'
       }}>

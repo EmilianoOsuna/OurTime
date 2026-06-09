@@ -5,11 +5,30 @@ import { Icon } from '../components/ui/Icon'
 import { fmtDate, fmtDateShort, toRoman, countdown } from '../lib/chapterUtils'
 import type { PlanType } from '../lib/supabase'
 
+type CalendarPlan = PlanType & { storyName?: string; storyCategory?: string }
+
 const DIAS = ['lun', 'mar', 'mié', 'jue', 'vie', 'sáb', 'dom']
 const MESES_L = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
                  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
 
 const todayStr = new Date().toISOString().slice(0, 10)
+
+// Solid colors for calendar dots (CSS vars don't work in dynamic backgrounds easily)
+const CAT_DOT: Record<string, string> = {
+  pareja:  '#F17720',
+  amigos:  '#0474BA',
+  familia: '#2E7D5B',
+  otro:    '#6B7280',
+}
+const CAT_COLOR: Record<string, string> = {
+  pareja: 'var(--cat-pareja)',
+  amigos: 'var(--cat-amigos)',
+  familia: 'var(--cat-familia)',
+  otro: 'var(--cat-otro)',
+}
+const CAT_ICON: Record<string, string> = {
+  pareja: 'heartFill', amigos: 'users', familia: 'home', otro: 'tag',
+}
 
 function CircBtn({ icon, onClick }: { icon: string; onClick: () => void }) {
   return (
@@ -23,14 +42,14 @@ function CircBtn({ icon, onClick }: { icon: string; onClick: () => void }) {
   )
 }
 
-export default function Calendar({ plans, onOpenPlan }: { plans: PlanType[]; onOpenPlan?: (p: PlanType) => void }) {
+export default function Calendar({ plans, onOpenPlan }: { plans: CalendarPlan[]; onOpenPlan?: (p: PlanType) => void }) {
   const today = new Date()
   const [ym, setYm] = useState({ y: today.getFullYear(), m: today.getMonth() })
   const [sel, setSel] = useState(todayStr)
 
   const visiblePlans = plans.filter(p => p.status !== 'cancelado')
 
-  const byDate: Record<string, PlanType[]> = {}
+  const byDate: Record<string, CalendarPlan[]> = {}
   visiblePlans.forEach(p => {
     const d = p.plan_date.slice(0, 10)
     ;(byDate[d] = byDate[d] || []).push(p)
@@ -109,8 +128,9 @@ export default function Calendar({ plans, onOpenPlan }: { plans: PlanType[]; onO
                     {ps.slice(0, 3).map((p, j) => (
                       <span key={j} className="dot" style={{
                         width: 5, height: 5,
-                        background: isSel ? 'rgba(255,255,255,0.8)'
-                          : (p.status === 'completado' ? 'var(--done)' : 'var(--orange)'),
+                        background: isSel
+                          ? 'rgba(255,255,255,0.8)'
+                          : (CAT_DOT[p.storyCategory || 'otro'] || '#F17720'),
                       }} />
                     ))}
                   </span>
@@ -133,6 +153,11 @@ export default function Calendar({ plans, onOpenPlan }: { plans: PlanType[]; onO
           }}>
             <CatMedallion cat={p.type} size={46} />
             <div style={{ flex: 1, minWidth: 0 }}>
+              {p.storyName && (
+                <div style={{ marginBottom: 4 }}>
+                  <StoryBadge name={p.storyName} category={p.storyCategory} />
+                </div>
+              )}
               <div className="display" style={{ fontSize: 16.5, lineHeight: 1.1 }}>{p.title}</div>
               {p.description && (
                 <div style={{ fontSize: 12.5, color: 'var(--ink-soft)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -160,7 +185,24 @@ export default function Calendar({ plans, onOpenPlan }: { plans: PlanType[]; onO
   )
 }
 
-function ChapterList({ plans, onOpen }: { plans: PlanType[]; onOpen: (p: PlanType) => void }) {
+function StoryBadge({ name, category }: { name?: string; category?: string }) {
+  if (!name) return null
+  const cat = category || 'otro'
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 3,
+      background: `color-mix(in srgb, ${CAT_DOT[cat]} 15%, transparent)`,
+      color: CAT_DOT[cat],
+      borderRadius: 6, padding: '2px 6px',
+      fontSize: 10.5, fontWeight: 700, fontFamily: 'var(--font-ui)',
+    }}>
+      <Icon name={CAT_ICON[cat] || 'tag'} size={10} />
+      {name}
+    </span>
+  )
+}
+
+function ChapterList({ plans, onOpen }: { plans: CalendarPlan[]; onOpen: (p: PlanType) => void }) {
   const upcoming = plans.filter(p => p.status === 'pendiente')
   const past     = plans.filter(p => p.status === 'completado')
 
@@ -205,7 +247,7 @@ function ChapterList({ plans, onOpen }: { plans: PlanType[]; onOpen: (p: PlanTyp
   )
 }
 
-function ChapterRow({ plan, no, onOpen }: { plan: PlanType; no: number; onOpen: (p: PlanType) => void }) {
+function ChapterRow({ plan, no, onOpen }: { plan: CalendarPlan; no: number; onOpen: (p: PlanType) => void }) {
   const done = plan.status === 'completado'
   return (
     <button onClick={() => onOpen(plan)} className="ot-card" style={{
@@ -224,8 +266,9 @@ function ChapterRow({ plan, no, onOpen }: { plan: PlanType; no: number; onOpen: 
         )}
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 11, color: 'var(--ink-faint)', fontWeight: 600, marginBottom: 2 }}>
-          Mom. {toRoman(no)}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+          <span style={{ fontSize: 11, color: 'var(--ink-faint)', fontWeight: 600 }}>Mom. {toRoman(no)}</span>
+          {plan.storyName && <StoryBadge name={plan.storyName} category={plan.storyCategory} />}
         </div>
         <div className="display" style={{ fontSize: 15.5, lineHeight: 1.15 }}>{plan.title}</div>
         <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 6 }}>

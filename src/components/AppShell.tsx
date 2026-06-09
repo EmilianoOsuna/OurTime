@@ -86,6 +86,7 @@ export default function AppShell() {
   const [notifsVisible, setNotifsVisible] = useState(false)
   const [storySwitcherOpen, setStorySwitcherOpen] = useState(false)
   const [plans, setPlans] = useState<any[]>([])
+  const [allCalendarPlans, setAllCalendarPlans] = useState<any[]>([])
   const [memories, setMemories] = useState<any[]>([])
   const [transactions, setTransactions] = useState<any[]>([])
   const [lightbox, setLightbox] = useState<string | null>(null)
@@ -185,6 +186,23 @@ export default function AppShell() {
       .single()
       .then(({ data }) => setIsAdmin(data?.permission_level === 'admin'))
   }, [activeStoryId, user])
+
+  // Fetch plans from ALL stories for the calendar view
+  useEffect(() => {
+    if (!stories.length) { setAllCalendarPlans([]); return }
+    const storyIds = stories.map(s => s.id)
+    supabase.from('plans').select('*')
+      .in('story_id', storyIds)
+      .neq('status', 'cancelado')
+      .then(({ data }) => {
+        if (!data) return
+        const withStory = data.map((p: any) => {
+          const story = stories.find((s: any) => s.id === p.story_id)
+          return { ...p, storyName: story?.name || '', storyCategory: story?.category || 'otro' }
+        })
+        setAllCalendarPlans(withStory)
+      })
+  }, [stories])
 
   // Mark chat messages as read when ENTERING chat — so badge is already 0 when NavBar reappears on exit
   useEffect(() => {
@@ -443,7 +461,7 @@ export default function AppShell() {
             onNewPlan={() => setOverlay({ type: 'newplan' })}
             onStorySwitcher={() => setStorySwitcherOpen(true)}
             me={me} partner={partnerDisplay} unreadNotifs={unreadNotifs} />,
-    calendar: <Calendar plans={plans} onOpenPlan={openPlan} />,
+    calendar: <Calendar plans={allCalendarPlans} onOpenPlan={openPlan} />,
     gallery: <Gallery memories={memories} setMemories={setMemories}
                onImageClick={(url: string) => setLightbox(url)} me={me} />,
     finance: <Finances />,
@@ -534,12 +552,12 @@ function NavBar({ tab, setTab, onFab, me, onProfileOpen, stories, activeStoryId,
   const activeStory = stories.find(s => s.id === activeStoryId)
   const catColor = activeStory ? (CAT_COLOR[activeStory.category] || 'var(--orange)') : 'var(--orange)'
 
-  const items: { key: Tab; icon: string; label: string; badge?: number }[] = [
-    { key: 'home',     icon: 'home',     label: 'Inicio'      },
-    { key: 'calendar', icon: 'calendar', label: 'Agenda'      },
-    { key: 'gallery',  icon: 'image',    label: 'Fotos'       },
-    { key: 'finance',  icon: 'wallet',   label: 'Gasto'       },
-    { key: 'chat',     icon: 'chat',     label: 'Chat', badge: unreadCount },
+  const items: { tab: Tab; icon: string; label: string; badge?: number }[] = [
+    { tab: 'home',     icon: 'home',     label: 'Inicio'      },
+    { tab: 'calendar', icon: 'calendar', label: 'Agenda'      },
+    { tab: 'gallery',  icon: 'image',    label: 'Fotos'       },
+    { tab: 'finance',  icon: 'wallet',   label: 'Gasto'       },
+    { tab: 'chat',     icon: 'chat',     label: 'Chat', badge: unreadCount },
   ]
 
   return (
@@ -571,10 +589,10 @@ function NavBar({ tab, setTab, onFab, me, onProfileOpen, stories, activeStoryId,
             letterSpacing: '0.02em', color: 'var(--ink-faint)' }}>Yo</span>
         </button>
 
-        <NavBtn {...items[0]} active={tab === items[0].key} onClick={() => setTab(items[0].key)} />
-        <NavBtn {...items[1]} active={tab === items[1].key} onClick={() => setTab(items[1].key)} />
+        <NavBtn icon={items[0].icon} label={items[0].label} active={tab === items[0].tab} onClick={() => setTab(items[0].tab)} />
+        <NavBtn icon={items[1].icon} label={items[1].label} active={tab === items[1].tab} onClick={() => setTab(items[1].tab)} />
 
-        <button onClick={onFab} style={{
+        <button data-testid="fab-btn" onClick={onFab} style={{
           width: 48, height: 48, borderRadius: '50%', border: 'none',
           background: catColor, color: '#fff', cursor: 'pointer', margin: '0 4px',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -587,9 +605,9 @@ function NavBar({ tab, setTab, onFab, me, onProfileOpen, stories, activeStoryId,
           <Icon name="plus" size={22} stroke={2.4} />
         </button>
 
-        <NavBtn {...items[2]} active={tab === items[2].key} onClick={() => setTab(items[2].key)} />
-        <NavBtn {...items[3]} active={tab === items[3].key} onClick={() => setTab(items[3].key)} />
-        <NavBtn {...items[4]} active={tab === items[4].key} onClick={() => setTab(items[4].key)} />
+        <NavBtn icon={items[2].icon} label={items[2].label} active={tab === items[2].tab} onClick={() => setTab(items[2].tab)} />
+        <NavBtn icon={items[3].icon} label={items[3].label} active={tab === items[3].tab} onClick={() => setTab(items[3].tab)} />
+        <NavBtn icon={items[4].icon} label={items[4].label} badge={items[4].badge} active={tab === items[4].tab} onClick={() => setTab(items[4].tab)} />
       </div>
     </nav>
   )

@@ -66,9 +66,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(session)
         setUser(session?.user ?? null)
         if (session?.user) {
+          // Reset isLoading before fetching so AppInner doesn't see stale empty stories
+          setIsLoading(true)
           fetchProfileAndStories(session.user.id)
           // Save Google provider_token if this was a Calendar OAuth redirect
-          if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session.provider_token) {
+          if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') && session.provider_token) {
             const updates: Record<string, unknown> = {
               google_calendar_token: session.provider_token,
               google_calendar_enabled: true,
@@ -81,7 +83,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 .from('profiles').select('avatar_url').eq('id', session.user.id).single()
               if (!existing?.avatar_url) updates.avatar_url = googleAvatar
             }
-            supabase.from('profiles').update(updates).eq('id', session.user.id)
+            supabase.from('profiles').update(updates).eq('id', session.user.id).then(() => {})
           }
         } else {
           _setActiveStoryId(null)
@@ -152,7 +154,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [user, activeStoryId])
 
   const signOut = async () => {
-    await supabase.auth.signOut()
+    // Clear state immediately so UI responds without waiting for network
+    setSession(null)
+    setUser(null)
+    _setActiveStoryId(null)
+    setStories([])
+    setProfile(null)
+    setIsLoading(false)
+    localStorage.removeItem('activeStoryId')
+    // Fire-and-forget with 5s timeout (clears server-side session)
+    Promise.race([
+      supabase.auth.signOut(),
+      new Promise(resolve => setTimeout(resolve, 5000)),
+    ]).catch(() => {})
   }
 
   const value = useMemo(() => ({
