@@ -59,17 +59,12 @@ export function Sheet({ onClose, children, height = 'auto', pad = true }: {
   const onPointerUp = () => {
     const el = sheetRef.current
     if (state.current.dragging) {
-      const vy = Math.min(Math.max(state.current.velocity, -3000), 3000)
-      if (y.get() > 120 || vy > 800) {
-        const h = window.innerHeight
-        animate(y, h, {
-          type: 'spring', damping: 30, stiffness: 250, mass: 0.8,
-          velocity: vy,
-        }).then(() => onClose())
+      if (y.get() > 120 || Math.min(Math.max(state.current.velocity, -3000), 3000) > 800) {
+        onClose()
       } else {
         animate(y, 0, {
           type: 'spring', damping: 35, stiffness: 300, mass: 0.6,
-          velocity: vy,
+          velocity: Math.min(Math.max(state.current.velocity, -3000), 3000),
         })
       }
       if (el) el.style.overflowY = ''

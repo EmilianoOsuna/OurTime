@@ -93,7 +93,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (session?.user) {
         fetchedRef.current = true
         setIsLoading(true)
-        fetchProfileAndStories(session.user.id)
+        const fetchTimeout = setTimeout(() => {
+          setIsLoading(false)
+        }, 8000)
+        fetchProfileAndStories(session.user.id).finally(() => clearTimeout(fetchTimeout))
       } else {
         setIsLoading(false)
       }

@@ -484,7 +484,9 @@ export default function AppShell() {
       >
         {screen[tab]}
       </motion.div>
+      </Suspense>
 
+      <Suspense fallback={null}>
       {overlay?.type === 'plan' && (
         <motion.div key="plan-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}
           style={{ position: 'relative', zIndex: 100 }}>
@@ -544,7 +546,10 @@ export default function AppShell() {
           <EditStorySheet story={overlay.story} onClose={closeOverlay} onUpdated={() => {}} isAdmin={adminStoryIds.has(overlay.story.id)} />
         </motion.div>
       )}
+      </Suspense>
+      <Suspense fallback={null}>
       {notifsVisible && <NotificationsPanel onClose={closeNotifs} items={notifications} />}
+      </Suspense>
       {lightbox && <Lightbox url={lightbox} onClose={() => setLightbox(null)} />}
       {storySwitcherOpen && (
         <StorySwitcherSheet
@@ -564,7 +569,6 @@ export default function AppShell() {
           stories={stories} activeStoryId={activeStoryId}
           unreadCount={unreadCount} />
       )}
-      </Suspense>
     </div>
   )
 }
