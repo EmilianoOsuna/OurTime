@@ -30,3 +30,4 @@ playwright-results/
 playwright-report/
 
 android/app/google-services.json
+.opencode/pilot-audit.log.*

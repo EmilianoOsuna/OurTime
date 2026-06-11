@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react'
-import { motion, animate, useMotionValue, useTransform, AnimatePresence } from 'framer-motion'
+import { motion, animate, useMotionValue, useTransform } from 'framer-motion'
 import { useAuth } from '../context/AuthContext'
 import type { ProfileType } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
@@ -485,59 +485,57 @@ export default function AppShell() {
         {screen[tab]}
       </motion.div>
 
-      <AnimatePresence>
-        {overlay?.type === 'plan' && (
-          <motion.div key="plan-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-            <PlanDetail plan={overlay.data} onClose={closeOverlay} chapterNo={chapterNo(overlay.data.id)} onUpdated={refreshPlans} />
-          </motion.div>
-        )}
-        {overlay?.type === 'profile' && (
-          <motion.div key="profile-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-            <ProfileScreen
-              plans={plans}
-              onClose={closeOverlay}
-              onGoToFinance={() => { closeOverlay(); go('finance') }}
-              storyCode={storyCode}
-              isAdmin={isAdmin}
-              onEditStory={(s) => setOverlay({ type: 'editstory', story: s })}
-            />
-          </motion.div>
-        )}
-        {overlay?.type === 'action' && (
-          <motion.div key="action-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-            <GlobalActionSheet onClose={closeOverlay}
-              onNewPlan={() => setOverlay({ type: 'newplan' })}
-              onNewMoney={() => setOverlay({ type: 'money' })}
-              onNewMemory={() => setOverlay({ type: 'memory' })}
-              onNewStory={() => setOverlay({ type: 'newstory' })} />
-          </motion.div>
-        )}
-        {overlay?.type === 'newplan' && (
-          <motion.div key="newplan-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-            <NewPlanSheet onClose={closeOverlay} onCreated={() => { closeOverlay(); refreshPlans() }} />
-          </motion.div>
-        )}
-        {overlay?.type === 'money' && (
-          <motion.div key="money-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-            <MoneySheet onClose={closeOverlay} onCreated={() => { closeOverlay(); refreshTransactions() }} />
-          </motion.div>
-        )}
-        {overlay?.type === 'memory' && (
-          <motion.div key="memory-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-            <NewMemorySheet onClose={closeOverlay} onCreated={() => { closeOverlay(); refreshMemories() }} />
-          </motion.div>
-        )}
-        {overlay?.type === 'newstory' && (
-          <motion.div key="newstory-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-            <NewStorySheet onClose={closeOverlay} onCreated={() => { closeOverlay(); go('home') }} />
-          </motion.div>
-        )}
-        {overlay?.type === 'editstory' && (
-          <motion.div key="editstory-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-            <EditStorySheet story={overlay.story} onClose={closeOverlay} onUpdated={() => {}} isAdmin={adminStoryIds.has(overlay.story.id)} />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {overlay?.type === 'plan' && (
+        <motion.div key="plan-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
+          <PlanDetail plan={overlay.data} onClose={closeOverlay} chapterNo={chapterNo(overlay.data.id)} onUpdated={refreshPlans} />
+        </motion.div>
+      )}
+      {overlay?.type === 'profile' && (
+        <motion.div key="profile-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
+          <ProfileScreen
+            plans={plans}
+            onClose={closeOverlay}
+            onGoToFinance={() => { closeOverlay(); go('finance') }}
+            storyCode={storyCode}
+            isAdmin={isAdmin}
+            onEditStory={(s) => setOverlay({ type: 'editstory', story: s })}
+          />
+        </motion.div>
+      )}
+      {overlay?.type === 'action' && (
+        <motion.div key="action-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
+          <GlobalActionSheet onClose={closeOverlay}
+            onNewPlan={() => setOverlay({ type: 'newplan' })}
+            onNewMoney={() => setOverlay({ type: 'money' })}
+            onNewMemory={() => setOverlay({ type: 'memory' })}
+            onNewStory={() => setOverlay({ type: 'newstory' })} />
+        </motion.div>
+      )}
+      {overlay?.type === 'newplan' && (
+        <motion.div key="newplan-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
+          <NewPlanSheet onClose={closeOverlay} onCreated={() => { closeOverlay(); refreshPlans() }} />
+        </motion.div>
+      )}
+      {overlay?.type === 'money' && (
+        <motion.div key="money-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
+          <MoneySheet onClose={closeOverlay} onCreated={() => { closeOverlay(); refreshTransactions() }} />
+        </motion.div>
+      )}
+      {overlay?.type === 'memory' && (
+        <motion.div key="memory-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
+          <NewMemorySheet onClose={closeOverlay} onCreated={() => { closeOverlay(); refreshMemories() }} />
+        </motion.div>
+      )}
+      {overlay?.type === 'newstory' && (
+        <motion.div key="newstory-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
+          <NewStorySheet onClose={closeOverlay} onCreated={() => { closeOverlay(); go('home') }} />
+        </motion.div>
+      )}
+      {overlay?.type === 'editstory' && (
+        <motion.div key="editstory-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
+          <EditStorySheet story={overlay.story} onClose={closeOverlay} onUpdated={() => {}} isAdmin={adminStoryIds.has(overlay.story.id)} />
+        </motion.div>
+      )}
       {notifsVisible && <NotificationsPanel onClose={closeNotifs} items={notifications} />}
       {lightbox && <Lightbox url={lightbox} onClose={() => setLightbox(null)} />}
       {storySwitcherOpen && (
