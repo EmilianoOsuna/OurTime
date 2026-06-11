@@ -38,6 +38,7 @@ function DuplicateAccountScreen({ onSignOut }: { onSignOut: () => void }) {
   )
 }
 
+const Landing = lazy(() => import('./pages/Landing'))
 const Auth = lazy(() => import('./pages/Auth'))
 const Onboarding = lazy(() => import('./pages/Onboarding'))
 const AppShell = lazy(() => import('./components/AppShell'))
@@ -56,6 +57,7 @@ function AppInner() {
   const { session, user, profile, stories, isLoading, refreshProfile, refreshStories, signOut } = useAuth()
   const [needsOnboarding, setNeedsOnboarding] = useState(false)
   const [stateLoading, setStateLoading] = useState(true)
+  const [showAuth, setShowAuth] = useState(false)
 
   useEffect(() => {
     if (!isLoading) {
@@ -87,7 +89,9 @@ function AppInner() {
   return (
     <Suspense fallback={<Spinner />}>
       {!session
-        ? <Auth onAuth={handleAuth} />
+        ? showAuth
+          ? <Auth onAuth={handleAuth} />
+          : <Landing onGetStarted={() => setShowAuth(true)} />
         : likelyDuplicateAccount
           ? <DuplicateAccountScreen onSignOut={signOut} />
           : needsOnboarding

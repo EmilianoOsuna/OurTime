@@ -1,0 +1,57 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e9] [cursor=pointer]:
+      - img [ref=e13]
+      - img [ref=e17]
+    - generic [ref=e20]:
+      - link [ref=e22] [cursor=pointer]:
+        - /url: mailto:hello@goodsecrets.co
+        - img [ref=e25]
+      - link [ref=e28] [cursor=pointer]:
+        - /url: https://www.instagram.com/goodsecrets.co/
+        - img [ref=e31]
+    - img [ref=e37] [cursor=pointer]
+    - generic [ref=e40] [cursor=pointer]:
+      - paragraph [ref=e50]:
+        - generic [ref=e52]: A
+        - generic [ref=e53]
+        - generic [ref=e66]
+        - generic [ref=e73]: "&"
+        - generic [ref=e74]
+        - generic [ref=e81]
+        - generic [ref=e90]
+      - img [ref=e100]
+      - generic [ref=e102]:
+        - paragraph [ref=e105]
+        - paragraph [ref=e113]
+      - generic [ref=e122]:
+        - paragraph [ref=e125]
+        - paragraph [ref=e136]
+      - generic [ref=e146]:
+        - img [ref=e149]
+        - paragraph [ref=e152]: scroll
+    - generic [ref=e155]:
+      - generic [ref=e157]:
+        - img [ref=e317]
+        - img [ref=e161]
+        - img [ref=e341]
+        - img [ref=e167]
+        - img [ref=e389]
+        - img [ref=e407]
+        - img [ref=e175]
+        - img [ref=e179]
+        - img [ref=e428]
+        - img [ref=e185]
+      - generic [ref=e189]:
+        - generic
+        - generic [ref=e191]
+      - generic [ref=e222]:
+        - paragraph [ref=e227]: © 2026 Good Secrets
+        - generic [ref=e228]
+  - img [ref=e268]
+  - img [ref=e280]
+  - img [ref=e285]
+  - img [ref=e290]
+  - img [ref=e293]
+  - img [ref=e297]
+  - img [ref=e314]

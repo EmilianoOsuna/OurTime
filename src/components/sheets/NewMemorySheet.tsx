@@ -24,6 +24,10 @@ export const NewMemorySheet: React.FC<Props> = ({ onClose, onCreated, initialAlb
   const [saving, setSaving]   = useState(false)
 
   useEffect(() => {
+    return () => { if (preview) URL.revokeObjectURL(preview) }
+  }, [preview])
+
+  useEffect(() => {
     if (!activeStoryId) return
     supabase.from('plans').select('*').eq('story_id', activeStoryId)
       .order('plan_date', { ascending: true })

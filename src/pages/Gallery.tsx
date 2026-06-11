@@ -131,6 +131,7 @@ export default function Gallery({ memories, setMemories, onImageClick, me }: {
     if (!activeStoryId) return
     supabase.from('albums').select('*').eq('story_id', activeStoryId)
       .order('created_at', { ascending: false })
+      .limit(50)
       .then(({ data }) => { if (data) setAlbums(data as AlbumType[]) })
   }, [activeStoryId])
 

@@ -273,7 +273,7 @@ function ChapterRow({ plan, no, onOpen }: { plan: CalendarPlan; no: number; onOp
         <div className="display" style={{ fontSize: 15.5, lineHeight: 1.15 }}>{plan.title}</div>
         <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
           <Icon name="calendar" size={12} />
-          {fmtDateShort(plan.plan_date)} {new Date(plan.plan_date + 'T00:00:00').getFullYear()}
+          {fmtDateShort(plan.plan_date)} {new Date(plan.plan_date.slice(0,10) + 'T00:00:00Z').getUTCFullYear()}
           {!done && <span style={{ color: 'var(--orange-deep)', fontWeight: 600 }}>· {countdown(plan.plan_date)}</span>}
         </div>
       </div>

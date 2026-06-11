@@ -20,16 +20,16 @@ export const CAT_META: Record<string, { label: string; tone: 'orange' | 'blue' }
 
 const MESES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic']
 export function fmtDateShort(iso: string) {
-  const d = new Date(iso + 'T00:00:00')
-  return `${d.getDate()} ${MESES[d.getMonth()]}`
+  const d = new Date(iso.slice(0,10) + 'T00:00:00Z')
+  return `${d.getUTCDate()} ${MESES[d.getUTCMonth()]}`
 }
 export function fmtDate(iso: string) {
-  const d = new Date(iso + 'T00:00:00')
-  return `${d.getDate()} ${MESES[d.getMonth()]} ${d.getFullYear()}`
+  const d = new Date(iso.slice(0,10) + 'T00:00:00Z')
+  return `${d.getUTCDate()} ${MESES[d.getUTCMonth()]} ${d.getUTCFullYear()}`
 }
 export function countdown(iso: string) {
-  const today = new Date(); today.setHours(0, 0, 0, 0)
-  const target = new Date(iso.slice(0, 10) + 'T00:00:00')
+  const today = new Date(); today.setUTCHours(0, 0, 0, 0)
+  const target = new Date(iso.slice(0, 10) + 'T00:00:00Z')
   const d = Math.round((target.getTime() - today.getTime()) / 86400000)
   if (d < 0) return 'pasado'
   if (d === 0) return 'hoy'

@@ -9,7 +9,7 @@ type Mode = 'days' | 'months' | 'years'
 
 function parseSafe(v: string) {
   if (!v) return new Date()
-  const d = new Date(v + 'T00:00:00')
+  const d = new Date(v.slice(0,10) + 'T00:00:00Z')
   return isNaN(d.getTime()) ? new Date() : d
 }
 
@@ -23,7 +23,7 @@ export function DatePicker({ value, onChange, label, minDate }: {
   const ref = parseSafe(value || todayStr)
   const [open, setOpen] = useState(false)
   const [mode, setMode] = useState<Mode>('days')
-  const [ym, setYm] = useState({ y: ref.getFullYear(), m: ref.getMonth() })
+  const [ym, setYm] = useState({ y: ref.getUTCFullYear(), m: ref.getUTCMonth() })
 
   const firstDay    = new Date(ym.y, ym.m, 1)
   const startOffset = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1
@@ -38,7 +38,7 @@ export function DatePicker({ value, onChange, label, minDate }: {
     `${ym.y}-${String(ym.m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
 
   const displayVal = value
-    ? parseSafe(value).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
+    ? new Date(value.slice(0,10) + 'T00:00:00Z').toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
     : 'Seleccionar fecha'
 
   const prevMonth = () => setYm(({ y, m }) => m === 0 ? { y: y - 1, m: 11 } : { y, m: m - 1 })
@@ -178,7 +178,7 @@ export function DatePicker({ value, onChange, label, minDate }: {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
                 {MESES.map((mes, idx) => {
-                  const isSelected = idx === ym.m && ym.y === parseSafe(value || todayStr).getFullYear()
+                  const isSelected = idx === ym.m && ym.y === parseSafe(value || todayStr).getUTCFullYear()
                   const isCurrent  = idx === new Date().getMonth() && ym.y === new Date().getFullYear()
                   return (
                     <button key={mes} type="button" onClick={() => { setYm(v => ({ ...v, m: idx })); setMode('days') }}

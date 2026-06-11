@@ -15,9 +15,11 @@ const CATEGORIES = [
 
 const FAMILY_ROLES = ['Papá', 'Mamá', 'Hijo/a', 'Hermano/a', 'Abuelo/a', 'Tío/a', 'Primo/a', 'Otro']
 
-function randomCode(len = 6) {
+function randomCode(len = 8) {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
-  return Array.from({ length: len }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
+  const arr = new Uint8Array(len)
+  crypto.getRandomValues(arr)
+  return Array.from(arr, (b) => chars[b % chars.length]).join('')
 }
 
 interface Props { onClose: () => void; onCreated: () => void }

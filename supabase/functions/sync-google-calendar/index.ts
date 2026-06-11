@@ -9,15 +9,18 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
 
   try {
-    const { plan_id, provider_token } = await req.json() as {
-      plan_id: string
-      provider_token: string
-    }
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) throw new Error('Missing Authorization header')
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+      { global: { headers: { Authorization: authHeader } } }
     )
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) throw new Error('Unauthorized')
+
+    const { plan_id } = await req.json() as { plan_id: string }
 
     const { data: plan, error: planErr } = await supabase
       .from('plans')
@@ -29,8 +32,19 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Plan not found' }), { status: 404, headers: CORS })
     }
 
+    // Read google_calendar_token from DB instead of client body
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('google_calendar_token')
+      .eq('id', user.id)
+      .single()
+    const provider_token = profile?.google_calendar_token
+    if (!provider_token) {
+      return new Response(JSON.stringify({ error: 'Google Calendar not connected' }), { status: 400, headers: CORS })
+    }
+
     // Build Google Calendar event
-    const startDate = plan.plan_date.slice(0, 10) // YYYY-MM-DD
+    const startDate = plan.plan_date.slice(0, 10)
     const event = {
       summary: plan.title,
       location: plan.place ?? undefined,

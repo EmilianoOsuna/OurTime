@@ -1,0 +1,186 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e9] [cursor=pointer]:
+      - img [ref=e13]
+      - img [ref=e17]
+    - generic [ref=e20]:
+      - link [ref=e22] [cursor=pointer]:
+        - /url: mailto:hello@goodsecrets.co
+        - img [ref=e25]
+      - link [ref=e28] [cursor=pointer]:
+        - /url: https://www.instagram.com/goodsecrets.co/
+        - img [ref=e31]
+    - img [ref=e37] [cursor=pointer]
+    - generic [ref=e40] [cursor=pointer]:
+      - paragraph [ref=e50]:
+        - generic [ref=e52]: A
+        - generic [ref=e53]:
+          - generic [ref=e54]: p
+          - generic [ref=e55]: u
+          - generic [ref=e56]: r
+          - generic [ref=e57]: p
+          - generic [ref=e58]: o
+          - generic [ref=e59]: s
+          - generic [ref=e60]: e
+          - generic [ref=e61]: f
+          - generic [ref=e62]: u
+          - generic [ref=e63]: l
+          - generic [ref=e64]: l
+          - generic [ref=e65]: "y"
+        - generic [ref=e66]:
+          - generic [ref=e67]: s
+          - generic [ref=e68]: m
+          - generic [ref=e69]: a
+          - generic [ref=e70]: l
+          - generic [ref=e71]: l
+        - generic [ref=e73]: "&"
+        - generic [ref=e74]:
+          - generic [ref=e75]: "n"
+          - generic [ref=e76]: i
+          - generic [ref=e77]: m
+          - generic [ref=e78]: b
+          - generic [ref=e79]: l
+          - generic [ref=e80]: e
+        - generic [ref=e81]:
+          - generic [ref=e82]: c
+          - generic [ref=e83]: r
+          - generic [ref=e84]: e
+          - generic [ref=e85]: a
+          - generic [ref=e86]: t
+          - generic [ref=e87]: i
+          - generic [ref=e88]: v
+          - generic [ref=e89]: e
+        - generic [ref=e90]:
+          - generic [ref=e91]: s
+          - generic [ref=e92]: t
+          - generic [ref=e93]: u
+          - generic [ref=e94]: d
+          - generic [ref=e95]: i
+          - generic [ref=e96]: o
+      - img [ref=e100]
+      - generic [ref=e102]:
+        - paragraph [ref=e105]:
+          - generic [ref=e106]:
+            - generic [ref=e107]: g
+            - generic [ref=e108]: o
+            - generic [ref=e109]: o
+            - generic [ref=e110]: d
+        - paragraph [ref=e113]:
+          - generic [ref=e114]:
+            - generic [ref=e115]: s
+            - generic [ref=e116]: e
+            - generic [ref=e117]: c
+            - generic [ref=e118]: r
+            - generic [ref=e119]: e
+            - generic [ref=e120]: t
+            - generic [ref=e121]: s
+      - generic [ref=e122]:
+        - paragraph [ref=e125]:
+          - generic [ref=e126]:
+            - generic [ref=e127]: g
+            - generic [ref=e128]: r
+            - generic [ref=e129]: e
+            - generic [ref=e130]: a
+            - generic [ref=e131]: t
+        - paragraph [ref=e136]:
+          - generic [ref=e137]:
+            - generic [ref=e138]: p
+            - generic [ref=e139]: e
+            - generic [ref=e140]: o
+            - generic [ref=e141]: p
+            - generic [ref=e142]: l
+            - generic [ref=e143]: e
+      - generic [ref=e146]:
+        - img [ref=e149]
+        - paragraph [ref=e152]: scroll
+    - generic [ref=e155]:
+      - generic [ref=e157]:
+        - img [ref=e161]:
+          - paragraph [ref=e163]: the secret
+        - img [ref=e167]:
+          - paragraph [ref=e169]: to making
+        - img [ref=e175]:
+          - paragraph [ref=e177]: great work
+        - img [ref=e179]:
+          - paragraph [ref=e181]: is knowing
+        - img [ref=e185]:
+          - paragraph [ref=e187]: good people
+      - generic [ref=e189]:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - paragraph: HBO Original
+                            - generic:
+                              - paragraph: U.S. against the world
+                        - generic:
+                          - generic:
+                            - generic:
+                              - paragraph: cash app F1
+                        - generic:
+                          - generic:
+                            - generic:
+                              - paragraph: github universe '25
+        - generic [ref=e191]:
+          - link [ref=e195] [cursor=pointer]:
+            - /url: ./work/hbo-us-against-the-world
+            - generic [ref=e200]:
+              - generic:
+                - paragraph
+          - link [ref=e204] [cursor=pointer]:
+            - /url: ./work/cash-app-f1-reveal
+            - generic [ref=e209]:
+              - generic:
+                - paragraph
+          - link "github universe" [ref=e213] [cursor=pointer]:
+            - /url: ./work/github-universe
+            - paragraph [ref=e220]: github universe
+      - generic [ref=e222]:
+        - paragraph [ref=e227]: © 2026 Good Secrets
+        - generic [ref=e228]:
+          - paragraph [ref=e231]:
+            - generic [ref=e232]:
+              - generic [ref=e233]: w
+              - generic [ref=e234]: o
+              - generic [ref=e235]: w
+              - generic [ref=e236]: .
+              - generic [ref=e237]: "y"
+              - generic [ref=e238]: e
+              - generic [ref=e239]: s
+              - generic [ref=e240]: .
+            - generic [ref=e241]:
+              - generic [ref=e242]: s
+              - generic [ref=e243]: o
+              - generic [ref=e244]: l
+              - generic [ref=e245]: d
+              - generic [ref=e246]: .
+          - generic [ref=e249] [cursor=pointer]:
+            - paragraph [ref=e252]:
+              - generic [ref=e253]:
+                - generic [ref=e254]: g
+                - generic [ref=e255]: e
+                - generic [ref=e256]: t
+              - generic [ref=e257]:
+                - generic [ref=e258]: i
+                - generic [ref=e259]: "n"
+              - generic [ref=e260]:
+                - generic [ref=e261]: t
+                - generic [ref=e262]: o
+                - generic [ref=e263]: u
+                - generic [ref=e264]: c
+                - generic [ref=e265]: h
+            - button [ref=e267]
+  - img [ref=e268]
+  - img [ref=e280]
+  - img [ref=e285]
+  - img [ref=e290]
+  - img [ref=e293]
+  - img [ref=e297]
+  - img [ref=e314]

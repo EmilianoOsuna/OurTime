@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
-import { motion, animate, useMotionValue, useTransform } from 'framer-motion'
+import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react'
+import { motion, animate, useMotionValue, useTransform, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../context/AuthContext'
 import type { ProfileType } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
@@ -7,20 +7,22 @@ import { buildPerson, type PersonDisplay, type StoryType } from '../lib/supabase
 import { setBackHandler, isNative } from '../lib/native'
 import { invokeTopBack, consumeIgnorePop } from '../lib/backStack'
 
-import Dashboard from '../pages/Dashboard'
-import Calendar from '../pages/Calendar'
-import Gallery from '../pages/Gallery'
-import Finances from '../pages/Finances'
-import Chat from '../pages/Chat'
-import { PlanDetail } from '../pages/PlanDetail'
-import { ProfileScreen } from '../pages/Profile'
-import { NotificationsPanel, type NotifItem } from './NotificationsPanel'
-import { GlobalActionSheet } from './sheets/GlobalActionSheet'
-import { NewPlanSheet } from './sheets/NewPlanSheet'
-import { MoneySheet } from './sheets/MoneySheet'
-import { NewMemorySheet } from './sheets/NewMemorySheet'
-import { NewStorySheet } from './sheets/NewStorySheet'
-import { EditStorySheet } from './sheets/EditStorySheet'
+import type { NotifItem } from './NotificationsPanel'
+
+const Dashboard = lazy(() => import('../pages/Dashboard'))
+const Calendar = lazy(() => import('../pages/Calendar'))
+const Gallery = lazy(() => import('../pages/Gallery'))
+const Finances = lazy(() => import('../pages/Finances'))
+const Chat = lazy(() => import('../pages/Chat'))
+const PlanDetail = lazy(() => import('../pages/PlanDetail').then(m => ({ default: m.PlanDetail })))
+const ProfileScreen = lazy(() => import('../pages/Profile').then(m => ({ default: m.ProfileScreen })))
+const NotificationsPanel = lazy(() => import('./NotificationsPanel').then(m => ({ default: m.NotificationsPanel })))
+const GlobalActionSheet = lazy(() => import('./sheets/GlobalActionSheet').then(m => ({ default: m.GlobalActionSheet })))
+const NewPlanSheet = lazy(() => import('./sheets/NewPlanSheet').then(m => ({ default: m.NewPlanSheet })))
+const MoneySheet = lazy(() => import('./sheets/MoneySheet').then(m => ({ default: m.MoneySheet })))
+const NewMemorySheet = lazy(() => import('./sheets/NewMemorySheet').then(m => ({ default: m.NewMemorySheet })))
+const NewStorySheet = lazy(() => import('./sheets/NewStorySheet').then(m => ({ default: m.NewStorySheet })))
+const EditStorySheet = lazy(() => import('./sheets/EditStorySheet').then(m => ({ default: m.EditStorySheet })))
 import { Icon } from './ui/Icon'
 import { Avatar } from './ui/Avatar'
 import { usePushNotifications } from '../lib/usePushNotifications'
@@ -149,14 +151,17 @@ export default function AppShell() {
 
     supabase.from('plans').select('*').eq('story_id', activeStoryId)
       .order('plan_date', { ascending: false })
+      .limit(50)
       .then(({ data }) => { if (data) setPlans(data) })
 
     supabase.from('memories').select('*').eq('story_id', activeStoryId)
       .order('created_at', { ascending: false })
+      .limit(50)
       .then(({ data }) => { if (data) setMemories(data) })
 
     supabase.from('transactions').select('*').eq('story_id', activeStoryId)
       .order('created_at', { ascending: false })
+      .limit(50)
       .then(({ data }) => { if (data) setTransactions(data) })
 
     // Find co-members of this story
@@ -194,6 +199,7 @@ export default function AppShell() {
     supabase.from('plans').select('*')
       .in('story_id', storyIds)
       .neq('status', 'cancelado')
+      .limit(50)
       .then(({ data }) => {
         if (!data) return
         const withStory = data.map((p: any) => {
@@ -379,18 +385,21 @@ export default function AppShell() {
     if (!activeStoryId) return
     supabase.from('plans').select('*').eq('story_id', activeStoryId)
       .order('plan_date', { ascending: true })
+      .limit(50)
       .then(({ data }) => data && setPlans(data))
   }
   const refreshMemories = () => {
     if (!activeStoryId) return
     supabase.from('memories').select('*').eq('story_id', activeStoryId)
       .order('created_at', { ascending: false })
+      .limit(50)
       .then(({ data }) => data && setMemories(data))
   }
   const refreshTransactions = () => {
     if (!activeStoryId) return
     supabase.from('transactions').select('*').eq('story_id', activeStoryId)
       .order('created_at', { ascending: false })
+      .limit(50)
       .then(({ data }) => data && setTransactions(data))
   }
 
@@ -454,6 +463,8 @@ export default function AppShell() {
     setNotifications(ns => ns.map(n => ({ ...n, read: true })))
   }
 
+  const ease = [0.16, 1, 0.3, 1] as const
+
   const screen = {
     home: <Dashboard plans={plans} go={go}
             onBell={() => { setNotifsVisible(true); markNotifsRead() }} onPlanClick={openPlan}
@@ -469,37 +480,82 @@ export default function AppShell() {
              storyName={stories.find(s => s.id === activeStoryId)?.name}
              storyCoverUrl={stories.find(s => s.id === activeStoryId)?.cover_url ?? null}
              onBack={leaveChat} />,
-  }[tab]
+  }
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--paper)', position: 'relative' }}>
-      {screen}
+      <Suspense fallback={
+        <div style={{ padding: '80px 22px', display: 'flex', justifyContent: 'center' }}>
+          <div style={{ width: 32, height: 32, borderRadius: '50%', border: '3px solid var(--orange)',
+            borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite' }} />
+        </div>
+      }>
+      <motion.div
+        key={tab}
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, ease }}
+      >
+        {screen[tab]}
+      </motion.div>
 
-      {overlay?.type === 'plan' && <PlanDetail plan={overlay.data} onClose={closeOverlay} chapterNo={chapterNo(overlay.data.id)} onUpdated={refreshPlans} />}
-      {overlay?.type === 'profile' && (
-        <ProfileScreen
-          plans={plans} memories={memories}
-          onClose={closeOverlay}
-          onGoToFinance={() => { closeOverlay(); go('finance') }}
-          onOpenPlan={openPlan}
-          partner={partnerDisplay}
-          storyCode={storyCode}
-          isAdmin={isAdmin}
-          onNewStory={() => setOverlay({ type: 'newstory' })}
-          onStorySwitcher={() => { closeOverlay(); setStorySwitcherOpen(true) }}
-          onEditStory={(s) => setOverlay({ type: 'editstory', story: s })}
-        />
-      )}
-      {overlay?.type === 'action' && <GlobalActionSheet onClose={closeOverlay}
-        onNewPlan={() => setOverlay({ type: 'newplan' })}
-        onNewMoney={() => setOverlay({ type: 'money' })}
-        onNewMemory={() => setOverlay({ type: 'memory' })}
-        onNewStory={() => setOverlay({ type: 'newstory' })} />}
-      {overlay?.type === 'newplan' && <NewPlanSheet onClose={closeOverlay} onCreated={() => { closeOverlay(); refreshPlans() }} />}
-      {overlay?.type === 'money' && <MoneySheet onClose={closeOverlay} onCreated={() => { closeOverlay(); refreshTransactions() }} />}
-      {overlay?.type === 'memory' && <NewMemorySheet onClose={closeOverlay} onCreated={() => { closeOverlay(); refreshMemories() }} />}
-      {overlay?.type === 'newstory' && <NewStorySheet onClose={closeOverlay} onCreated={() => { closeOverlay(); go('home') }} />}
-      {overlay?.type === 'editstory' && <EditStorySheet story={overlay.story} onClose={closeOverlay} onUpdated={() => {}} isAdmin={adminStoryIds.has(overlay.story.id)} />}
+      <AnimatePresence>
+        {overlay?.type === 'plan' && (
+          <motion.div key="plan-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+            <PlanDetail plan={overlay.data} onClose={closeOverlay} chapterNo={chapterNo(overlay.data.id)} onUpdated={refreshPlans} />
+          </motion.div>
+        )}
+        {overlay?.type === 'profile' && (
+          <motion.div key="profile-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+            <ProfileScreen
+              plans={plans} memories={memories}
+              onClose={closeOverlay}
+              onGoToFinance={() => { closeOverlay(); go('finance') }}
+              onOpenPlan={openPlan}
+              partner={partnerDisplay}
+              storyCode={storyCode}
+              isAdmin={isAdmin}
+              onNewStory={() => setOverlay({ type: 'newstory' })}
+              onStorySwitcher={() => { closeOverlay(); setStorySwitcherOpen(true) }}
+              onEditStory={(s) => setOverlay({ type: 'editstory', story: s })}
+            />
+          </motion.div>
+        )}
+        {overlay?.type === 'action' && (
+          <motion.div key="action-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+            <GlobalActionSheet onClose={closeOverlay}
+              onNewPlan={() => setOverlay({ type: 'newplan' })}
+              onNewMoney={() => setOverlay({ type: 'money' })}
+              onNewMemory={() => setOverlay({ type: 'memory' })}
+              onNewStory={() => setOverlay({ type: 'newstory' })} />
+          </motion.div>
+        )}
+        {overlay?.type === 'newplan' && (
+          <motion.div key="newplan-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+            <NewPlanSheet onClose={closeOverlay} onCreated={() => { closeOverlay(); refreshPlans() }} />
+          </motion.div>
+        )}
+        {overlay?.type === 'money' && (
+          <motion.div key="money-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+            <MoneySheet onClose={closeOverlay} onCreated={() => { closeOverlay(); refreshTransactions() }} />
+          </motion.div>
+        )}
+        {overlay?.type === 'memory' && (
+          <motion.div key="memory-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+            <NewMemorySheet onClose={closeOverlay} onCreated={() => { closeOverlay(); refreshMemories() }} />
+          </motion.div>
+        )}
+        {overlay?.type === 'newstory' && (
+          <motion.div key="newstory-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+            <NewStorySheet onClose={closeOverlay} onCreated={() => { closeOverlay(); go('home') }} />
+          </motion.div>
+        )}
+        {overlay?.type === 'editstory' && (
+          <motion.div key="editstory-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+            <EditStorySheet story={overlay.story} onClose={closeOverlay} onUpdated={() => {}} isAdmin={adminStoryIds.has(overlay.story.id)} />
+          </motion.div>
+        )}
+      </AnimatePresence>
       {notifsVisible && <NotificationsPanel onClose={closeNotifs} items={notifications} />}
       {lightbox && <Lightbox url={lightbox} onClose={() => setLightbox(null)} />}
       {storySwitcherOpen && (
@@ -520,6 +576,7 @@ export default function AppShell() {
           stories={stories} activeStoryId={activeStoryId}
           unreadCount={unreadCount} />
       )}
+      </Suspense>
     </div>
   )
 }

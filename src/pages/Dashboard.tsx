@@ -11,7 +11,7 @@ import type { Tab } from '../components/AppShell'
 
 
 function daysTogether(since: string) {
-  return Math.floor((Date.now() - new Date(since + 'T00:00:00').getTime()) / 86400000)
+  return Math.floor((Date.now() - new Date(since.slice(0,10) + 'T00:00:00Z').getTime()) / 86400000)
 }
 
 
@@ -285,7 +285,7 @@ function TimelineRow({ plan, no, onClick, index }: { plan: PlanType; no: number;
         </div>
         <h3 className="display" style={{ fontSize: 17.5, margin: '6px 0 0', lineHeight: 1.12 }}>{plan.title}</h3>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 9, fontSize: 12.5, color: 'var(--ink-soft)' }}>
-          <span>{fmtDateShort(plan.plan_date)} · {new Date(plan.plan_date + 'T00:00:00').getFullYear()}</span>
+          <span>{fmtDateShort(plan.plan_date)} · {new Date(plan.plan_date.slice(0,10) + 'T00:00:00Z').getUTCFullYear()}</span>
         </div>
       </button>
     </div>

@@ -59,6 +59,7 @@ export default function Finances() {
     supabase.from('plans').select('*').eq('story_id', activeStoryId)
       .or('budget_amount.not.is.null,actual_amount.not.is.null')
       .order('plan_date', { ascending: false })
+      .limit(50)
       .then(({ data }) => {
         if (data) setPlans(data as PlanType[])
         setLoading(false)

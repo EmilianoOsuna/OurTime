@@ -60,6 +60,7 @@ export default function Chat({ me, partner, storyName, storyCoverUrl, onBack }: 
     supabase.from('messages').select('*')
       .eq('story_id', activeStoryId)
       .order('created_at', { ascending: true })
+      .limit(50)
       .then(({ data }) => {
         if (data) setMessages(data as MessageType[])
         setLoading(false)

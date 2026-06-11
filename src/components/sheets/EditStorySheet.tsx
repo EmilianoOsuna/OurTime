@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { BottomSheet } from '../ui/BottomSheet'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
@@ -28,6 +28,11 @@ export const EditStorySheet: React.FC<Props> = ({ story, onClose, onUpdated, isA
   const [category, setCategory] = useState<StoryType['category']>(story.category)
   const [coverPreview, setCoverPreview] = useState<string | null>(story.cover_url)
   const [coverFile, setCoverFile] = useState<File | null>(null)
+  const coverObjectUrlRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    return () => { if (coverObjectUrlRef.current) URL.revokeObjectURL(coverObjectUrlRef.current) }
+  }, [])
   const [uploadingCover, setUploadingCover] = useState(false)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -40,7 +45,10 @@ export const EditStorySheet: React.FC<Props> = ({ story, onClose, onUpdated, isA
     const f = e.target.files?.[0]
     if (!f) return
     setCoverFile(f)
-    setCoverPreview(URL.createObjectURL(f))
+    if (coverObjectUrlRef.current) URL.revokeObjectURL(coverObjectUrlRef.current)
+    const url = URL.createObjectURL(f)
+    coverObjectUrlRef.current = url
+    setCoverPreview(url)
   }
 
   const save = async () => {

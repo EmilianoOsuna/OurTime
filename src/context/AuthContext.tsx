@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react'
+import React, { createContext, useContext, useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import type { Session, User } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import type { StoryType } from '../lib/supabase'
@@ -46,6 +46,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [stories, setStories] = useState<StoryType[]>([])
   const [profile, setProfile] = useState<ProfileType | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const fetchedRef = useRef(false)
 
   const setActiveStoryId = useCallback((id: string | null) => {
     _setActiveStoryId(id)
@@ -57,7 +58,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
       setUser(session?.user ?? null)
-      if (session?.user) fetchProfileAndStories(session.user.id)
+      if (session?.user) { fetchedRef.current = true; fetchProfileAndStories(session.user.id) }
       else setIsLoading(false)
     })
 
@@ -66,6 +67,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(session)
         setUser(session?.user ?? null)
         if (session?.user) {
+          if (fetchedRef.current) return
+          fetchedRef.current = true
           // Reset isLoading before fetching so AppInner doesn't see stale empty stories
           setIsLoading(true)
           fetchProfileAndStories(session.user.id)
