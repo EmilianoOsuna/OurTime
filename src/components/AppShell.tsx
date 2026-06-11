@@ -273,20 +273,10 @@ export default function AppShell() {
 
   const closeOverlay = useCallback(() => {
     setOverlay(null)
-    if (historyPushed.current) {
-      historyPushed.current = false
-      ignorePop.current = true
-      window.history.back()
-    }
   }, [])
 
   const closeNotifs = useCallback(() => {
     setNotifsVisible(false)
-    if (historyPushed.current && overlayRef.current === null) {
-      historyPushed.current = false
-      ignorePop.current = true
-      window.history.back()
-    }
   }, [])
 
   const leaveChat = useCallback(() => {
@@ -302,11 +292,6 @@ export default function AppShell() {
         .then(() => setUnreadRefreshKey(k => k + 1), console.error)
     } else {
       setUnreadRefreshKey(k => k + 1)
-    }
-    if (historyPushed.current) {
-      historyPushed.current = false
-      ignorePop.current = true
-      window.history.back()
     }
   }, [activeStoryId, user])
 

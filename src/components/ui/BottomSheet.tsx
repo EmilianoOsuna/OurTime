@@ -80,18 +80,18 @@ export const BottomSheet: React.FC<Props> = ({ onClose, children, maxHeight = '9
   }
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 150, display: 'flex',
+    <div style={{ position: 'fixed', inset: 0, zIndex: 150, pointerEvents: 'none', display: 'flex',
       flexDirection: 'column', justifyContent: 'flex-end' }}>
       <motion.div
         onClick={() => {
           const h = window.innerHeight
           animate(y, h, { type: 'spring', damping: 30, stiffness: 250, mass: 0.8 }).then(() => onClose())
         }}
-        style={{ position: 'absolute', inset: 0, opacity: backdropOpacity,
+        style={{ position: 'absolute', inset: 0, opacity: backdropOpacity, pointerEvents: 'auto',
           background: 'rgba(33,29,24,0.42)', }}
       />
       <motion.div
-        style={{ y, position: 'relative', background: 'var(--paper)',
+        style={{ y, position: 'relative', pointerEvents: 'auto', background: 'var(--paper)',
           borderRadius: '28px 28px 0 0', boxShadow: '0 -10px 40px rgba(33,29,24,0.2)',
           maxHeight, display: 'flex', flexDirection: 'column',
           paddingBottom: 'max(24px, env(safe-area-inset-bottom))',
