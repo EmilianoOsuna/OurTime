@@ -101,6 +101,9 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
   // Memory lightbox
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null)
 
+  // Past plan prompt
+  const [pastPromptDismissed, setPastPromptDismissed] = useState(false)
+
   // Spending confirmation
   const [confirmingAmount, setConfirmingAmount] = useState(false)
   const [actualAmountInput, setActualAmountInput] = useState('')
@@ -475,8 +478,38 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
           </div>
         </div>
 
+        {/* Past plan prompt — "¿Ya vivieron?" */}
+        {!editing && !isFuture && !done && !pastPromptDismissed && (
+          <div className="card anim-up" style={{ marginTop: 14, padding: '16px 18px', border: '1.5px solid var(--orange)' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 14 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--orange-tint)',
+                color: 'var(--orange-deep)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Icon name="sparkle" size={18} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 700, fontSize: 14.5, marginBottom: 3 }}>¿Ya vivieron este momento?</div>
+                <div style={{ fontSize: 13, color: 'var(--ink-soft)', lineHeight: 1.4 }}>
+                  Este momento fue el <strong>{fmtDate(plan.plan_date)}</strong>. Si ya lo vivieron, máquenlo como completado para que aparezca en su historia.
+                </div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={complete} className="btn btn-orange" style={{ flex: 2, padding: '10px', fontSize: 13.5, borderRadius: 12 }}>
+                <Icon name="check" size={16} stroke={2.5} /> Sí, marcarlo
+              </button>
+              <button onClick={() => setPastPromptDismissed(true)} style={{
+                flex: 1, border: '1.5px solid var(--line)', background: 'transparent', cursor: 'pointer',
+                borderRadius: 12, padding: '10px', fontSize: 13, fontWeight: 600, color: 'var(--ink-faint)',
+                fontFamily: 'var(--font-ui)',
+              }}>
+                Todavía no
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Spending confirmation banner */}
-        {!editing && !isFuture && plan.budget_amount != null && plan.actual_amount == null && !amountDismissed && (
+        {!editing && !isFuture && plan.actual_amount == null && !amountDismissed && (
           <div className="card anim-up" style={{ marginTop: 14, padding: '16px 18px', border: '1.5px solid var(--orange-tint)' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 12 }}>
               <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--orange-tint)',
@@ -486,17 +519,20 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 700, fontSize: 14.5, marginBottom: 3 }}>¿Cuánto gastaron?</div>
                 <div style={{ fontSize: 13, color: 'var(--ink-soft)', lineHeight: 1.4 }}>
-                  Tenían estimado <strong>{plan.budget_amount.toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</strong>.
-                  Confirma el gasto real para mantener el presupuesto al día.
+                  {plan.budget_amount != null ? (
+                    <>Tenían estimado <strong>{plan.budget_amount.toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</strong>. Confirma el gasto real para mantener el presupuesto al día.</>
+                  ) : (
+                    <>Registren lo que gastaron para llevar un control de sus finanzas.</>
+                  )}
                 </div>
               </div>
             </div>
             {confirmingAmount ? (
               <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                 <input value={actualAmountInput} onChange={e => setActualAmountInput(e.target.value.replace(/[^0-9.]/g, ''))}
-                  placeholder={String(plan.budget_amount)} inputMode="decimal" autoFocus
+                  placeholder={plan.budget_amount != null ? String(plan.budget_amount) : '0'} inputMode="decimal" autoFocus
                   style={{ ...INPUT_STYLE, flex: 1 }} />
-                <button onClick={saveActualAmount} disabled={savingActual || !actualAmountInput}
+                <button onClick={saveActualAmount} disabled={savingActual}
                   className="btn btn-orange" style={{ flexShrink: 0, padding: '10px 16px', borderRadius: 12, fontSize: 14 }}>
                   {savingActual ? '…' : 'OK'}
                 </button>
