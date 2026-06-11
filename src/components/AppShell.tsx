@@ -90,7 +90,7 @@ export default function AppShell() {
   const [plans, setPlans] = useState<any[]>([])
   const [allCalendarPlans, setAllCalendarPlans] = useState<any[]>([])
   const [memories, setMemories] = useState<any[]>([])
-  const [transactions, setTransactions] = useState<any[]>([])
+  const [, setTransactions] = useState<any[]>([])
   const [lightbox, setLightbox] = useState<string | null>(null)
   const [partner, setPartner] = useState<ProfileType | null>(null)
   const [storyCode, setStoryCode] = useState<string | null>(null)
@@ -149,7 +149,7 @@ export default function AppShell() {
   useEffect(() => {
     if (!activeStoryId || !user) return
 
-    supabase.from('plans').select('*').eq('story_id', activeStoryId)
+    supabase.from('plans').select('*').eq('story_id', activeStoryId).neq('status', 'cancelado')
       .order('plan_date', { ascending: false })
       .limit(50)
       .then(({ data }) => { if (data) setPlans(data) })
@@ -170,7 +170,7 @@ export default function AppShell() {
       .eq('story_id', activeStoryId)
       .neq('user_id', user.id)
       .then(async ({ data: coMembers }) => {
-        if (coMembers && coMembers.length > 0) {
+        if (coMembers && coMembers.length > 0 && coMembers[0]) {
           const { data: coProfile } = await supabase
             .from('profiles')
             .select('*')
@@ -219,7 +219,7 @@ export default function AppShell() {
           .eq('story_id', activeStoryId)
           .neq('sender_id', user.id)
           .is('read_at', null)
-          .then(() => setUnreadRefreshKey(k => k + 1))
+          .then(() => setUnreadRefreshKey(k => k + 1), console.error)
       } else {
         setUnreadRefreshKey(k => k + 1)
       }
@@ -299,7 +299,7 @@ export default function AppShell() {
         .eq('story_id', activeStoryId)
         .neq('sender_id', user.id)
         .is('read_at', null)
-        .then(() => setUnreadRefreshKey(k => k + 1))
+        .then(() => setUnreadRefreshKey(k => k + 1), console.error)
     } else {
       setUnreadRefreshKey(k => k + 1)
     }
@@ -383,7 +383,7 @@ export default function AppShell() {
 
   const refreshPlans = () => {
     if (!activeStoryId) return
-    supabase.from('plans').select('*').eq('story_id', activeStoryId)
+    supabase.from('plans').select('*').eq('story_id', activeStoryId).neq('status', 'cancelado')
       .order('plan_date', { ascending: true })
       .limit(50)
       .then(({ data }) => data && setPlans(data))
@@ -460,6 +460,7 @@ export default function AppShell() {
     if (!activeStoryId) return
     supabase.from('notifications').update({ read: true })
       .eq('story_id', activeStoryId).eq('read', false)
+      .then(undefined, console.error)
     setNotifications(ns => ns.map(n => ({ ...n, read: true })))
   }
 
@@ -508,15 +509,11 @@ export default function AppShell() {
         {overlay?.type === 'profile' && (
           <motion.div key="profile-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
             <ProfileScreen
-              plans={plans} memories={memories}
+              plans={plans}
               onClose={closeOverlay}
               onGoToFinance={() => { closeOverlay(); go('finance') }}
-              onOpenPlan={openPlan}
-              partner={partnerDisplay}
               storyCode={storyCode}
               isAdmin={isAdmin}
-              onNewStory={() => setOverlay({ type: 'newstory' })}
-              onStorySwitcher={() => { closeOverlay(); setStorySwitcherOpen(true) }}
               onEditStory={(s) => setOverlay({ type: 'editstory', story: s })}
             />
           </motion.div>
@@ -609,12 +606,12 @@ function NavBar({ tab, setTab, onFab, me, onProfileOpen, stories, activeStoryId,
   const activeStory = stories.find(s => s.id === activeStoryId)
   const catColor = activeStory ? (CAT_COLOR[activeStory.category] || 'var(--orange)') : 'var(--orange)'
 
-  const items: { tab: Tab; icon: string; label: string; badge?: number }[] = [
-    { tab: 'home',     icon: 'home',     label: 'Inicio'      },
-    { tab: 'calendar', icon: 'calendar', label: 'Agenda'      },
-    { tab: 'gallery',  icon: 'image',    label: 'Fotos'       },
-    { tab: 'finance',  icon: 'wallet',   label: 'Gasto'       },
-    { tab: 'chat',     icon: 'chat',     label: 'Chat', badge: unreadCount },
+  const items = [
+    { tab: 'home' as const,     icon: 'home' as const,     label: 'Inicio'      },
+    { tab: 'calendar' as const, icon: 'calendar' as const, label: 'Agenda'      },
+    { tab: 'gallery' as const,  icon: 'image' as const,    label: 'Fotos'       },
+    { tab: 'finance' as const,  icon: 'wallet' as const,   label: 'Gasto'       },
+    { tab: 'chat' as const,     icon: 'chat' as const,     label: 'Chat', badge: unreadCount },
   ]
 
   return (
@@ -646,8 +643,8 @@ function NavBar({ tab, setTab, onFab, me, onProfileOpen, stories, activeStoryId,
             letterSpacing: '0.02em', color: 'var(--ink-faint)' }}>Yo</span>
         </button>
 
-        <NavBtn icon={items[0].icon} label={items[0].label} active={tab === items[0].tab} onClick={() => setTab(items[0].tab)} />
-        <NavBtn icon={items[1].icon} label={items[1].label} active={tab === items[1].tab} onClick={() => setTab(items[1].tab)} />
+        <NavBtn icon={items[0]!.icon} label={items[0]!.label} active={tab === items[0]!.tab} onClick={() => setTab(items[0]!.tab)} />
+        <NavBtn icon={items[1]!.icon} label={items[1]!.label} active={tab === items[1]!.tab} onClick={() => setTab(items[1]!.tab)} />
 
         <button data-testid="fab-btn" onClick={onFab} style={{
           width: 48, height: 48, borderRadius: '50%', border: 'none',
@@ -662,9 +659,9 @@ function NavBar({ tab, setTab, onFab, me, onProfileOpen, stories, activeStoryId,
           <Icon name="plus" size={22} stroke={2.4} />
         </button>
 
-        <NavBtn icon={items[2].icon} label={items[2].label} active={tab === items[2].tab} onClick={() => setTab(items[2].tab)} />
-        <NavBtn icon={items[3].icon} label={items[3].label} active={tab === items[3].tab} onClick={() => setTab(items[3].tab)} />
-        <NavBtn icon={items[4].icon} label={items[4].label} badge={items[4].badge} active={tab === items[4].tab} onClick={() => setTab(items[4].tab)} />
+        <NavBtn icon={items[2]!.icon} label={items[2]!.label} active={tab === items[2]!.tab} onClick={() => setTab(items[2]!.tab)} />
+        <NavBtn icon={items[3]!.icon} label={items[3]!.label} active={tab === items[3]!.tab} onClick={() => setTab(items[3]!.tab)} />
+        <NavBtn icon={items[4]!.icon} label={items[4]!.label} badge={items[4]!.badge} active={tab === items[4]!.tab} onClick={() => setTab(items[4]!.tab)} />
       </div>
     </nav>
   )

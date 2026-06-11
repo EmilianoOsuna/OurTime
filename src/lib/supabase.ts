@@ -16,7 +16,7 @@ export const supabase = createClient(
   {
     auth: {
       detectSessionInUrl: !isNative,
-      flowType: isNative ? 'pkce' : 'implicit',
+      flowType: 'pkce',
     },
   }
 )

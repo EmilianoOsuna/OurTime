@@ -1,4 +1,4 @@
-import React from 'react'
+
 
 export function PresenceDot({ size = 9, color = 'var(--done)' }: { size?: number; color?: string }) {
   return (

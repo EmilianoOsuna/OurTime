@@ -18,7 +18,10 @@ function fmtTime(iso: string): string {
 
 function shouldShowDate(msgs: MessageType[], idx: number): boolean {
   if (idx === 0) return true
-  return new Date(msgs[idx - 1].created_at).toDateString() !== new Date(msgs[idx].created_at).toDateString()
+  const prev = msgs[idx - 1]
+  const curr = msgs[idx]
+  if (!prev || !curr) return true
+  return new Date(prev.created_at).toDateString() !== new Date(curr.created_at).toDateString()
 }
 
 function fmtDateLabel(iso: string): string {
@@ -50,6 +53,9 @@ export default function Chat({ me, partner, storyName, storyCoverUrl, onBack }: 
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
+  const mounted = useRef(true)
+  useEffect(() => { return () => { mounted.current = false } }, [])
+
   const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior }), 50)
   }, [])
@@ -62,6 +68,7 @@ export default function Chat({ me, partner, storyName, storyCoverUrl, onBack }: 
       .order('created_at', { ascending: true })
       .limit(50)
       .then(({ data }) => {
+        if (!mounted.current) return
         if (data) setMessages(data as MessageType[])
         setLoading(false)
         scrollToBottom('instant' as ScrollBehavior)
@@ -71,6 +78,7 @@ export default function Chat({ me, partner, storyName, storyCoverUrl, onBack }: 
       .select('user_id, profiles(full_name, avatar_url)')
       .eq('story_id', activeStoryId)
       .then(({ data }) => {
+        if (!mounted.current) return
         if (data) {
           setMembers(data.map((m: any) => ({
             userId: m.user_id,
@@ -85,6 +93,7 @@ export default function Chat({ me, partner, storyName, storyCoverUrl, onBack }: 
       .on('postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'messages', filter: `story_id=eq.${activeStoryId}` },
         payload => {
+          if (!mounted.current) return
           setMessages(prev => [...prev, payload.new as MessageType])
           scrollToBottom()
         })
@@ -102,7 +111,7 @@ export default function Chat({ me, partner, storyName, storyCoverUrl, onBack }: 
       .eq('story_id', activeStoryId)
       .neq('sender_id', user.id)
       .is('read_at', null)
-      .then(() => {})
+      .then(undefined, console.error)
   }, [messages, activeStoryId, user])
 
   const send = async () => {
@@ -116,13 +125,12 @@ export default function Chat({ me, partner, storyName, storyCoverUrl, onBack }: 
     if (error) {
       setText(trimmed)
     } else {
-      // fire-and-forget — don't await so send feels instant
       sendPushToStoryMembers(
         activeStoryId, user.id,
         me.name || 'Nuevo mensaje',
         trimmed.length > 80 ? trimmed.slice(0, 80) + '…' : trimmed,
         '/?shortcut=chat'
-      )
+      ).catch(console.error)
     }
     setSending(false)
     inputRef.current?.focus()
@@ -212,8 +220,10 @@ export default function Chat({ me, partner, storyName, storyCoverUrl, onBack }: 
           const isMe = msg.sender_id === user?.id
           const showDate = shouldShowDate(messages, idx)
           const person = isMe ? me : (partner ?? { name: 'Compañero', initial: 'C', color: 'var(--orange)' })
-          const prevSame = idx > 0 && messages[idx - 1].sender_id === msg.sender_id && !shouldShowDate(messages, idx)
-          const nextSame = idx < messages.length - 1 && messages[idx + 1].sender_id === msg.sender_id && !shouldShowDate(messages, idx + 1)
+          const prev = idx > 0 ? messages[idx - 1] : null
+          const next = idx < messages.length - 1 ? messages[idx + 1] : null
+          const prevSame = !!(prev && prev.sender_id === msg.sender_id && !shouldShowDate(messages, idx))
+          const nextSame = !!(next && next.sender_id === msg.sender_id && !shouldShowDate(messages, idx + 1))
 
           // Border-radius: tail corner (bottom-right for me, bottom-left for them) rounds down when last in group
           const br = isMe

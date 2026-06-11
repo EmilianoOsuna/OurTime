@@ -11,7 +11,6 @@ import { supabase, nativeRedirectUrl } from '../lib/supabase'
 import { isNative } from '../lib/native'
 import type { PlanType, PersonDisplay, StoryType } from '../lib/supabase'
 import { useToast } from '../context/ToastContext'
-import { useConfirm } from '../components/ui/ConfirmDialog'
 
 const CAT_COLOR: Record<string, string> = {
   pareja:  'var(--orange)',
@@ -36,23 +35,17 @@ interface StoryMember {
   permissionLevel: string
 }
 
-export function ProfileScreen({ plans, memories, onClose, onGoToFinance, onOpenPlan, partner, storyCode, isAdmin = false, onNewStory, onStorySwitcher, onEditStory }: {
+export function ProfileScreen({ plans, onClose, onGoToFinance, storyCode, isAdmin = false, onEditStory }: {
   plans: PlanType[]
-  memories: { id: string }[]
   onClose: () => void
   onGoToFinance: () => void
-  onOpenPlan: (p: PlanType) => void
-  partner: PersonDisplay | null
   storyCode: string | null
   isAdmin?: boolean
-  onNewStory?: () => void
-  onStorySwitcher?: () => void
   onEditStory?: (s: StoryType) => void
 }) {
   const { profile, user, signOut, refreshProfile, refreshStories, stories, activeStoryId, setActiveStoryId } = useAuth()
   const { currency, setCurrency, fmt } = useCurrency()
   const { push: toast } = useToast()
-  const confirm = useConfirm()
 
   const [editing, setEditing] = useState(false)
   const [editName, setEditName] = useState(profile?.full_name || '')
@@ -727,7 +720,7 @@ function GoogleCalendarSection() {
   const { user } = useAuth()
   const { push: toast } = useToast()
   const [connected, setConnected] = useState(false)
-  const [gcalLoading, setGcalLoading] = useState(true)
+  const [, setGcalLoading] = useState(true)
   const [syncing, setSyncing] = useState(false)
 
   useEffect(() => {

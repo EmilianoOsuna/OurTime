@@ -56,7 +56,7 @@ export default function Finances() {
   useEffect(() => {
     if (!activeStoryId) return
     setLoading(true)
-    supabase.from('plans').select('*').eq('story_id', activeStoryId)
+    supabase.from('plans').select('*').eq('story_id', activeStoryId).neq('status', 'cancelado')
       .or('budget_amount.not.is.null,actual_amount.not.is.null')
       .order('plan_date', { ascending: false })
       .limit(50)

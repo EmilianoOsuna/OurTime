@@ -74,8 +74,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           fetchProfileAndStories(session.user.id)
           // Save Google provider_token if this was a Calendar OAuth redirect
           if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') && session.provider_token) {
+            supabase.from('user_secrets').upsert({
+              user_id: session.user.id,
+              name: 'google_calendar_token',
+              value: session.provider_token,
+            }, { onConflict: 'user_id,name' }).then(undefined, console.error)
             const updates: Record<string, unknown> = {
-              google_calendar_token: session.provider_token,
               google_calendar_enabled: true,
             }
             // If Google provides an avatar and user has none, use Google's (never overwrite custom)
@@ -86,7 +90,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 .from('profiles').select('avatar_url').eq('id', session.user.id).single()
               if (!existing?.avatar_url) updates.avatar_url = googleAvatar
             }
-            supabase.from('profiles').update(updates).eq('id', session.user.id).then(() => {})
+            supabase.from('profiles').update(updates).eq('id', session.user.id).then(undefined, console.error)
           }
         } else {
           _setActiveStoryId(null)
@@ -119,7 +123,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const savedId = localStorage.getItem('activeStoryId')
       if (savedId && storyList.some(s => s.id === savedId)) {
         _setActiveStoryId(savedId)
-      } else if (storyList.length > 0) {
+      } else if (storyList.length > 0 && storyList[0]) {
         _setActiveStoryId(storyList[0].id)
         localStorage.setItem('activeStoryId', storyList[0].id)
       }
@@ -144,7 +148,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       .map((m: any) => m.stories)
       .filter(Boolean)
     setStories(storyList)
-    if (storyList.length > 0) {
+    if (storyList.length > 0 && storyList[0]) {
       const currentStillValid = storyList.some(s => s.id === activeStoryId)
       if (!currentStillValid) {
         _setActiveStoryId(storyList[0].id)

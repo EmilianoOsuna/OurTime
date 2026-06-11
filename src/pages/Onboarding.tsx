@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { motion } from 'framer-motion'
 import { Icon } from '../components/ui/Icon'
 import { Confetti } from '../components/ui/Confetti'
 import { supabase } from '../lib/supabase'
@@ -75,7 +74,7 @@ function Onboarding({ onComplete }: { onComplete: () => void }) {
     setLoading(true)
     setError('')
     try {
-      const { data: storyId, error: joinErr } = await supabase
+      const { error: joinErr } = await supabase
         .rpc('join_story_by_invite_code', { p_invite_code: code.trim().toUpperCase() })
       if (joinErr) throw joinErr
 
@@ -96,9 +95,6 @@ function Onboarding({ onComplete }: { onComplete: () => void }) {
     if (m === 'create') go(3)
     else go(3)
   }
-
-  const totalSteps = 5
-  const progress = Math.min(step / totalSteps, 1)
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--paper)', position: 'relative' }}>
@@ -161,7 +157,7 @@ function NameStep({ name, setName, onNext }: { name: string; setName: (v: string
       <div style={{ display: 'flex', justifyContent: 'center', margin: '8px 0 26px' }}>
         <div className="avatar" style={{ width: 88, height: 88, background: 'var(--blue)', fontSize: 40,
           animation: 'pop .5s cubic-bezier(.2,.8,.2,1) both' }}>
-          {name.trim() ? name.trim()[0].toUpperCase() : '—'}
+          {name.trim() ? name.trim().charAt(0).toUpperCase() : '—'}
         </div>
       </div>
       <label className="field-label">Tu nombre</label>
@@ -246,7 +242,6 @@ function CreateStep({ storyName, setStoryName, category, loading, error, onNext 
   storyName: string; setStoryName: (v: string) => void; category: Category
   loading: boolean; error: string; onNext: () => void
 }) {
-  const cat = CATS.find(c => c.id === category)!
   const defaultName = category === 'pareja' ? 'Nuestra historia'
     : category === 'amigos' ? 'Nuestra cuadrilla'
     : category === 'familia' ? 'Nuestra familia'

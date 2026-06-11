@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'
+import { useState, type ReactNode } from 'react'
 import { motion, animate, AnimatePresence, useMotionValue } from 'framer-motion'
 import { Sheet } from './ui/Sheet'
 import { Icon } from './ui/Icon'
@@ -7,7 +7,7 @@ export interface NotifItem {
   id: string
   person?: { name: string; initial: string; color: string }
   icon?: string
-  text: React.ReactNode
+  text: ReactNode
   time: string
   read: boolean
 }

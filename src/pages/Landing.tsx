@@ -55,58 +55,6 @@ const PLANS = [
   },
 ]
 
-// ─── Split text into individual characters ─────────────────
-function SplitText({ text, as: Tag = 'span', className = '', delay = 0, stagger = 0.03, ...props }: {
-  text: string
-  as?: 'span' | 'h1' | 'h2' | 'h3' | 'p' | 'div'
-  className?: string
-  delay?: number
-  stagger?: number
-} & Record<string, any>) {
-  const letters = text.split('')
-  return (
-    <Tag className={className} style={{ display: 'inline-flex', flexWrap: 'wrap', ...props.style }} {...props}>
-      {letters.map((char, i) => (
-        <motion.span
-          key={i}
-          initial={{ opacity: 0, y: 40, rotateX: -40 }}
-          animate={{ opacity: 1, y: 0, rotateX: 0 }}
-          transition={{ duration: 0.5, delay: delay + i * stagger, ease: easeOut }}
-          style={{ display: 'inline-block', whiteSpace: char === ' ' ? 'pre' : undefined }}
-        >
-          {char === ' ' ? '\u00A0' : char}
-        </motion.span>
-      ))}
-    </Tag>
-  )
-}
-
-// ─── Split words (not letters) ────────────────────────────
-function SplitWords({ text, as: Tag = 'span', className = '', delay = 0, stagger = 0.08, ...props }: {
-  text: string
-  as?: 'span' | 'h1' | 'h2' | 'h3' | 'p' | 'div'
-  className?: string
-  delay?: number
-  stagger?: number
-} & Record<string, any>) {
-  const words = text.split(' ')
-  return (
-    <Tag className={className} style={{ display: 'inline-flex', flexWrap: 'wrap', ...props.style }} {...props}>
-      {words.map((word, i) => (
-        <motion.span
-          key={i}
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: delay + i * stagger, ease: easeOut }}
-          style={{ display: 'inline-block', marginRight: '0.25em' }}
-        >
-          {word}
-        </motion.span>
-      ))}
-    </Tag>
-  )
-}
-
 // ─── Magnetic button (follows cursor) ──────────────────────
 function MagneticButton({ children, className = '', style, onClick }: {
   children: React.ReactNode
@@ -156,7 +104,7 @@ function MagneticButton({ children, className = '', style, onClick }: {
 
 // ─── Floating particle background ──────────────────────────
 function ParticleField() {
-  const particles = Array.from({ length: 30 }, (_, i) => ({
+  const particles = Array.from({ length: 30 }, () => ({
     x: Math.random() * 100,
     y: Math.random() * 100,
     size: Math.random() * 4 + 1,
@@ -197,11 +145,9 @@ function ParticleField() {
 }
 
 // ─── Floating Word (like Good Secrets "good" "secrets") ────
-function FloatingWord({ text, delay = 0, x = 0, y = 0, fontSize = 'clamp(80px, 18vw, 180px)', color = 'var(--ink)' }: {
+function FloatingWord({ text, delay = 0, fontSize = 'clamp(80px, 18vw, 180px)', color = 'var(--ink)' }: {
   text: string
   delay?: number
-  x?: number
-  y?: number
   fontSize?: string
   color?: string
 }) {
@@ -341,7 +287,7 @@ function HeroSection({ onGetStarted }: { onGetStarted: () => void }) {
 
           {/* Floating words — like "good" "secrets" */}
           <div style={{ marginBottom: 32 }}>
-            <FloatingWord text="Su" delay={0.3} x={-10} fontSize="clamp(60px, 14vw, 140px)" />
+            <FloatingWord text="Su" delay={0.3} fontSize="clamp(60px, 14vw, 140px)" />
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.2em', flexWrap: 'wrap' }}>
               <FloatingWord text="historia," delay={0.5} fontSize="clamp(60px, 14vw, 140px)" />
               <FloatingWord
@@ -771,16 +717,11 @@ function SocialProofSection() {
   const ref = useRef<HTMLDivElement>(null)
   const hasAnimated = useRef(false)
 
-  const stats = [
-    { key: 'users', value: 500, label: 'Usuarios activos' },
-    { key: 'stories', value: 350, label: 'Historias creadas' },
-    { key: 'plans', value: 1200, label: 'Planes organizados' },
-    { key: 'rating', value: 48, label: 'Valoración promedio', prefix: '⭐ ', suffix: '' },
-  ]
-
   useEffect(() => {
     const observer = new IntersectionObserver(
-      ([entry]) => {
+      (entries) => {
+        const entry = entries[0]
+        if (!entry) return
         if (entry.isIntersecting && !hasAnimated.current) {
           hasAnimated.current = true
           animate(0, 500, { duration: 1.5, ease: easeOut, onUpdate: (v) => setCounts(p => ({ ...p, users: Math.round(v) })) })

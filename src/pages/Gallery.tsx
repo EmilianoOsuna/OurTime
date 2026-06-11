@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Icon } from '../components/ui/Icon'
 import { Avatar } from '../components/ui/Avatar'
 import { fmtDateShort } from '../lib/chapterUtils'
@@ -126,13 +126,15 @@ export default function Gallery({ memories, setMemories, onImageClick, me }: {
   const [pickerOpen, setPickerOpen] = useState(false)
   const [pickerSelected, setPickerSelected] = useState<Set<string>>(new Set())
   const [assigningPhotos, setAssigningPhotos] = useState(false)
+  const mounted = useRef(true)
+  useEffect(() => { return () => { mounted.current = false } }, [])
 
   useEffect(() => {
     if (!activeStoryId) return
     supabase.from('albums').select('*').eq('story_id', activeStoryId)
       .order('created_at', { ascending: false })
       .limit(50)
-      .then(({ data }) => { if (data) setAlbums(data as AlbumType[]) })
+      .then(({ data }) => { if (mounted.current && data) setAlbums(data as AlbumType[]) })
   }, [activeStoryId])
 
   const createAlbum = async () => {
@@ -195,7 +197,7 @@ export default function Gallery({ memories, setMemories, onImageClick, me }: {
   const colCount = useColCount()
   const makeCols = useCallback((arr: Memory[]) => {
     const cols: Memory[][] = Array.from({ length: colCount }, () => [])
-    arr.forEach((m, i) => cols[i % colCount].push(m))
+    arr.forEach((m, i) => cols[i % colCount]!.push(m))
     return cols
   }, [colCount])
 
@@ -402,7 +404,7 @@ export default function Gallery({ memories, setMemories, onImageClick, me }: {
             </div>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              {albums.map((album, i) => (
+              {albums.map(album => (
                 <AlbumCard
                   key={album.id}
                   album={album}

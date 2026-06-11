@@ -46,7 +46,6 @@ export const NewPlanSheet: React.FC<Props> = ({ onClose, onCreated, parentPlanId
     if (error) { push({ icon: 'x', title: 'Error', body: error.message }); return }
     push({ icon: 'sparkle', eyebrow: 'Momento creado', title: `«${title.trim()}»`, body: parentPlanId ? 'Añadido como sub-momento' : 'Añadido a tu historia' })
     if (user && !parentPlanId) {
-      // Insert notification record so all story members see it in Novedades
       supabase.from('notifications').insert({
         story_id: activeStoryId,
         type: 'plan_created',
@@ -54,9 +53,9 @@ export const NewPlanSheet: React.FC<Props> = ({ onClose, onCreated, parentPlanId
         title: '¡Nuevo momento!',
         body: `«${title.trim()}» fue añadido a la historia`,
         read: false,
-      })
-      sendPushToStoryMembers(activeStoryId, user.id, '¡Nuevo momento!', `«${title.trim()}» fue añadido a la historia`)
-      if (newPlan?.id) syncPlanToGoogleCalendar(newPlan.id)
+      }).then(undefined, console.error)
+      sendPushToStoryMembers(activeStoryId, user.id, '¡Nuevo momento!', `«${title.trim()}» fue añadido a la historia`).catch(console.error)
+      if (newPlan?.id) syncPlanToGoogleCalendar(newPlan.id).catch(console.error)
     }
     onCreated()
     onClose()

@@ -31,6 +31,7 @@ export function setBackHandler(handler: () => boolean) {
 export async function setupNativeApp() {
   if (!isNative) return
   setTimeout(() => SplashScreen.hide(), 500)
+  registerPushNotifications().catch(console.error)
   App.addListener('backButton', () => {
     const handled = onBackPress?.() ?? false
     if (!handled) App.exitApp()
@@ -48,8 +49,12 @@ export async function setupNativeApp() {
       const { data: authData, error } = await supabase.auth.exchangeCodeForSession(code)
       // If this was a Google Calendar linkIdentity, save the provider_token immediately
       if (!error && authData?.session?.provider_token && authData.session.user) {
+        await supabase.from('user_secrets').upsert({
+          user_id: authData.session.user.id,
+          name: 'google_calendar_token',
+          value: authData.session.provider_token,
+        }, { onConflict: 'user_id,name' })
         const updates: Record<string, unknown> = {
-          google_calendar_token: authData.session.provider_token,
           google_calendar_enabled: true,
         }
         const googleAvatar = authData.session.user.user_metadata?.avatar_url as string | undefined
@@ -59,7 +64,7 @@ export async function setupNativeApp() {
             .from('profiles').select('avatar_url').eq('id', authData.session.user.id).single()
           if (!existing?.avatar_url) updates.avatar_url = googleAvatar
         }
-        supabase.from('profiles').update(updates).eq('id', authData.session.user.id).then(() => {})
+        supabase.from('profiles').update(updates).eq('id', authData.session.user.id).then(undefined, console.error)
       }
       return
     }
@@ -79,10 +84,28 @@ export async function setupNativeApp() {
 
 export async function registerPushNotifications(): Promise<void> {
   if (!isNative) return
-  const perm = await PushNotifications.requestPermissions()
-  if (perm.receive === 'granted') {
-    await PushNotifications.register()
-  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const PN: any = PushNotifications
+  const perm = await PN.requestPermissions()
+  if (perm.receive !== 'granted') return
+
+  await PN.register()
+
+  PN.addListener('registration', async ({ value }: any) => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    const sub = { platform: Capacitor.getPlatform(), token: value }
+    supabase.from('profiles').update({ push_subscription: sub as never })
+      .eq('id', user.id).then(undefined, console.error)
+  })
+
+  PN.addListener('pushNotificationReceived', (notification: any) => {
+    console.log('Push received:', notification)
+  })
+
+  PN.addListener('pushNotificationActionPerformed', (action: any) => {
+    console.log('Push action:', action)
+  })
 }
 
 export {

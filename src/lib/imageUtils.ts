@@ -3,6 +3,12 @@ export async function compressToWebP(
   maxPx = 1920,
   quality = 0.82
 ): Promise<File> {
+  if (file.size > 20 * 1024 * 1024) {
+    throw new Error('La imagen supera los 20 MB. Elegí una más liviana.')
+  }
+  if (!file.type.startsWith('image/')) {
+    throw new Error('El archivo no es una imagen válida.')
+  }
   return new Promise((resolve, reject) => {
     const img = new Image()
     const url = URL.createObjectURL(file)

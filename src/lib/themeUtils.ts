@@ -11,7 +11,7 @@ const THEME_IMAGES: Record<string, string> = {
 };
 
 export const getPlanThemeImage = (type: string | undefined): string => {
-  if (!type) return THEME_IMAGES.default;
+  if (!type) return THEME_IMAGES.default!;
   const normalizedType = type.toLowerCase();
-  return THEME_IMAGES[normalizedType] || THEME_IMAGES.default;
+  return THEME_IMAGES[normalizedType] ?? THEME_IMAGES.default!;
 };

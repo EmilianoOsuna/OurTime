@@ -122,7 +122,8 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
   const meta = CAT_META[plan.type] || { tone: 'orange' as const }
   const blue = meta.tone === 'blue'
   const no = chapterNo ?? 1
-  const todayStr = new Date().toISOString().slice(0, 10)
+  const now = new Date()
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
   const isFuture = plan.plan_date > todayStr
 
   useEffect(() => {
@@ -163,7 +164,7 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
         title: '¡Momento vivido!',
         body: `«${plan.title}» completado`,
         read: false,
-      })
+      }).then(undefined, console.error)
     }
     setTimeout(() => setBurst(false), 2600)
     onUpdated?.()

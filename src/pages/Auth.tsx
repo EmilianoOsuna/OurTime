@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { supabase, nativeRedirectUrl } from '../lib/supabase'
 import { isNative } from '../lib/native'
 import { Icon } from '../components/ui/Icon'
-import { useToast } from '../context/ToastContext'
 
 type Flow = 'welcome' | 'register' | 'login' | 'forgot'
 
@@ -178,7 +177,7 @@ export default function Auth({ onAuth }: { onAuth: () => void }) {
                 color: name.trim() ? '#fff' : 'var(--ink-faint)',
                 animation: 'pop .5s cubic-bezier(.2,.8,.2,1) both',
                 boxShadow: 'inset 0 0 0 2px rgba(255,255,255,0.3)' }}>
-                {name.trim() ? name.trim()[0].toUpperCase() : '?'}
+                {name.trim() ? name.trim().charAt(0).toUpperCase() : '?'}
               </div>
             </div>
 

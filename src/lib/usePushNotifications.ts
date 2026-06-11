@@ -63,15 +63,24 @@ export async function syncPlanToGoogleCalendar(planId: string) {
   ])
   if (!user) return
 
-  // Prefer session provider_token (fresh), fall back to saved token in profile
+  // Prefer session provider_token (fresh), fall back to user_secrets or legacy profiles column
   let token = session?.provider_token ?? null
+  if (!token) {
+    const { data: secret } = await supabase
+      .from('user_secrets')
+      .select('value')
+      .eq('user_id', user.id)
+      .eq('name', 'google_calendar_token')
+      .maybeSingle()
+    token = secret?.value ?? null
+  }
   if (!token) {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('google_calendar_enabled, google_calendar_token')
+      .select('google_calendar_token')
       .eq('id', user.id)
       .single()
-    if (!profile?.google_calendar_enabled || !profile?.google_calendar_token) return
+    if (!profile?.google_calendar_token) return
     token = profile.google_calendar_token
   }
 

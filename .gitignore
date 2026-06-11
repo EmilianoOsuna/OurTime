@@ -24,6 +24,7 @@ dist-ssr
 *.sw?
 
 .env
+VAPID_KEYS.txt
 e2e/.auth/
 playwright-results/
 playwright-report/

@@ -41,11 +41,11 @@ export const MoneySheet: React.FC<Props> = ({ onClose, onCreated }) => {
   const cats = kind === 'ingreso' ? CATS_IN : CATS_OUT
   const ok = amt && +amt > 0 && label.trim()
 
-  useEffect(() => { setCat(cats[0].id) }, [kind])
+  useEffect(() => { setCat(cats[0]?.id ?? 'cena') }, [kind])
 
   useEffect(() => {
     if (!activeStoryId) return
-    supabase.from('plans').select('*').eq('story_id', activeStoryId)
+    supabase.from('plans').select('*').eq('story_id', activeStoryId).neq('status', 'cancelado')
       .order('plan_date', { ascending: true })
       .then(({ data }) => { if (data) setPlans(data as PlanType[]) })
   }, [activeStoryId])
@@ -70,7 +70,7 @@ export const MoneySheet: React.FC<Props> = ({ onClose, onCreated }) => {
       title: (kind === 'ingreso' ? '+' : '–') + sym + (+amt).toLocaleString('es-ES'),
       body: label.trim() })
     if (user?.id && kind === 'gasto') {
-      sendPushToStoryMembers(activeStoryId, user.id, 'Nuevo gasto registrado', `${sym}${(+amt).toLocaleString('es-ES')} · ${label.trim()}`)
+      sendPushToStoryMembers(activeStoryId, user.id, 'Nuevo gasto registrado', `${sym}${(+amt).toLocaleString('es-ES')} · ${label.trim()}`).catch(console.error)
     }
     onCreated()
     onClose()

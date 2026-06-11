@@ -32,13 +32,22 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Plan not found' }), { status: 404, headers: CORS })
     }
 
-    // Read google_calendar_token from DB instead of client body
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('google_calendar_token')
-      .eq('id', user.id)
-      .single()
-    const provider_token = profile?.google_calendar_token
+    // Read google_calendar_token from user_secrets (or legacy profiles column)
+    const { data: secret } = await supabase
+      .from('user_secrets')
+      .select('value')
+      .eq('user_id', user.id)
+      .eq('name', 'google_calendar_token')
+      .maybeSingle()
+    let provider_token = secret?.value
+    if (!provider_token) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('google_calendar_token')
+        .eq('id', user.id)
+        .single()
+      provider_token = profile?.google_calendar_token ?? null
+    }
     if (!provider_token) {
       return new Response(JSON.stringify({ error: 'Google Calendar not connected' }), { status: 400, headers: CORS })
     }

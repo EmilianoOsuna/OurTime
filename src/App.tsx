@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 import { ToastProvider } from './context/ToastContext'
 import { CurrencyProvider } from './context/CurrencyContext'
 import { ConfirmProvider } from './components/ui/ConfirmDialog'
+import { ErrorBoundary } from './components/ui/ErrorBoundary'
 
 function DuplicateAccountScreen({ onSignOut }: { onSignOut: () => void }) {
   return (
@@ -104,6 +105,7 @@ function AppInner() {
 
 function App() {
   return (
+    <ErrorBoundary>
     <AuthProvider>
       <ToastProvider>
         <CurrencyProvider>
@@ -113,6 +115,7 @@ function App() {
         </CurrencyProvider>
       </ToastProvider>
     </AuthProvider>
+    </ErrorBoundary>
   )
 }
 

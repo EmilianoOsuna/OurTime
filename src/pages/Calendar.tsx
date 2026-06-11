@@ -11,7 +11,8 @@ const DIAS = ['lun', 'mar', 'mié', 'jue', 'vie', 'sáb', 'dom']
 const MESES_L = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
                  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
 
-const todayStr = new Date().toISOString().slice(0, 10)
+const now = new Date()
+const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
 
 // Solid colors for calendar dots (CSS vars don't work in dynamic backgrounds easily)
 const CAT_DOT: Record<string, string> = {
@@ -19,12 +20,6 @@ const CAT_DOT: Record<string, string> = {
   amigos:  '#0474BA',
   familia: '#2E7D5B',
   otro:    '#6B7280',
-}
-const CAT_COLOR: Record<string, string> = {
-  pareja: 'var(--cat-pareja)',
-  amigos: 'var(--cat-amigos)',
-  familia: 'var(--cat-familia)',
-  otro: 'var(--cat-otro)',
 }
 const CAT_ICON: Record<string, string> = {
   pareja: 'heartFill', amigos: 'users', familia: 'home', otro: 'tag',
@@ -217,7 +212,7 @@ function ChapterList({ plans, onOpen }: { plans: CalendarPlan[]; onOpen: (p: Pla
             <span style={{ fontSize: 12, color: 'var(--ink-faint)', fontWeight: 600 }}>{upcoming.length}</span>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {upcoming.map((p, i) => (
+            {upcoming.map(p => (
               <ChapterRow key={p.id} plan={p} no={plans.indexOf(p) + 1} onOpen={onOpen} />
             ))}
           </div>

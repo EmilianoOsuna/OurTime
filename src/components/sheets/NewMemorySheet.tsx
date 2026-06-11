@@ -29,7 +29,7 @@ export const NewMemorySheet: React.FC<Props> = ({ onClose, onCreated, initialAlb
 
   useEffect(() => {
     if (!activeStoryId) return
-    supabase.from('plans').select('*').eq('story_id', activeStoryId)
+    supabase.from('plans').select('*').eq('story_id', activeStoryId).neq('status', 'cancelado')
       .order('plan_date', { ascending: true })
       .then(({ data }) => { if (data) setPlans(data as PlanType[]) })
     supabase.from('albums').select('*').eq('story_id', activeStoryId)
@@ -67,7 +67,7 @@ export const NewMemorySheet: React.FC<Props> = ({ onClose, onCreated, initialAlb
           'Nuevo recuerdo',
           caption ? `«${caption}»` : 'Se añadió una nueva foto a la galería',
           '/?shortcut=gallery'
-        )
+        ).catch(console.error)
       }
       onCreated()
       onClose()
