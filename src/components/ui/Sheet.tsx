@@ -10,6 +10,7 @@ export function Sheet({ onClose, children, height = 'auto', pad = true }: {
   const y = useMotionValue(0)
   const backdropOpacity = useTransform(y, [0, 500], [1, 0])
   const sheetRef = useRef<HTMLDivElement>(null)
+  const backdropRef = useRef<HTMLDivElement>(null)
   const state = useRef({
     startY: 0, startScroll: 0, dragging: false,
     lastY: 0, lastTime: 0, velocity: 0,
@@ -60,6 +61,7 @@ export function Sheet({ onClose, children, height = 'auto', pad = true }: {
     const el = sheetRef.current
     if (state.current.dragging) {
       if (y.get() > 120 || Math.min(Math.max(state.current.velocity, -3000), 3000) > 800) {
+        if (backdropRef.current) backdropRef.current.style.pointerEvents = 'none'
         onClose()
       } else {
         animate(y, 0, {
@@ -76,6 +78,7 @@ export function Sheet({ onClose, children, height = 'auto', pad = true }: {
     <div style={{ position: 'fixed', inset: 0, zIndex: 95, pointerEvents: 'none', display: 'flex',
       flexDirection: 'column', justifyContent: 'flex-end' }}>
       <motion.div
+        ref={backdropRef}
         onClick={() => onClose()}
         style={{ position: 'absolute', inset: 0, opacity: backdropOpacity, pointerEvents: 'auto',
           background: 'rgba(33,29,24,0.42)', }}

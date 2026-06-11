@@ -94,6 +94,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         fetchedRef.current = true
         setIsLoading(true)
         const fetchTimeout = setTimeout(() => {
+          // Profile fetch timed out — clear session so AppInner shows landing
+          // instead of hanging on (session && !profile) gate
+          _setActiveStoryId(null)
+          setStories([])
+          setProfile(null)
+          setSession(null)
+          setUser(null)
           setIsLoading(false)
         }, 8000)
         fetchProfileAndStories(session.user.id).finally(() => clearTimeout(fetchTimeout))

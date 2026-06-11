@@ -11,6 +11,7 @@ export const BottomSheet: React.FC<Props> = ({ onClose, children, maxHeight = '9
   const y = useMotionValue(0)
   const backdropOpacity = useTransform(y, [0, 500], [1, 0])
   const scrollRef = useRef<HTMLDivElement>(null)
+  const backdropRef = useRef<HTMLDivElement>(null)
   const state = useRef({
     startY: 0, startScroll: 0, dragging: false,
     lastY: 0, lastTime: 0, velocity: 0,
@@ -62,6 +63,7 @@ export const BottomSheet: React.FC<Props> = ({ onClose, children, maxHeight = '9
     const el = scrollRef.current
     if (state.current.dragging) {
       if (y.get() > 120 || Math.min(Math.max(state.current.velocity, -3000), 3000) > 800) {
+        if (backdropRef.current) backdropRef.current.style.pointerEvents = 'none'
         onClose()
       } else {
         animate(y, 0, {
@@ -78,6 +80,7 @@ export const BottomSheet: React.FC<Props> = ({ onClose, children, maxHeight = '9
     <div style={{ position: 'fixed', inset: 0, zIndex: 150, pointerEvents: 'none', display: 'flex',
       flexDirection: 'column', justifyContent: 'flex-end' }}>
       <motion.div
+        ref={backdropRef}
         onClick={() => onClose()}
         style={{ position: 'absolute', inset: 0, opacity: backdropOpacity, pointerEvents: 'auto',
           background: 'rgba(33,29,24,0.42)', }}
