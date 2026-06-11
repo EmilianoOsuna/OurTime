@@ -65,8 +65,10 @@ function AppInner() {
       if (!session) {
         setNeedsOnboarding(false)
         setStateLoading(false)
-      } else if (profile) {
-        setNeedsOnboarding(stories.length === 0)
+      } else {
+        if (profile) {
+          setNeedsOnboarding(stories.length === 0)
+        }
         setStateLoading(false)
       }
     }
