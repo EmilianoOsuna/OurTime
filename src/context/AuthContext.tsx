@@ -56,8 +56,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const timeout = setTimeout(() => {
-      if (!fetchedRef.current) setIsLoading(false)
-    }, 10000)
+      if (!fetchedRef.current) {
+        // Clear stale session so Supabase doesn't hang on next init
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+          const k = localStorage.key(i)
+          if (k?.startsWith('sb-')) { localStorage.removeItem(k) }
+        }
+        setIsLoading(false)
+      }
+    }, 5000)
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       clearTimeout(timeout)
