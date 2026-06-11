@@ -55,11 +55,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [])
 
   useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (!fetchedRef.current) setIsLoading(false)
+    }, 10000)
+
     supabase.auth.getSession().then(({ data: { session } }) => {
+      clearTimeout(timeout)
       setSession(session)
       setUser(session?.user ?? null)
       if (session?.user) { fetchedRef.current = true; fetchProfileAndStories(session.user.id) }
       else setIsLoading(false)
+    }, () => {
+      clearTimeout(timeout)
+      setIsLoading(false)
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -101,7 +109,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     )
 
-    return () => subscription.unsubscribe()
+    return () => { clearTimeout(timeout); subscription.unsubscribe() }
   }, [])
 
   const fetchProfileAndStories = async (userId: string) => {
