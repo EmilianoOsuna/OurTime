@@ -75,7 +75,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     const timeout = setTimeout(() => {
-      // Safety net: if nothing resolved in 3s, stop waiting so the UI is not stuck forever
+      // Safety net: if nothing resolved in 10s, clear stale session so next load is clean
       if (!fetchedRef.current) {
         for (let i = localStorage.length - 1; i >= 0; i--) {
           const k = localStorage.key(i)
@@ -84,19 +84,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         fetchedRef.current = true
       }
       setIsLoading(false)
-    }, 3000)
+    }, 10000)
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       clearTimeout(timeout)
       setSession(session)
       setUser(session?.user ?? null)
       if (session?.user) {
-        // INITIAL_SESSION may have already started fetching — don't duplicate
-        if (!fetchedRef.current) {
-          fetchedRef.current = true
-          setIsLoading(true)
-          fetchProfileAndStories(session.user.id)
-        }
+        fetchedRef.current = true
+        setIsLoading(true)
+        fetchProfileAndStories(session.user.id)
       } else {
         setIsLoading(false)
       }

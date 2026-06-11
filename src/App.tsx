@@ -88,7 +88,8 @@ function AppInner() {
     await refreshStories()
   }, [user, refreshProfile, refreshStories])
 
-  if (stateLoading || isLoading) return <Spinner />
+  // Keep loading while auth is initializing OR session exists but profile hasn't loaded yet
+  if (stateLoading || isLoading || (session && !profile)) return <Spinner />
 
   return (
     <Suspense fallback={<Spinner />}>
