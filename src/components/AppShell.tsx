@@ -486,12 +486,14 @@ export default function AppShell() {
       </motion.div>
 
       {overlay?.type === 'plan' && (
-        <motion.div key="plan-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
+        <motion.div key="plan-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}
+          style={{ position: 'relative', zIndex: 100 }}>
           <PlanDetail plan={overlay.data} onClose={closeOverlay} chapterNo={chapterNo(overlay.data.id)} onUpdated={refreshPlans} />
         </motion.div>
       )}
       {overlay?.type === 'profile' && (
-        <motion.div key="profile-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
+        <motion.div key="profile-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}
+          style={{ position: 'relative', zIndex: 100 }}>
           <ProfileScreen
             plans={plans}
             onClose={closeOverlay}
@@ -503,7 +505,8 @@ export default function AppShell() {
         </motion.div>
       )}
       {overlay?.type === 'action' && (
-        <motion.div key="action-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
+        <motion.div key="action-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}
+          style={{ position: 'relative', zIndex: 100 }}>
           <GlobalActionSheet onClose={closeOverlay}
             onNewPlan={() => setOverlay({ type: 'newplan' })}
             onNewMoney={() => setOverlay({ type: 'money' })}
@@ -512,27 +515,32 @@ export default function AppShell() {
         </motion.div>
       )}
       {overlay?.type === 'newplan' && (
-        <motion.div key="newplan-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
+        <motion.div key="newplan-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}
+          style={{ position: 'relative', zIndex: 100 }}>
           <NewPlanSheet onClose={closeOverlay} onCreated={() => { closeOverlay(); refreshPlans() }} />
         </motion.div>
       )}
       {overlay?.type === 'money' && (
-        <motion.div key="money-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
+        <motion.div key="money-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}
+          style={{ position: 'relative', zIndex: 100 }}>
           <MoneySheet onClose={closeOverlay} onCreated={() => { closeOverlay(); refreshTransactions() }} />
         </motion.div>
       )}
       {overlay?.type === 'memory' && (
-        <motion.div key="memory-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
+        <motion.div key="memory-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}
+          style={{ position: 'relative', zIndex: 100 }}>
           <NewMemorySheet onClose={closeOverlay} onCreated={() => { closeOverlay(); refreshMemories() }} />
         </motion.div>
       )}
       {overlay?.type === 'newstory' && (
-        <motion.div key="newstory-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
+        <motion.div key="newstory-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}
+          style={{ position: 'relative', zIndex: 100 }}>
           <NewStorySheet onClose={closeOverlay} onCreated={() => { closeOverlay(); go('home') }} />
         </motion.div>
       )}
       {overlay?.type === 'editstory' && (
-        <motion.div key="editstory-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
+        <motion.div key="editstory-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}
+          style={{ position: 'relative', zIndex: 100 }}>
           <EditStorySheet story={overlay.story} onClose={closeOverlay} onUpdated={() => {}} isAdmin={adminStoryIds.has(overlay.story.id)} />
         </motion.div>
       )}

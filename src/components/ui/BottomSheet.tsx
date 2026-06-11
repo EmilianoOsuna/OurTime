@@ -83,10 +83,7 @@ export const BottomSheet: React.FC<Props> = ({ onClose, children, maxHeight = '9
     <div style={{ position: 'fixed', inset: 0, zIndex: 150, pointerEvents: 'none', display: 'flex',
       flexDirection: 'column', justifyContent: 'flex-end' }}>
       <motion.div
-        onClick={() => {
-          const h = window.innerHeight
-          animate(y, h, { type: 'spring', damping: 30, stiffness: 250, mass: 0.8 }).then(() => onClose())
-        }}
+        onClick={() => onClose()}
         style={{ position: 'absolute', inset: 0, opacity: backdropOpacity, pointerEvents: 'auto',
           background: 'rgba(33,29,24,0.42)', }}
       />
