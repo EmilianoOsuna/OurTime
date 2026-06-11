@@ -705,11 +705,8 @@ function StorySwitcherSheet({ stories, activeStoryId, adminStoryIds, onSelect, o
     if (dragState.current.dragging) {
       const vy = Math.min(Math.max(dragState.current.velocity, -3000), 3000)
       if (y.get() > 120 || vy > 800) {
-        const h = window.innerHeight
-        animate(y, h, {
-          type: 'spring', damping: 30, stiffness: 250, mass: 0.8,
-          velocity: vy,
-        }).then(() => onClose())
+        y.set(window.innerHeight)
+        onClose()
       } else {
         animate(y, 0, {
           type: 'spring', damping: 35, stiffness: 300, mass: 0.6,

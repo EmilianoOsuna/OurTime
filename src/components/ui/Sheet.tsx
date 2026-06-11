@@ -60,6 +60,7 @@ export function Sheet({ onClose, children, height = 'auto', pad = true }: {
     const el = sheetRef.current
     if (state.current.dragging) {
       if (y.get() > 120 || Math.min(Math.max(state.current.velocity, -3000), 3000) > 800) {
+        y.set(window.innerHeight)
         onClose()
       } else {
         animate(y, 0, {

@@ -86,6 +86,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(false)
     }, 10000)
 
+    const fetchWithTimeout = <T,>(promise: Promise<T>, ms: number) => {
+      const timer = setTimeout(() => {
+        setSession(null)
+        setUser(null)
+        setProfile(null)
+        setStories([])
+        setIsLoading(false)
+      }, ms)
+      return promise.finally(() => clearTimeout(timer))
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       clearTimeout(timeout)
       setSession(session)
@@ -93,10 +104,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (session?.user) {
         fetchedRef.current = true
         setIsLoading(true)
-        const fetchTimeout = setTimeout(() => {
-          setIsLoading(false)
-        }, 8000)
-        fetchProfileAndStories(session.user.id).finally(() => clearTimeout(fetchTimeout))
+        fetchWithTimeout(fetchProfileAndStories(session.user.id), 8000)
       } else {
         setIsLoading(false)
       }
@@ -114,7 +122,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (fetchedRef.current && (event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED')) return
           fetchedRef.current = true
           setIsLoading(true)
-          fetchProfileAndStories(session.user.id)
+          fetchWithTimeout(fetchProfileAndStories(session.user.id), 8000)
           if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') && session.provider_token) {
             supabase.from('user_secrets').upsert({
               user_id: session.user.id,
