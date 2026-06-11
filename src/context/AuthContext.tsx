@@ -55,16 +55,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [])
 
   useEffect(() => {
+    // Clear malformed sessions (missing required fields) — not expired ones
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const k = localStorage.key(i)
+      if (!k?.startsWith('sb-') || k.endsWith('-user')) continue
+      try {
+        const raw = localStorage.getItem(k)
+        if (raw) {
+          const parsed = JSON.parse(raw)
+          if (!parsed?.access_token || !parsed?.refresh_token || !parsed?.expires_at) {
+            localStorage.removeItem(k)
+            localStorage.removeItem(k + '-user')
+          }
+        }
+      } catch {
+        localStorage.removeItem(k)
+        localStorage.removeItem(k + '-user')
+      }
+    }
+
     const timeout = setTimeout(() => {
       if (!fetchedRef.current) {
-        // Clear stale session so Supabase doesn't hang on next init
         for (let i = localStorage.length - 1; i >= 0; i--) {
           const k = localStorage.key(i)
-          if (k?.startsWith('sb-')) { localStorage.removeItem(k) }
+          if (k?.startsWith('sb-')) { localStorage.removeItem(k); localStorage.removeItem(k + '-user') }
         }
+        fetchedRef.current = true
         setIsLoading(false)
       }
-    }, 5000)
+    }, 3000)
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       clearTimeout(timeout)
@@ -82,12 +101,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(session)
         setUser(session?.user ?? null)
         if (session?.user) {
-          if (fetchedRef.current) return
+          // Only block initial replay; always allow fresh SIGNED_IN after timeout
+          if (fetchedRef.current && (event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED')) return
           fetchedRef.current = true
-          // Reset isLoading before fetching so AppInner doesn't see stale empty stories
           setIsLoading(true)
           fetchProfileAndStories(session.user.id)
-          // Save Google provider_token if this was a Calendar OAuth redirect
           if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') && session.provider_token) {
             supabase.from('user_secrets').upsert({
               user_id: session.user.id,
@@ -97,7 +115,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const updates: Record<string, unknown> = {
               google_calendar_enabled: true,
             }
-            // If Google provides an avatar and user has none, use Google's (never overwrite custom)
             const googleAvatar = session.user.user_metadata?.avatar_url as string | undefined
                                ?? session.user.user_metadata?.picture as string | undefined
             if (googleAvatar) {

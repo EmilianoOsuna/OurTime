@@ -63,8 +63,9 @@ function AppInner() {
   useEffect(() => {
     if (!isLoading) {
       if (!session) {
+        setNeedsOnboarding(false)
         setStateLoading(false)
-      } else if (profile || session) {
+      } else if (profile) {
         setNeedsOnboarding(stories.length === 0)
         setStateLoading(false)
       }
