@@ -24,27 +24,32 @@ let _fcmToken: { access_token: string; expires_at: number } | null = null
 function getFCMServiceAccount(): Record<string, string> {
   if (!FCM_SERVICE_ACCOUNT_JSON) throw new Error('FCM_SERVICE_ACCOUNT not configured')
 
-  let value = FCM_SERVICE_ACCOUNT_JSON.trim()
-  for (let attempt = 0; attempt < 3; attempt++) {
+  const raw = FCM_SERVICE_ACCOUNT_JSON.trim()
+  const unquoted = raw.length > 1 && raw.startsWith('"') && raw.endsWith('"')
+    ? raw.slice(1, -1)
+    : raw
+  const quotesDecoded = unquoted.replace(/\\"/g, '"')
+  const candidates = [
+    raw,
+    unquoted,
+    quotesDecoded,
+    quotesDecoded.replace(/\\\\([nrtbf\\/])/g, '\\$1'),
+  ]
+
+  let lastError: unknown
+  for (const candidate of [...new Set(candidates)]) {
     try {
-      const parsed = JSON.parse(value)
-      if (typeof parsed === 'string') {
-        value = parsed
-        continue
-      }
+      const parsed = JSON.parse(candidate)
       if (!parsed?.project_id || !parsed?.client_email || !parsed?.private_key || !parsed?.token_uri) {
         throw new Error('FCM_SERVICE_ACCOUNT is missing required fields')
       }
+      parsed.private_key = parsed.private_key.replace(/\\n/g, '\n').replace(/\\r/g, '\r')
       return parsed
     } catch (error) {
-      if (attempt === 0 && value.startsWith('{\\"')) {
-        value = value.replace(/\\"/g, '"').replace(/\\\\/g, '\\')
-        continue
-      }
-      throw error
+      lastError = error
     }
   }
-  throw new Error('FCM_SERVICE_ACCOUNT has an invalid format')
+  throw new Error(`FCM_SERVICE_ACCOUNT has an invalid format: ${lastError instanceof Error ? lastError.message : 'unknown parse error'}`)
 }
 
 async function getFCMAccessToken(): Promise<string> {
