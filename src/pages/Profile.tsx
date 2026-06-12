@@ -804,7 +804,7 @@ function GoogleCalendarSection() {
     const oauthOptions = {
       scopes: GCAL_SCOPE,
       redirectTo: isNative ? nativeRedirectUrl : window.location.origin,
-      queryParams: { access_type: 'offline', prompt: 'consent' },
+      queryParams: { access_type: 'offline', prompt: 'consent', include_granted_scopes: 'true' },
       skipBrowserRedirect: isNative,
     }
     const { data, error } = googleAlreadyLinked
@@ -830,6 +830,9 @@ function GoogleCalendarSection() {
       const result = await testGoogleCalendarConnection()
       toast({ icon: 'check', title: 'Google Calendar conectado', body: result?.calendar ? `Calendario: ${result.calendar}` : 'La conexión funciona correctamente.' })
     } catch (error) {
+      if (error instanceof Error && error.message.includes('Desconecta y vuelve a conectar')) {
+        setConnected(false)
+      }
       toast({ icon: 'x', title: 'Falló Google Calendar', body: error instanceof Error ? error.message : 'No se pudo validar la conexión.' })
     } finally {
       setSyncing(false)

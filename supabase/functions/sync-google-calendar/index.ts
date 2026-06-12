@@ -77,15 +77,26 @@ Deno.serve(async (req) => {
     }
 
     if (test_connection === true) {
-      const testResponse = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary', {
+      const tokenInfoResponse = await fetch(`https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(provider_token)}`)
+      const tokenInfo = await tokenInfoResponse.json()
+      const scopes = String(tokenInfo.scope ?? '').split(' ')
+      const hasCalendarScope = scopes.includes('https://www.googleapis.com/auth/calendar')
+        || scopes.includes('https://www.googleapis.com/auth/calendar.events')
+      if (!tokenInfoResponse.ok || !hasCalendarScope) {
+        return Response.json({
+          error: 'Google Calendar permission missing',
+          detail: 'La autorización actual no incluye Google Calendar. Desconecta y vuelve a conectar para conceder el permiso.',
+        }, { headers: CORS })
+      }
+
+      const testResponse = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events?maxResults=1&singleEvents=true', {
         headers: { Authorization: `Bearer ${provider_token}` },
       })
       if (!testResponse.ok) {
         const detail = await testResponse.text()
         return Response.json({ error: 'Google Calendar connection failed', detail, google_status: testResponse.status }, { headers: CORS })
       }
-      const calendar = await testResponse.json()
-      return Response.json({ connected: true, calendar: calendar.summary ?? calendar.id }, { headers: CORS })
+      return Response.json({ connected: true })
     }
 
     if (!plan_id) return Response.json({ error: 'Missing plan_id' }, { headers: CORS })
