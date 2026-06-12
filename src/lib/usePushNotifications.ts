@@ -6,6 +6,35 @@ import { savePushSubscription } from './pushSubscriptions'
 
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined
 
+async function getFunctionErrorMessage(error: unknown): Promise<string> {
+  const fallback = error instanceof Error ? error.message : 'La función devolvió un error.'
+  const context = (error as { context?: unknown })?.context
+  if (!context) return fallback
+
+  if (typeof context === 'object' && context !== null) {
+    const responseLike = context as {
+      json?: () => Promise<unknown>
+      text?: () => Promise<string>
+      detail?: unknown
+      error?: unknown
+      message?: unknown
+    }
+    if (typeof responseLike.json === 'function') {
+      const payload = await responseLike.json().catch(() => null) as { detail?: unknown; error?: unknown } | null
+      if (payload?.detail) return String(payload.detail)
+      if (payload?.error) return String(payload.error)
+    }
+    if (typeof responseLike.text === 'function') {
+      const text = await responseLike.text().catch(() => '')
+      if (text) return text
+    }
+    if (responseLike.detail) return String(responseLike.detail)
+    if (responseLike.error) return String(responseLike.error)
+    if (responseLike.message) return String(responseLike.message)
+  }
+  return fallback
+}
+
 function urlBase64ToUint8Array(base64: string): Uint8Array {
   const padding = '='.repeat((4 - base64.length % 4) % 4)
   const b64 = (base64 + padding).replace(/-/g, '+').replace(/_/g, '/')
@@ -132,12 +161,7 @@ export async function syncPlanToGoogleCalendar(planId: string) {
     body: { plan_id: planId },
   })
   if (error) {
-    const response = (error as { context?: Response }).context
-    if (response) {
-      const payload = await response.clone().json().catch(() => null)
-      throw new Error(payload?.detail || payload?.error || error.message)
-    }
-    throw error
+    throw new Error(await getFunctionErrorMessage(error))
   }
   if (data?.error) throw new Error(data.detail || data.error)
   return data
@@ -148,12 +172,7 @@ export async function testGoogleCalendarConnection() {
     body: { test_connection: true },
   })
   if (error) {
-    const response = (error as { context?: Response }).context
-    if (response) {
-      const payload = await response.clone().json().catch(() => null)
-      throw new Error(payload?.detail || payload?.error || error.message)
-    }
-    throw error
+    throw new Error(await getFunctionErrorMessage(error))
   }
   if (data?.error) throw new Error(data.detail || data.error)
   return data
