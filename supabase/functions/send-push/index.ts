@@ -21,11 +21,35 @@ const corsHeaders = {
 
 let _fcmToken: { access_token: string; expires_at: number } | null = null
 
-async function getFCMAccessToken(): Promise<string> {
-  if (_fcmToken && Date.now() < _fcmToken.expires_at) return _fcmToken.access_token
+function getFCMServiceAccount(): Record<string, string> {
   if (!FCM_SERVICE_ACCOUNT_JSON) throw new Error('FCM_SERVICE_ACCOUNT not configured')
 
-  const sa = JSON.parse(FCM_SERVICE_ACCOUNT_JSON)
+  let value = FCM_SERVICE_ACCOUNT_JSON.trim()
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const parsed = JSON.parse(value)
+      if (typeof parsed === 'string') {
+        value = parsed
+        continue
+      }
+      if (!parsed?.project_id || !parsed?.client_email || !parsed?.private_key || !parsed?.token_uri) {
+        throw new Error('FCM_SERVICE_ACCOUNT is missing required fields')
+      }
+      return parsed
+    } catch (error) {
+      if (attempt === 0 && value.startsWith('{\\"')) {
+        value = value.replace(/\\"/g, '"').replace(/\\\\/g, '\\')
+        continue
+      }
+      throw error
+    }
+  }
+  throw new Error('FCM_SERVICE_ACCOUNT has an invalid format')
+}
+
+async function getFCMAccessToken(): Promise<string> {
+  if (_fcmToken && Date.now() < _fcmToken.expires_at) return _fcmToken.access_token
+  const sa = getFCMServiceAccount()
 
   function base64url(s: string): string {
     return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
@@ -85,7 +109,7 @@ async function getFCMAccessToken(): Promise<string> {
 
 async function sendFCM(deviceToken: string, title: string, body: string, tag: string, url: string) {
   const accessToken = await getFCMAccessToken()
-  const projectId = JSON.parse(FCM_SERVICE_ACCOUNT_JSON!).project_id
+  const projectId = getFCMServiceAccount().project_id
   const fcmUrl = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`
 
   const payload = {
