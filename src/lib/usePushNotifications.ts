@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { CapacitorHttp } from '@capacitor/core'
 import { supabase } from './supabase'
 import { useAuth } from '../context/AuthContext'
 import { enableNativePushNotifications, getNativePushTarget, isNative, showNativeNotificationTest, syncNativePushToken } from './native'
@@ -13,25 +14,46 @@ async function invokeCalendarFunction(body: Record<string, unknown>) {
   const { data: { session }, error: sessionError } = await supabase.auth.getSession()
   if (sessionError || !session) throw new Error('Tu sesión expiró. Vuelve a iniciar sesión.')
 
-  let response: Response
+  const url = `${SUPABASE_URL}/functions/v1/sync-google-calendar`
+  const headers = {
+    apikey: SUPABASE_ANON_KEY,
+    Authorization: `Bearer ${session.access_token}`,
+    'Content-Type': 'application/json',
+  }
+
+  let status: number
+  let payload: any
   try {
-    response = await fetch(`${SUPABASE_URL}/functions/v1/sync-google-calendar`, {
-      method: 'POST',
-      headers: {
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${session.access_token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-    })
+    if (isNative) {
+      const response = await CapacitorHttp.post({
+        url,
+        headers,
+        data: body,
+        connectTimeout: 15_000,
+        readTimeout: 30_000,
+      })
+      status = response.status
+      payload = response.data
+    } else {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(body),
+      })
+      status = response.status
+      const text = await response.text()
+      payload = text ? JSON.parse(text) : null
+    }
   } catch (error) {
     throw new Error(`No se pudo conectar con Supabase: ${error instanceof Error ? error.message : String(error)}`)
   }
 
-  const text = await response.text()
-  const payload = text ? JSON.parse(text) : null
-  if (!response.ok || payload?.error) {
-    throw new Error(payload?.detail || payload?.error || `Google Calendar respondió ${response.status}.`)
+  if (typeof payload === 'string') {
+    try { payload = JSON.parse(payload) } catch { /* Keep the server text for the error below. */ }
+  }
+  if (status < 200 || status >= 300 || payload?.error) {
+    const detail = typeof payload === 'string' ? payload : payload?.detail || payload?.error
+    throw new Error(detail || `Google Calendar respondió ${status}.`)
   }
   return payload
 }
