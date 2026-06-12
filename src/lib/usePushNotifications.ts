@@ -65,6 +65,13 @@ function urlBase64ToUint8Array(base64: string): Uint8Array {
   return Uint8Array.from(raw, c => c.charCodeAt(0))
 }
 
+function sameApplicationServerKey(subscription: PushSubscription, expected: Uint8Array): boolean {
+  const current = subscription.options.applicationServerKey
+  if (!current) return false
+  const bytes = new Uint8Array(current)
+  return bytes.length === expected.length && bytes.every((value, index) => value === expected[index])
+}
+
 export function usePushNotifications() {
   const { user } = useAuth()
   const [enabled, setEnabled] = useState(false)
@@ -83,10 +90,15 @@ export function usePushNotifications() {
     if (nextPermission !== 'granted') return false
 
     const reg = await navigator.serviceWorker.ready
-    const existing = await reg.pushManager.getSubscription()
+    const applicationServerKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+    let existing = await reg.pushManager.getSubscription()
+    if (existing && !sameApplicationServerKey(existing, applicationServerKey)) {
+      await existing.unsubscribe()
+      existing = null
+    }
     const sub = existing ?? await reg.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) as BufferSource,
+      applicationServerKey: applicationServerKey as BufferSource,
     })
     await savePushSubscription(user.id, JSON.parse(JSON.stringify(sub)))
     setEnabled(true)
@@ -152,6 +164,12 @@ export async function sendTestPushNotification() {
     const registration = await navigator.serviceWorker.ready
     const subscription = await registration.pushManager.getSubscription()
     if (subscription) testTarget = { platform: 'web', endpoint: subscription.endpoint }
+    await registration.showNotification('Prueba local de OurTime', {
+      body: 'El navegador permite mostrar notificaciones en esta PWA.',
+      icon: '/pwa-192x192.png',
+      badge: '/pwa-192x192.png',
+      tag: `ourtime-local-test-${Date.now()}`,
+    })
   }
   if (!testTarget) throw new Error('Este dispositivo todavía no tiene una suscripción registrada.')
 
