@@ -5,34 +5,35 @@ import { enableNativePushNotifications, getNativePushTarget, isNative, showNativ
 import { savePushSubscription } from './pushSubscriptions'
 
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
 
-async function getFunctionErrorMessage(error: unknown): Promise<string> {
-  const fallback = error instanceof Error ? error.message : 'La función devolvió un error.'
-  const context = (error as { context?: unknown })?.context
-  if (!context) return fallback
+async function invokeCalendarFunction(body: Record<string, unknown>) {
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) throw new Error('Supabase no está configurado.')
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+  if (sessionError || !session) throw new Error('Tu sesión expiró. Vuelve a iniciar sesión.')
 
-  if (typeof context === 'object' && context !== null) {
-    const responseLike = context as {
-      json?: () => Promise<unknown>
-      text?: () => Promise<string>
-      detail?: unknown
-      error?: unknown
-      message?: unknown
-    }
-    if (typeof responseLike.json === 'function') {
-      const payload = await responseLike.json().catch(() => null) as { detail?: unknown; error?: unknown } | null
-      if (payload?.detail) return String(payload.detail)
-      if (payload?.error) return String(payload.error)
-    }
-    if (typeof responseLike.text === 'function') {
-      const text = await responseLike.text().catch(() => '')
-      if (text) return text
-    }
-    if (responseLike.detail) return String(responseLike.detail)
-    if (responseLike.error) return String(responseLike.error)
-    if (responseLike.message) return String(responseLike.message)
+  let response: Response
+  try {
+    response = await fetch(`${SUPABASE_URL}/functions/v1/sync-google-calendar`, {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    })
+  } catch (error) {
+    throw new Error(`No se pudo conectar con Supabase: ${error instanceof Error ? error.message : String(error)}`)
   }
-  return fallback
+
+  const text = await response.text()
+  const payload = text ? JSON.parse(text) : null
+  if (!response.ok || payload?.error) {
+    throw new Error(payload?.detail || payload?.error || `Google Calendar respondió ${response.status}.`)
+  }
+  return payload
 }
 
 function urlBase64ToUint8Array(base64: string): Uint8Array {
@@ -157,23 +158,9 @@ export async function syncPlanToGoogleCalendar(planId: string) {
     .eq('id', user.id)
     .single()
   if (!profile?.google_calendar_enabled) return null
-  const { data, error } = await supabase.functions.invoke('sync-google-calendar', {
-    body: { plan_id: planId },
-  })
-  if (error) {
-    throw new Error(await getFunctionErrorMessage(error))
-  }
-  if (data?.error) throw new Error(data.detail || data.error)
-  return data
+  return invokeCalendarFunction({ plan_id: planId })
 }
 
 export async function testGoogleCalendarConnection() {
-  const { data, error } = await supabase.functions.invoke('sync-google-calendar', {
-    body: { test_connection: true },
-  })
-  if (error) {
-    throw new Error(await getFunctionErrorMessage(error))
-  }
-  if (data?.error) throw new Error(data.detail || data.error)
-  return data
+  return invokeCalendarFunction({ test_connection: true })
 }
