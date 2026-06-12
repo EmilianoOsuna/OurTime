@@ -55,7 +55,11 @@ export const NewPlanSheet: React.FC<Props> = ({ onClose, onCreated, parentPlanId
         read: false,
       }).then(undefined, console.error)
       sendPushToStoryMembers(activeStoryId, user.id, '¡Nuevo momento!', `«${title.trim()}» fue añadido a la historia`).catch(console.error)
-      if (newPlan?.id) syncPlanToGoogleCalendar(newPlan.id).catch(console.error)
+      if (newPlan?.id) {
+        syncPlanToGoogleCalendar(newPlan.id).catch(error => {
+          push({ icon: 'x', title: 'No se sincronizó con Google Calendar', body: error instanceof Error ? error.message : 'Inténtalo de nuevo.' })
+        })
+      }
     }
     onCreated()
     onClose()

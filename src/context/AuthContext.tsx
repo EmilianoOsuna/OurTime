@@ -46,8 +46,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [stories, setStories] = useState<StoryType[]>([])
   const [profile, setProfile] = useState<ProfileType | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const fetchedRef = useRef(false)
-
+  const loadedUserIdRef = useRef<string | null>(null)
   const setActiveStoryId = useCallback((id: string | null) => {
     _setActiveStoryId(id)
     if (id) localStorage.setItem('activeStoryId', id)
@@ -55,77 +54,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [])
 
   useEffect(() => {
-    console.log('[DIAG] AuthProvider mounted, isLoading=true')
-
-    const timeout = setTimeout(() => {
-      console.log('[DIAG] ⏰ 30s safety timeout fired! fetchedRef.current=', fetchedRef.current)
-      if (!fetchedRef.current) {
-        fetchedRef.current = true
-        setIsLoading(false)
-      }
-    }, 30000)
-
-    const fetchWithTimeout = <T,>(promise: Promise<T>, ms: number) => {
-      const timer = setTimeout(() => {
-        console.log('[DIAG] ⏰ fetchWithTimeout fired after', ms, 'ms — keeping session, only stopping loading')
-        setIsLoading(false)
-      }, ms)
-      return promise.finally(() => clearTimeout(timer))
-    }
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      clearTimeout(timeout)
-      console.log('[DIAG] getSession() resolved. session=', session ? `found (user=${session.user.id})` : 'null')
-      setSession(session)
-      setUser(session?.user ?? null)
-      if (session?.user) {
-        fetchedRef.current = true
-        setIsLoading(true)
-        console.log('[DIAG] session found, fetching profile+stories...')
-        fetchWithTimeout(fetchProfileAndStories(session.user.id), 15000)
-      } else {
-        console.log('[DIAG] no session, setting isLoading=false')
-        setIsLoading(false)
-      }
-    }, (err) => {
-      clearTimeout(timeout)
-      console.log('[DIAG] getSession() rejected:', err)
-      setIsLoading(false)
-    })
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log(`[DIAG] onAuthStateChange: event="${event}", session=`, session ? 'exists' : 'null')
-        setSession(session)
-        setUser(session?.user ?? null)
-        if (session?.user) {
-          if (fetchedRef.current && (event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED')) {
-            console.log('[DIAG] ignoring redundant event:', event)
-            return
+      (event, nextSession) => {
+        setSession(nextSession)
+        setUser(nextSession?.user ?? null)
+
+        if (nextSession?.user) {
+          const userChanged = loadedUserIdRef.current !== nextSession.user.id
+          if (event === 'INITIAL_SESSION' || event === 'USER_UPDATED' || userChanged) {
+            loadedUserIdRef.current = nextSession.user.id
+            setIsLoading(true)
+            const userId = nextSession.user.id
+            setTimeout(() => void fetchProfileAndStories(userId), 0)
           }
-          console.log('[DIAG] processing auth event, fetching profile+stories...')
-          fetchedRef.current = true
-          setIsLoading(true)
-          fetchWithTimeout(fetchProfileAndStories(session.user.id), 8000)
-          if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') && session.provider_token) {
-            supabase.from('user_secrets').upsert({
-              user_id: session.user.id,
-              name: 'google_calendar_token',
-              value: session.provider_token,
-            }, { onConflict: 'user_id,name' }).then(undefined, console.error)
-            const updates: Record<string, unknown> = {
-              google_calendar_enabled: true,
-            }
-            const googleAvatar = session.user.user_metadata?.avatar_url as string | undefined
-                               ?? session.user.user_metadata?.picture as string | undefined
-            if (googleAvatar) {
-              const { data: existing } = await supabase
-                .from('profiles').select('avatar_url').eq('id', session.user.id).single()
-              if (!existing?.avatar_url) updates.avatar_url = googleAvatar
-            }
-            supabase.from('profiles').update(updates).eq('id', session.user.id).then(undefined, console.error)
+
+          if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') && nextSession.provider_token) {
+            const authSession = nextSession
+            setTimeout(() => void persistGoogleAccount(authSession).catch(console.error), 0)
           }
         } else {
+          loadedUserIdRef.current = null
           _setActiveStoryId(null)
           setStories([])
           setProfile(null)
@@ -134,11 +82,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     )
 
-    return () => { clearTimeout(timeout); subscription.unsubscribe() }
+    return () => subscription.unsubscribe()
   }, [])
 
+  const persistGoogleAccount = async (authSession: Session) => {
+    if (!authSession.provider_token) return
+
+    await supabase.from('user_secrets').upsert({
+      user_id: authSession.user.id,
+      name: 'google_calendar_token',
+      value: authSession.provider_token,
+    }, { onConflict: 'user_id,name' })
+    if (authSession.provider_refresh_token) {
+      await supabase.from('user_secrets').upsert({
+        user_id: authSession.user.id,
+        name: 'google_calendar_refresh_token',
+        value: authSession.provider_refresh_token,
+      }, { onConflict: 'user_id,name' })
+    }
+    await supabase.from('user_secrets').upsert({
+      user_id: authSession.user.id,
+      name: 'google_calendar_token_expires_at',
+      value: String(Date.now() + 50 * 60 * 1000),
+    }, { onConflict: 'user_id,name' })
+
+    const updates: Record<string, unknown> = { google_calendar_enabled: true }
+    const googleAvatar = authSession.user.user_metadata?.avatar_url as string | undefined
+      ?? authSession.user.user_metadata?.picture as string | undefined
+    if (googleAvatar) {
+      const { data: existing } = await supabase
+        .from('profiles').select('avatar_url').eq('id', authSession.user.id).single()
+      if (!existing?.avatar_url) updates.avatar_url = googleAvatar
+    }
+    await supabase.from('profiles').update(updates).eq('id', authSession.user.id)
+  }
+
   const fetchProfileAndStories = async (userId: string) => {
-    console.log('[DIAG] fetchProfileAndStories start, userId=', userId)
     try {
       const [{ data: profileData }, { data: memberships }] = await Promise.all([
         supabase.from('profiles').select('*').eq('id', userId).single(),
@@ -146,8 +125,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .select('story_id, stories(*)')
           .eq('user_id', userId),
       ])
-
-      console.log('[DIAG] fetchProfileAndStories results: profile=', profileData ? 'found' : 'null', 'stories=', memberships?.length ?? 0)
 
       if (profileData) setProfile(profileData as ProfileType)
 
@@ -164,9 +141,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem('activeStoryId', storyList[0].id)
       }
     } catch (e) {
-      console.error('[DIAG] fetchProfileAndStories error:', e)
+      console.error('Unable to load account data:', e)
     } finally {
-      console.log('[DIAG] fetchProfileAndStories complete, isLoading=false')
       setIsLoading(false)
     }
   }
@@ -198,7 +174,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [user, activeStoryId])
 
   const signOut = async () => {
-    console.log('[DIAG] signOut called')
     setSession(null)
     setUser(null)
     _setActiveStoryId(null)

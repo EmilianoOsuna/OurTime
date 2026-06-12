@@ -8,9 +8,10 @@ import { fmtDate } from '../lib/chapterUtils'
 import { DatePicker } from '../components/ui/DatePicker'
 import { useAuth } from '../context/AuthContext'
 import { supabase, nativeRedirectUrl } from '../lib/supabase'
-import { isNative } from '../lib/native'
+import { Browser, isNative } from '../lib/native'
 import type { PlanType, PersonDisplay, StoryType } from '../lib/supabase'
 import { useToast } from '../context/ToastContext'
+import { usePushNotifications } from '../lib/usePushNotifications'
 
 const CAT_COLOR: Record<string, string> = {
   pareja:  'var(--orange)',
@@ -624,6 +625,7 @@ export function ProfileScreen({ plans, onClose, onGoToFinance, storyCode, isAdmi
         {/* ── SECCIÓN: APP ── */}
         <div style={{ padding: '18px 22px 0' }}>
           <div className="eyebrow" style={{ marginBottom: 10 }}>Integraciones</div>
+          <PushNotificationsSection />
           <GoogleCalendarSection />
         </div>
 
@@ -716,6 +718,46 @@ export function ProfileScreen({ plans, onClose, onGoToFinance, storyCode, isAdmi
 
 const GCAL_SCOPE = 'https://www.googleapis.com/auth/calendar.events'
 
+function PushNotificationsSection() {
+  const { push: toast } = useToast()
+  const { enabled, permission, loading, enable } = usePushNotifications()
+
+  const activate = async () => {
+    try {
+      const ok = await enable()
+      toast(ok
+        ? { icon: 'check', title: 'Notificaciones activadas', body: 'Este dispositivo ya puede recibir avisos.' }
+        : { icon: 'x', title: 'Permiso no concedido', body: 'Activa las notificaciones desde los ajustes del dispositivo.' })
+    } catch (error) {
+      toast({ icon: 'x', title: 'No se pudieron activar', body: error instanceof Error ? error.message : 'Inténtalo de nuevo.' })
+    }
+  }
+
+  return (
+    <div className="card" style={{ padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 14, marginBottom: 10 }}>
+      <div style={{ width: 40, height: 40, borderRadius: 12, background: enabled ? 'var(--orange-tint)' : 'var(--card-2)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <Icon name="bell" size={20} style={{ color: enabled ? 'var(--orange-deep)' : 'var(--ink-faint)' }} />
+      </div>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontWeight: 700, fontSize: 14.5, color: 'var(--ink)' }}>Notificaciones push</div>
+        <div style={{ fontSize: 12, color: 'var(--ink-faint)', marginTop: 2 }}>
+          {enabled ? 'Activadas en este dispositivo' : permission === 'denied' ? 'Bloqueadas en los ajustes' : 'Recibe avisos de nuevos momentos y mensajes'}
+        </div>
+      </div>
+      {!enabled && (
+        <button onClick={activate} disabled={loading || permission === 'unsupported'} style={{
+          border: 'none', background: 'var(--orange)', borderRadius: 10, padding: '8px 12px',
+          fontSize: 12.5, fontWeight: 700, color: '#fff', cursor: 'pointer', fontFamily: 'var(--font-ui)',
+          opacity: loading || permission === 'unsupported' ? 0.6 : 1,
+        }}>
+          {loading ? '…' : 'Activar'}
+        </button>
+      )}
+    </div>
+  )
+}
+
 function GoogleCalendarSection() {
   const { user } = useAuth()
   const { push: toast } = useToast()
@@ -726,30 +768,38 @@ function GoogleCalendarSection() {
   useEffect(() => {
     if (!user) return
     ;(async () => {
-      const { data } = await supabase.from('profiles').select('google_calendar_enabled').eq('id', user.id).single()
-      if (data?.google_calendar_enabled) setConnected(true)
+      const [{ data: profileData }, { data: tokenData }] = await Promise.all([
+        supabase.from('profiles').select('google_calendar_enabled').eq('id', user.id).single(),
+        supabase.from('user_secrets').select('value').eq('user_id', user.id).eq('name', 'google_calendar_token').maybeSingle(),
+      ])
+      setConnected(Boolean(profileData?.google_calendar_enabled && tokenData?.value))
       setGcalLoading(false)
     })()
   }, [user])
 
   const connect = async () => {
     setSyncing(true)
-    // linkIdentity adds Google to the existing account without creating a new user
-    const { error } = await supabase.auth.linkIdentity({
-      provider: 'google',
-      options: {
-        scopes: GCAL_SCOPE,
-        redirectTo: isNative ? nativeRedirectUrl : window.location.origin,
-        queryParams: { access_type: 'offline', prompt: 'consent' },
-      },
-    })
+    const googleAlreadyLinked = user?.identities?.some(identity => identity.provider === 'google')
+    const oauthOptions = {
+      scopes: GCAL_SCOPE,
+      redirectTo: isNative ? nativeRedirectUrl : window.location.origin,
+      queryParams: { access_type: 'offline', prompt: 'consent' },
+      skipBrowserRedirect: isNative,
+    }
+    const { data, error } = googleAlreadyLinked
+      ? await supabase.auth.signInWithOAuth({ provider: 'google', options: oauthOptions })
+      : await supabase.auth.linkIdentity({ provider: 'google', options: oauthOptions })
+    if (!error && isNative && data.url) await Browser.open({ url: data.url })
     if (error) { toast({ icon: 'x', title: 'Error al conectar', body: error.message }); setSyncing(false) }
     // On success this redirects to Google — no further code runs here
   }
 
   const disconnect = async () => {
     if (!user) return
-    await supabase.from('profiles').update({ google_calendar_enabled: false }).eq('id', user.id)
+    await Promise.all([
+      supabase.from('profiles').update({ google_calendar_enabled: false }).eq('id', user.id),
+      supabase.from('user_secrets').delete().eq('user_id', user.id).like('name', 'google_calendar_%'),
+    ])
     setConnected(false)
   }
 

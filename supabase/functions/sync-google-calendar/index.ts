@@ -5,6 +5,29 @@ const CORS = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+const GOOGLE_CLIENT_ID = Deno.env.get('GOOGLE_CLIENT_ID')
+const GOOGLE_CLIENT_SECRET = Deno.env.get('GOOGLE_CLIENT_SECRET')
+
+async function refreshGoogleToken(refreshToken: string): Promise<{ accessToken: string; expiresAt: number }> {
+  if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) throw new Error('Google OAuth refresh is not configured')
+  const response = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      client_id: GOOGLE_CLIENT_ID,
+      client_secret: GOOGLE_CLIENT_SECRET,
+      refresh_token: refreshToken,
+      grant_type: 'refresh_token',
+    }),
+  })
+  const data = await response.json()
+  if (!response.ok || !data.access_token) throw new Error(`Google token refresh failed: ${JSON.stringify(data)}`)
+  return {
+    accessToken: data.access_token,
+    expiresAt: Date.now() + (Number(data.expires_in ?? 3600) - 60) * 1000,
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
 
@@ -33,13 +56,15 @@ Deno.serve(async (req) => {
     }
 
     // Read google_calendar_token from user_secrets (or legacy profiles column)
-    const { data: secret } = await supabase
+    const { data: secrets } = await supabase
       .from('user_secrets')
-      .select('value')
+      .select('name, value')
       .eq('user_id', user.id)
-      .eq('name', 'google_calendar_token')
-      .maybeSingle()
-    let provider_token = secret?.value
+      .in('name', ['google_calendar_token', 'google_calendar_refresh_token', 'google_calendar_token_expires_at'])
+    const secretMap = new Map((secrets ?? []).map(secret => [secret.name, secret.value]))
+    let provider_token = secretMap.get('google_calendar_token') ?? null
+    const refreshToken = secretMap.get('google_calendar_refresh_token') ?? null
+    const expiresAt = Number(secretMap.get('google_calendar_token_expires_at') ?? 0)
     if (!provider_token) {
       const { data: profile } = await supabase
         .from('profiles')
@@ -52,27 +77,47 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Google Calendar not connected' }), { status: 400, headers: CORS })
     }
 
+    if (refreshToken && expiresAt <= Date.now()) {
+      const refreshed = await refreshGoogleToken(refreshToken)
+      provider_token = refreshed.accessToken
+      await supabase.from('user_secrets').upsert([
+        { user_id: user.id, name: 'google_calendar_token', value: refreshed.accessToken },
+        { user_id: user.id, name: 'google_calendar_token_expires_at', value: String(refreshed.expiresAt) },
+      ], { onConflict: 'user_id,name' })
+    }
+
     // Build Google Calendar event
     const startDate = plan.plan_date.slice(0, 10)
+    const end = new Date(`${startDate}T00:00:00Z`)
+    end.setUTCDate(end.getUTCDate() + 1)
+    const endDate = end.toISOString().slice(0, 10)
     const event = {
       summary: plan.title,
       location: plan.place ?? undefined,
       description: plan.description ?? undefined,
       start: { date: startDate },
-      end: { date: startDate },
+      end: { date: endDate },
     }
 
-    const gcalRes = await fetch(
-      'https://www.googleapis.com/calendar/v3/calendars/primary/events',
-      {
+    const sendEvent = (token: string) => fetch(
+      'https://www.googleapis.com/calendar/v3/calendars/primary/events', {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${provider_token}`,
+          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(event),
-      }
-    )
+      })
+    let gcalRes = await sendEvent(provider_token)
+    if (gcalRes.status === 401 && refreshToken) {
+      const refreshed = await refreshGoogleToken(refreshToken)
+      provider_token = refreshed.accessToken
+      await supabase.from('user_secrets').upsert([
+        { user_id: user.id, name: 'google_calendar_token', value: refreshed.accessToken },
+        { user_id: user.id, name: 'google_calendar_token_expires_at', value: String(refreshed.expiresAt) },
+      ], { onConflict: 'user_id,name' })
+      gcalRes = await sendEvent(provider_token)
+    }
 
     if (!gcalRes.ok) {
       const errBody = await gcalRes.text()

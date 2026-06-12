@@ -10,12 +10,16 @@ export function Sheet({ onClose, children, height = 'auto', pad = true }: {
   const y = useMotionValue(0)
   const backdropOpacity = useTransform(y, [0, 500], [1, 0])
   const sheetRef = useRef<HTMLDivElement>(null)
+  const rootRef = useRef<HTMLDivElement>(null)
   const state = useRef({
-    startY: 0, startScroll: 0, dragging: false,
+    pointerId: -1, startY: 0, startScroll: 0, dragging: false,
     lastY: 0, lastTime: 0, velocity: 0,
   })
 
   const onPointerDown = (e: React.PointerEvent) => {
+    if (e.pointerType === 'mouse') return
+    state.current.pointerId = e.pointerId
+    e.currentTarget.setPointerCapture(e.pointerId)
     state.current.startY = e.clientY
     state.current.startScroll = sheetRef.current?.scrollTop ?? 0
     state.current.dragging = false
@@ -25,6 +29,7 @@ export function Sheet({ onClose, children, height = 'auto', pad = true }: {
   }
 
   const onPointerMove = (e: React.PointerEvent) => {
+    if (state.current.pointerId !== e.pointerId) return
     const el = sheetRef.current
     if (!el) return
     const dy = e.clientY - state.current.startY
@@ -56,11 +61,12 @@ export function Sheet({ onClose, children, height = 'auto', pad = true }: {
     el.scrollTop = newScroll
   }
 
-  const onPointerUp = () => {
+  const finishGesture = (e: React.PointerEvent, cancelled = false) => {
+    if (state.current.pointerId !== e.pointerId) return
     const el = sheetRef.current
-    if (state.current.dragging) {
+    if (state.current.dragging && !cancelled) {
       if (y.get() > 120 || Math.min(Math.max(state.current.velocity, -3000), 3000) > 800) {
-        y.set(window.innerHeight)
+        if (rootRef.current) rootRef.current.style.visibility = 'hidden'
         onClose()
       } else {
         animate(y, 0, {
@@ -70,14 +76,20 @@ export function Sheet({ onClose, children, height = 'auto', pad = true }: {
       }
       if (el) el.style.overflowY = ''
     }
+    if (cancelled) y.set(0)
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId)
+    state.current.pointerId = -1
     state.current.dragging = false
   }
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 95, pointerEvents: 'none', display: 'flex',
+    <div ref={rootRef} style={{ position: 'fixed', inset: 0, zIndex: 95, pointerEvents: 'none', display: 'flex',
       flexDirection: 'column', justifyContent: 'flex-end' }}>
       <motion.div
-        onClick={() => onClose()}
+        onClick={() => {
+          if (rootRef.current) rootRef.current.style.visibility = 'hidden'
+          onClose()
+        }}
         style={{ position: 'absolute', inset: 0, opacity: backdropOpacity, pointerEvents: 'auto',
           background: 'rgba(33,29,24,0.42)', }}
       />
@@ -89,8 +101,8 @@ export function Sheet({ onClose, children, height = 'auto', pad = true }: {
           paddingBottom: 24, touchAction: 'none', willChange: 'transform' }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerLeave={onPointerUp}
+        onPointerUp={finishGesture}
+        onPointerCancel={e => finishGesture(e, true)}
       >
         <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 4px', flexShrink: 0 }}>
           <div style={{ width: 40, height: 5, borderRadius: 3, background: 'var(--line)' }} />

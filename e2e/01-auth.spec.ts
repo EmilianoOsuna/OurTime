@@ -97,6 +97,9 @@ test.describe('Auth — Flujo de registro', () => {
 test.describe('Auth — Flujo de login', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/')
+    const startButton = page.getByRole('button', { name: 'Empezar', exact: true })
+    await expect(startButton).toBeVisible()
+    await startButton.click()
     await expect(page.getByText('Ya tengo cuenta — Iniciar sesión')).toBeVisible()
     await page.getByText('Ya tengo cuenta — Iniciar sesión').click()
   })
@@ -152,6 +155,18 @@ test.describe('Auth — Flujo de login', () => {
     await page.getByRole('button', { name: /Entrar/i }).click()
     // FAB is unique to the authenticated AppShell — no ambiguity
     await expect(page.locator('[data-testid="fab-btn"]')).toBeVisible({ timeout: 20_000 })
+  })
+
+  test('mantiene la sesión después de recargar la página', async ({ page }) => {
+    await page.getByPlaceholder('mateo@correo.com').fill(TEST_EMAIL)
+    await page.getByPlaceholder('Tu contraseña').fill(TEST_PASSWORD)
+    await page.getByRole('button', { name: /Entrar/i }).click()
+    await expect(page.locator('[data-testid="fab-btn"]')).toBeVisible({ timeout: 20_000 })
+
+    await page.reload()
+
+    await expect(page.locator('[data-testid="fab-btn"]')).toBeVisible({ timeout: 20_000 })
+    await expect(page.getByText('Ya tengo cuenta — Iniciar sesión')).not.toBeVisible()
   })
 })
 

@@ -673,13 +673,16 @@ function StorySwitcherSheet({ stories, activeStoryId, adminStoryIds, onSelect, o
 }) {
   const y = useMotionValue(0)
   const backdropOpacity = useTransform(y, [0, 500], [1, 0])
+  const rootRef = useRef<HTMLDivElement>(null)
   const dragState = useRef({
-    startY: 0, dragging: false,
+    pointerId: -1, startY: 0, dragging: false,
     lastY: 0, lastTime: 0, velocity: 0,
   })
 
   const dragPointerDown = (e: React.PointerEvent) => {
     if (e.pointerType === 'mouse') return
+    dragState.current.pointerId = e.pointerId
+    e.currentTarget.setPointerCapture(e.pointerId)
     dragState.current.startY = e.clientY
     dragState.current.dragging = false
     dragState.current.lastY = e.clientY
@@ -687,6 +690,7 @@ function StorySwitcherSheet({ stories, activeStoryId, adminStoryIds, onSelect, o
     dragState.current.velocity = 0
   }
   const dragPointerMove = (e: React.PointerEvent) => {
+    if (dragState.current.pointerId !== e.pointerId) return
     const dy = e.clientY - dragState.current.startY
     if (dy > 5) dragState.current.dragging = true
     if (dragState.current.dragging) {
@@ -701,11 +705,12 @@ function StorySwitcherSheet({ stories, activeStoryId, adminStoryIds, onSelect, o
       }
     }
   }
-  const dragPointerUp = () => {
-    if (dragState.current.dragging) {
+  const dragPointerUp = (e: React.PointerEvent, cancelled = false) => {
+    if (dragState.current.pointerId !== e.pointerId) return
+    if (dragState.current.dragging && !cancelled) {
       const vy = Math.min(Math.max(dragState.current.velocity, -3000), 3000)
       if (y.get() > 120 || vy > 800) {
-        y.set(window.innerHeight)
+        if (rootRef.current) rootRef.current.style.visibility = 'hidden'
         onClose()
       } else {
         animate(y, 0, {
@@ -714,20 +719,23 @@ function StorySwitcherSheet({ stories, activeStoryId, adminStoryIds, onSelect, o
         })
       }
     }
+    if (cancelled) y.set(0)
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId)
+    dragState.current.pointerId = -1
     dragState.current.dragging = false
   }
 
   const dragProps = {
     onPointerDown: dragPointerDown, onPointerMove: dragPointerMove,
-    onPointerUp: dragPointerUp, onPointerLeave: dragPointerUp,
+    onPointerUp: dragPointerUp, onPointerCancel: (e: React.PointerEvent) => dragPointerUp(e, true),
   }
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 85, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+    <div ref={rootRef} style={{ position: 'fixed', inset: 0, zIndex: 85, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
       <motion.div style={{ position: 'absolute', inset: 0, opacity: backdropOpacity,
         background: 'rgba(0,0,0,0.4)', }} onClick={() => {
-          const h = window.innerHeight
-          animate(y, h, { type: 'spring', damping: 30, stiffness: 250, mass: 0.8 }).then(() => onClose())
+          if (rootRef.current) rootRef.current.style.visibility = 'hidden'
+          onClose()
         }} />
       <motion.div
         style={{ y, touchAction: 'none', position: 'relative', background: 'var(--card)',

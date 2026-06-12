@@ -1,6 +1,5 @@
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-// @ts-ignore — web-push via npm specifier
+import { createClient } from 'npm:@supabase/supabase-js@2'
+// @ts-expect-error Deno resolves this package at Edge Function runtime.
 import webpush from 'npm:web-push@3'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
@@ -109,12 +108,12 @@ async function sendFCM(deviceToken: string, title: string, body: string, tag: st
 
   if (!res.ok) {
     const err = await res.text()
-    console.error('FCM send error:', err)
+    throw new Error(`FCM send error: ${err}`)
   }
   return res
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   try {
@@ -173,7 +172,8 @@ serve(async (req) => {
     )
 
     const sent = results.filter(r => r.status === 'fulfilled').length
-    return new Response(JSON.stringify({ sent, total: profiles.length }), { status: 200, headers: corsHeaders })
+    const failed = results.filter(r => r.status === 'rejected').map(r => (r as PromiseRejectedResult).reason?.message ?? String((r as PromiseRejectedResult).reason))
+    return new Response(JSON.stringify({ sent, total: profiles.length, failed }), { status: 200, headers: corsHeaders })
   } catch (e) {
     return new Response(JSON.stringify({ error: (e as Error).message }), {
       status: 500, headers: corsHeaders,

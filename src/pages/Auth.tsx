@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase, nativeRedirectUrl } from '../lib/supabase'
-import { isNative } from '../lib/native'
+import { Browser, isNative } from '../lib/native'
 import { Icon } from '../components/ui/Icon'
 
 type Flow = 'welcome' | 'register' | 'login' | 'forgot'
@@ -85,13 +85,15 @@ export default function Auth({ onAuth }: { onAuth: () => void }) {
     setLoading(true)
     setError('')
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: isNative ? nativeRedirectUrl : window.location.origin,
+          skipBrowserRedirect: isNative,
         },
       })
       if (error) throw error
+      if (isNative && data.url) await Browser.open({ url: data.url })
     } catch (e: any) { setError(e.message); setLoading(false) }
   }
 

@@ -23,6 +23,8 @@ export const isNative = Capacitor.isNativePlatform()
 export const isWeb = !isNative
 
 let onBackPress: (() => boolean) | null = null
+const PUSH_TOKEN_KEY = 'ourtime_push_token'
+let pushListenersReady = false
 
 export function setBackHandler(handler: () => boolean) {
   onBackPress = handler
@@ -31,7 +33,7 @@ export function setBackHandler(handler: () => boolean) {
 export async function setupNativeApp() {
   if (!isNative) return
   setTimeout(() => SplashScreen.hide(), 500)
-  registerPushNotifications().catch(console.error)
+  setupPushListeners().catch(console.error)
   App.addListener('appStateChange', ({ isActive }) => {
     console.log(`[DIAG] appStateChange: isActive=${isActive}`)
     if (isActive) {
@@ -64,6 +66,18 @@ export async function setupNativeApp() {
             name: 'google_calendar_token',
             value: authData.session.provider_token,
           }, { onConflict: 'user_id,name' })
+          if (authData.session.provider_refresh_token) {
+            await supabase.from('user_secrets').upsert({
+              user_id: authData.session.user.id,
+              name: 'google_calendar_refresh_token',
+              value: authData.session.provider_refresh_token,
+            }, { onConflict: 'user_id,name' })
+          }
+          await supabase.from('user_secrets').upsert({
+            user_id: authData.session.user.id,
+            name: 'google_calendar_token_expires_at',
+            value: String(Date.now() + 50 * 60 * 1000),
+          }, { onConflict: 'user_id,name' })
           const updates: Record<string, unknown> = {
             google_calendar_enabled: true,
           }
@@ -76,6 +90,7 @@ export async function setupNativeApp() {
           }
           supabase.from('profiles').update(updates).eq('id', authData.session.user.id).then(undefined, console.error)
         }
+        await Browser.close().catch(() => {})
         return
       }
 
@@ -93,22 +108,27 @@ export async function setupNativeApp() {
   })
 }
 
-export async function registerPushNotifications(): Promise<void> {
+async function savePushToken(token: string): Promise<void> {
+  await Preferences.set({ key: PUSH_TOKEN_KEY, value: token })
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+  const { error } = await supabase.from('profiles')
+    .update({ push_subscription: { platform: Capacitor.getPlatform(), token } as never })
+    .eq('id', user.id)
+  if (error) throw error
+}
+
+async function setupPushListeners(): Promise<void> {
+  if (!isNative || pushListenersReady) return
+  pushListenersReady = true
   if (!isNative) return
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const PN: any = PushNotifications
-  const perm = await PN.requestPermissions()
-  if (perm.receive !== 'granted') return
-
-  await PN.register()
-
   PN.addListener('registration', async ({ value }: any) => {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-    const sub = { platform: Capacitor.getPlatform(), token: value }
-    supabase.from('profiles').update({ push_subscription: sub as never })
-      .eq('id', user.id).then(undefined, console.error)
+    await savePushToken(value).catch(console.error)
   })
+
+  PN.addListener('registrationError', (error: unknown) => console.error('Push registration error:', error))
 
   PN.addListener('pushNotificationReceived', (notification: any) => {
     console.log('Push received:', notification)
@@ -117,6 +137,34 @@ export async function registerPushNotifications(): Promise<void> {
   PN.addListener('pushNotificationActionPerformed', (action: any) => {
     console.log('Push action:', action)
   })
+}
+
+export async function syncNativePushToken(): Promise<boolean> {
+  if (!isNative) return false
+  await setupPushListeners()
+  const { value: token } = await Preferences.get({ key: PUSH_TOKEN_KEY })
+  if (!token) return false
+  await savePushToken(token)
+  return true
+}
+
+export async function enableNativePushNotifications(): Promise<boolean> {
+  if (!isNative) return false
+  await setupPushListeners()
+  const permission = await PushNotifications.requestPermissions()
+  if (permission.receive !== 'granted') return false
+  if (Capacitor.getPlatform() === 'android') {
+    await PushNotifications.createChannel({
+      id: 'ourtime_messages',
+      name: 'Actividad de OurTime',
+      description: 'Mensajes, momentos y actividad de tus historias',
+      importance: 4,
+      visibility: 1,
+      vibration: true,
+    })
+  }
+  await PushNotifications.register()
+  return true
 }
 
 export {
