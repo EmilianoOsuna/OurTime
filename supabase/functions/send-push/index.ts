@@ -8,6 +8,7 @@ const VAPID_PUBLIC_KEY = Deno.env.get('VAPID_PUBLIC_KEY')!
 const VAPID_PRIVATE_KEY = Deno.env.get('VAPID_PRIVATE_KEY')!
 const VAPID_SUBJECT = Deno.env.get('VAPID_SUBJECT') ?? 'mailto:emilianingo2@gmail.com'
 const FCM_SERVICE_ACCOUNT_JSON = Deno.env.get('FCM_SERVICE_ACCOUNT')
+const FCM_SERVICE_ACCOUNT_B64 = Deno.env.get('FCM_SERVICE_ACCOUNT_B64')
 
 const RATE_LIMIT_WINDOW_MS = 60_000
 const RATE_LIMIT_MAX = 10
@@ -22,7 +23,16 @@ const corsHeaders = {
 let _fcmToken: { access_token: string; expires_at: number } | null = null
 
 function getFCMServiceAccount(): Record<string, string> {
-  if (!FCM_SERVICE_ACCOUNT_JSON) throw new Error('FCM_SERVICE_ACCOUNT not configured')
+  if (FCM_SERVICE_ACCOUNT_B64) {
+    const decoded = Uint8Array.from(atob(FCM_SERVICE_ACCOUNT_B64), char => char.charCodeAt(0))
+    const parsed = JSON.parse(new TextDecoder().decode(decoded))
+    if (!parsed?.project_id || !parsed?.client_email || !parsed?.private_key || !parsed?.token_uri) {
+      throw new Error('FCM_SERVICE_ACCOUNT_B64 is missing required fields')
+    }
+    return parsed
+  }
+
+  if (!FCM_SERVICE_ACCOUNT_JSON) throw new Error('Firebase service account not configured')
 
   const raw = FCM_SERVICE_ACCOUNT_JSON.trim()
   const unquoted = raw.length > 1 && raw.startsWith('"') && raw.endsWith('"')
