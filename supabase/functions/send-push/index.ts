@@ -92,7 +92,7 @@ async function sendFCM(deviceToken: string, title: string, body: string, tag: st
     message: {
       token: deviceToken,
       notification: { title, body },
-      android: { notification: { sound: 'default', tag, channelId: 'ourtime_messages' } },
+      android: { notification: { sound: 'default', tag, channel_id: 'ourtime_messages' } },
       data: { url },
     },
   }
@@ -126,54 +126,76 @@ Deno.serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) throw new Error('Unauthorized')
 
-    const { story_id, title, body, url } = await req.json()
+    const { story_id, title, body, url, test_self } = await req.json()
     const sender_id = user.id
 
-    const { count: recentCount, error: countErr } = await supabase
-      .from('notifications')
-      .select('id', { count: 'exact', head: true })
-      .eq('actor_id', sender_id)
-      .gte('created_at', new Date(Date.now() - RATE_LIMIT_WINDOW_MS).toISOString())
-    if (countErr) throw countErr
-    if (recentCount !== null && recentCount >= RATE_LIMIT_MAX) {
-      return new Response(JSON.stringify({ error: 'Demasiadas notificaciones. Esperá un momento.' }), {
-        status: 429, headers: corsHeaders,
-      })
+    if (test_self !== true) {
+      const { count: recentCount, error: countErr } = await supabase
+        .from('notifications')
+        .select('id', { count: 'exact', head: true })
+        .eq('actor_id', sender_id)
+        .gte('created_at', new Date(Date.now() - RATE_LIMIT_WINDOW_MS).toISOString())
+      if (countErr) throw countErr
+      if (recentCount !== null && recentCount >= RATE_LIMIT_MAX) {
+        return new Response(JSON.stringify({ error: 'Demasiadas notificaciones. Esperá un momento.' }), {
+          status: 429, headers: corsHeaders,
+        })
+      }
     }
 
-    const { data: members } = await supabase
-      .from('story_members')
-      .select('user_id')
-      .eq('story_id', story_id)
-      .neq('user_id', sender_id)
+    let userIds: string[]
+    if (test_self === true) {
+      userIds = [sender_id]
+    } else {
+      if (!story_id) throw new Error('Missing story_id')
+      const { data: membership, error: membershipError } = await supabase
+        .from('story_members')
+        .select('user_id')
+        .eq('story_id', story_id)
+        .eq('user_id', sender_id)
+        .maybeSingle()
+      if (membershipError) throw membershipError
+      if (!membership) throw new Error('Forbidden')
 
-    if (!members?.length) return new Response('No recipients', { status: 200, headers: corsHeaders })
+      const { data: members, error: membersError } = await supabase
+        .from('story_members')
+        .select('user_id')
+        .eq('story_id', story_id)
+        .neq('user_id', sender_id)
+      if (membersError) throw membersError
+      userIds = members?.map(m => m.user_id) ?? []
+    }
 
-    const userIds = members.map(m => m.user_id)
+    if (!userIds.length) return Response.json({ sent: 0, total: 0, failed: [], reason: 'No recipients' }, { headers: corsHeaders })
     const { data: profiles } = await supabase
       .from('profiles')
       .select('id, push_subscription')
       .in('id', userIds)
       .not('push_subscription', 'is', null)
 
-    if (!profiles?.length) return new Response('No subscriptions', { status: 200, headers: corsHeaders })
+    if (!profiles?.length) return Response.json({ sent: 0, total: 0, failed: [], reason: 'No subscriptions' }, { headers: corsHeaders })
+
+    const deliveries = profiles.flatMap(profile => {
+      const stored = profile.push_subscription
+      const subscriptions = Array.isArray(stored) ? stored : [stored]
+      return subscriptions.filter(Boolean).map(sub => ({ profileId: profile.id, sub }))
+    })
 
     const results = await Promise.allSettled(
-      profiles.map(p => {
-        const sub = p.push_subscription
+      deliveries.map(({ sub }) => {
         if (sub.endpoint) {
           return webpush.sendNotification(sub, JSON.stringify({ title, body, tag: story_id, url: url ?? '/' }))
         }
         if (sub.platform === 'android' && sub.token) {
           return sendFCM(sub.token, title, body, story_id, url ?? '/')
         }
-        return Promise.resolve()
+        return Promise.reject(new Error('Unsupported push subscription'))
       })
     )
 
     const sent = results.filter(r => r.status === 'fulfilled').length
     const failed = results.filter(r => r.status === 'rejected').map(r => (r as PromiseRejectedResult).reason?.message ?? String((r as PromiseRejectedResult).reason))
-    return new Response(JSON.stringify({ sent, total: profiles.length, failed }), { status: 200, headers: corsHeaders })
+    return Response.json({ sent, total: deliveries.length, failed }, { headers: corsHeaders })
   } catch (e) {
     return new Response(JSON.stringify({ error: (e as Error).message }), {
       status: 500, headers: corsHeaders,

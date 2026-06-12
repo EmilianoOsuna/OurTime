@@ -11,7 +11,7 @@ import { supabase, nativeRedirectUrl } from '../lib/supabase'
 import { Browser, isNative } from '../lib/native'
 import type { PlanType, PersonDisplay, StoryType } from '../lib/supabase'
 import { useToast } from '../context/ToastContext'
-import { usePushNotifications } from '../lib/usePushNotifications'
+import { sendTestPushNotification, usePushNotifications } from '../lib/usePushNotifications'
 
 const CAT_COLOR: Record<string, string> = {
   pareja:  'var(--orange)',
@@ -721,6 +721,7 @@ const GCAL_SCOPE = 'https://www.googleapis.com/auth/calendar.events'
 function PushNotificationsSection() {
   const { push: toast } = useToast()
   const { enabled, permission, loading, enable } = usePushNotifications()
+  const [testing, setTesting] = useState(false)
 
   const activate = async () => {
     try {
@@ -730,6 +731,18 @@ function PushNotificationsSection() {
         : { icon: 'x', title: 'Permiso no concedido', body: 'Activa las notificaciones desde los ajustes del dispositivo.' })
     } catch (error) {
       toast({ icon: 'x', title: 'No se pudieron activar', body: error instanceof Error ? error.message : 'Inténtalo de nuevo.' })
+    }
+  }
+
+  const testNotification = async () => {
+    setTesting(true)
+    try {
+      await sendTestPushNotification()
+      toast({ icon: 'check', title: 'Prueba enviada', body: 'La notificación debe aparecer en unos segundos.' })
+    } catch (error) {
+      toast({ icon: 'x', title: 'Falló la prueba', body: error instanceof Error ? error.message : 'No se pudo enviar.' })
+    } finally {
+      setTesting(false)
     }
   }
 
@@ -745,13 +758,21 @@ function PushNotificationsSection() {
           {enabled ? 'Activadas en este dispositivo' : permission === 'denied' ? 'Bloqueadas en los ajustes' : 'Recibe avisos de nuevos momentos y mensajes'}
         </div>
       </div>
-      {!enabled && (
+      {!enabled ? (
         <button onClick={activate} disabled={loading || permission === 'unsupported'} style={{
           border: 'none', background: 'var(--orange)', borderRadius: 10, padding: '8px 12px',
           fontSize: 12.5, fontWeight: 700, color: '#fff', cursor: 'pointer', fontFamily: 'var(--font-ui)',
           opacity: loading || permission === 'unsupported' ? 0.6 : 1,
         }}>
           {loading ? '…' : 'Activar'}
+        </button>
+      ) : (
+        <button onClick={testNotification} disabled={testing} style={{
+          border: '1px solid var(--line)', background: 'var(--card-2)', borderRadius: 10, padding: '8px 12px',
+          fontSize: 12.5, fontWeight: 700, color: 'var(--ink)', cursor: 'pointer', fontFamily: 'var(--font-ui)',
+          opacity: testing ? 0.6 : 1,
+        }}>
+          {testing ? '…' : 'Probar'}
         </button>
       )}
     </div>

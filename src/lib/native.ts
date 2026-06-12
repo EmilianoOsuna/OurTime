@@ -18,6 +18,7 @@ import { Dialog } from '@capacitor/dialog'
 import { Network } from '@capacitor/network'
 import { Toast } from '@capacitor/toast'
 import { ScreenOrientation } from '@capacitor/screen-orientation'
+import { savePushSubscription } from './pushSubscriptions'
 
 export const isNative = Capacitor.isNativePlatform()
 export const isWeb = !isNative
@@ -25,6 +26,7 @@ export const isWeb = !isNative
 let onBackPress: (() => boolean) | null = null
 const PUSH_TOKEN_KEY = 'ourtime_push_token'
 let pushListenersReady = false
+let registrationWaiter: ((registered: boolean) => void) | null = null
 
 export function setBackHandler(handler: () => boolean) {
   onBackPress = handler
@@ -112,10 +114,8 @@ async function savePushToken(token: string): Promise<void> {
   await Preferences.set({ key: PUSH_TOKEN_KEY, value: token })
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return
-  const { error } = await supabase.from('profiles')
-    .update({ push_subscription: { platform: Capacitor.getPlatform(), token } as never })
-    .eq('id', user.id)
-  if (error) throw error
+  const { identifier: installationId } = await Device.getId()
+  await savePushSubscription(user.id, { platform: Capacitor.getPlatform(), token, installationId })
 }
 
 async function setupPushListeners(): Promise<void> {
@@ -125,10 +125,22 @@ async function setupPushListeners(): Promise<void> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const PN: any = PushNotifications
   PN.addListener('registration', async ({ value }: any) => {
-    await savePushToken(value).catch(console.error)
+    try {
+      await savePushToken(value)
+      registrationWaiter?.(true)
+    } catch (error) {
+      console.error(error)
+      registrationWaiter?.(false)
+    } finally {
+      registrationWaiter = null
+    }
   })
 
-  PN.addListener('registrationError', (error: unknown) => console.error('Push registration error:', error))
+  PN.addListener('registrationError', (error: unknown) => {
+    console.error('Push registration error:', error)
+    registrationWaiter?.(false)
+    registrationWaiter = null
+  })
 
   PN.addListener('pushNotificationReceived', (notification: any) => {
     console.log('Push received:', notification)
@@ -163,8 +175,16 @@ export async function enableNativePushNotifications(): Promise<boolean> {
       vibration: true,
     })
   }
+  const registered = new Promise<boolean>(resolve => {
+    registrationWaiter = resolve
+    setTimeout(() => {
+      if (!registrationWaiter) return
+      registrationWaiter = null
+      resolve(false)
+    }, 15_000)
+  })
   await PushNotifications.register()
-  return true
+  return registered
 }
 
 export {

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { supabase } from './supabase'
 import { useAuth } from '../context/AuthContext'
 import { enableNativePushNotifications, isNative, syncNativePushToken } from './native'
+import { savePushSubscription } from './pushSubscriptions'
 
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined
 
@@ -35,10 +36,7 @@ export function usePushNotifications() {
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) as BufferSource,
     })
-    const { error } = await supabase.from('profiles')
-      .update({ push_subscription: JSON.parse(JSON.stringify(sub)) })
-      .eq('id', user.id)
-    if (error) throw error
+    await savePushSubscription(user.id, JSON.parse(JSON.stringify(sub)))
     setEnabled(true)
     return true
   }, [user])
@@ -89,6 +87,24 @@ export async function sendPushToStoryMembers(
     body: { story_id: storyId, sender_id: senderId, title, body, url },
   })
   if (error) throw error
+  if (data?.failed?.length) throw new Error(data.failed.join('\n'))
+  return data
+}
+
+export async function sendTestPushNotification() {
+  const { data, error } = await supabase.functions.invoke('send-push', {
+    body: {
+      test_self: true,
+      title: 'OurTime está listo',
+      body: 'Las notificaciones funcionan correctamente en este dispositivo.',
+      url: '/',
+    },
+  })
+  if (error) throw error
+  if (!data || data.sent < 1) {
+    const detail = data?.failed?.join('\n') || 'Este dispositivo todavía no tiene una suscripción registrada.'
+    throw new Error(detail)
+  }
   return data
 }
 
