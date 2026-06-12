@@ -13,14 +13,26 @@ precacheAndRoute(self.__WB_MANIFEST)
 self.addEventListener('install', () => self.skipWaiting())
 self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()))
 
-// Supabase API — Network first
+// Supabase API — Network first, but skip auth endpoints to avoid session issues
 registerRoute(
-  ({ url }) => url.hostname.endsWith('.supabase.co'),
+  ({ url }) => url.hostname.endsWith('.supabase.co') && !url.pathname.includes('/auth/'),
   new NetworkFirst({
     cacheName: 'supabase-api',
     networkTimeoutSeconds: 10,
     plugins: [
       new ExpirationPlugin({ maxEntries: 100, maxAgeSeconds: 86400 }),
+      new CacheableResponsePlugin({ statuses: [0, 200] }),
+    ],
+  })
+)
+
+// Supabase Auth — Network only (no caching)
+registerRoute(
+  ({ url }) => url.hostname.endsWith('.supabase.co') && url.pathname.includes('/auth/'),
+  new NetworkFirst({
+    cacheName: 'supabase-auth',
+    networkTimeoutSeconds: 30,
+    plugins: [
       new CacheableResponsePlugin({ statuses: [0, 200] }),
     ],
   })

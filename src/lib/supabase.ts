@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { Capacitor } from '@capacitor/core'
+import { capacitorStorageAdapter } from './capacitorStorageAdapter'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -9,17 +10,51 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 const isNative = Capacitor.isNativePlatform()
+console.log(`[DIAG] isNative=${isNative}, supabaseUrl=${supabaseUrl}`)
+
+const pwaStorageAdapter = {
+  getItem: async (key: string): Promise<string | null> => {
+    try {
+      const value = localStorage.getItem(key)
+      console.log(`[DIAG] pwaStorage.getItem("${key}") →`, value ? `found (${value.slice(0, 40)}...)` : 'null')
+      return value
+    } catch (e) {
+      console.error('[DIAG] pwaStorage.getItem error:', e)
+      return null
+    }
+  },
+  setItem: async (key: string, value: string): Promise<void> => {
+    try {
+      console.log(`[DIAG] pwaStorage.setItem("${key}", ${value.slice(0, 40)}...)`)
+      localStorage.setItem(key, value)
+    } catch (e) {
+      console.error('[DIAG] pwaStorage.setItem error:', e)
+    }
+  },
+  removeItem: async (key: string): Promise<void> => {
+    try {
+      console.log(`[DIAG] pwaStorage.removeItem("${key}")`)
+      localStorage.removeItem(key)
+    } catch (e) {
+      console.error('[DIAG] pwaStorage.removeItem error:', e)
+    }
+  },
+}
 
 export const supabase = createClient(
   supabaseUrl || '',
   supabaseAnonKey || '',
   {
     auth: {
-      detectSessionInUrl: !isNative,
-      flowType: isNative ? 'pkce' : 'implicit',
+      storage: isNative ? capacitorStorageAdapter : pwaStorageAdapter,
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true,
+      flowType: 'pkce',
     },
   }
 )
+console.log(`[DIAG] supabase client created, storage=`, isNative ? 'capacitorStorageAdapter' : 'pwaStorageAdapter (localStorage)')
 
 export const nativeRedirectUrl = 'ourtime://callback'
 

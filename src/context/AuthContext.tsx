@@ -55,43 +55,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [])
 
   useEffect(() => {
-    // Clear malformed sessions (missing required fields) — not expired ones
-    for (let i = localStorage.length - 1; i >= 0; i--) {
-      const k = localStorage.key(i)
-      if (!k?.startsWith('sb-') || k.endsWith('-user')) continue
-      try {
-        const raw = localStorage.getItem(k)
-        if (raw) {
-          const parsed = JSON.parse(raw)
-          if (!parsed?.access_token || !parsed?.refresh_token || !parsed?.expires_at) {
-            localStorage.removeItem(k)
-            localStorage.removeItem(k + '-user')
-          }
-        }
-      } catch {
-        localStorage.removeItem(k)
-        localStorage.removeItem(k + '-user')
-      }
-    }
+    console.log('[DIAG] AuthProvider mounted, isLoading=true')
 
     const timeout = setTimeout(() => {
-      // Safety net: if nothing resolved in 10s, clear stale session so next load is clean
+      console.log('[DIAG] ⏰ 30s safety timeout fired! fetchedRef.current=', fetchedRef.current)
       if (!fetchedRef.current) {
-        for (let i = localStorage.length - 1; i >= 0; i--) {
-          const k = localStorage.key(i)
-          if (k?.startsWith('sb-')) { localStorage.removeItem(k); localStorage.removeItem(k + '-user') }
-        }
         fetchedRef.current = true
+        setIsLoading(false)
       }
-      setIsLoading(false)
-    }, 10000)
+    }, 30000)
 
     const fetchWithTimeout = <T,>(promise: Promise<T>, ms: number) => {
       const timer = setTimeout(() => {
-        setSession(null)
-        setUser(null)
-        setProfile(null)
-        setStories([])
+        console.log('[DIAG] ⏰ fetchWithTimeout fired after', ms, 'ms — keeping session, only stopping loading')
         setIsLoading(false)
       }, ms)
       return promise.finally(() => clearTimeout(timer))
@@ -99,27 +75,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       clearTimeout(timeout)
+      console.log('[DIAG] getSession() resolved. session=', session ? `found (user=${session.user.id})` : 'null')
       setSession(session)
       setUser(session?.user ?? null)
       if (session?.user) {
         fetchedRef.current = true
         setIsLoading(true)
-        fetchWithTimeout(fetchProfileAndStories(session.user.id), 8000)
+        console.log('[DIAG] session found, fetching profile+stories...')
+        fetchWithTimeout(fetchProfileAndStories(session.user.id), 15000)
       } else {
+        console.log('[DIAG] no session, setting isLoading=false')
         setIsLoading(false)
       }
-    }, () => {
+    }, (err) => {
       clearTimeout(timeout)
+      console.log('[DIAG] getSession() rejected:', err)
       setIsLoading(false)
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log(`[DIAG] onAuthStateChange: event="${event}", session=`, session ? 'exists' : 'null')
         setSession(session)
         setUser(session?.user ?? null)
         if (session?.user) {
-          // Only block initial replay; always allow fresh SIGNED_IN after timeout
-          if (fetchedRef.current && (event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED')) return
+          if (fetchedRef.current && (event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED')) {
+            console.log('[DIAG] ignoring redundant event:', event)
+            return
+          }
+          console.log('[DIAG] processing auth event, fetching profile+stories...')
           fetchedRef.current = true
           setIsLoading(true)
           fetchWithTimeout(fetchProfileAndStories(session.user.id), 8000)
@@ -154,6 +138,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [])
 
   const fetchProfileAndStories = async (userId: string) => {
+    console.log('[DIAG] fetchProfileAndStories start, userId=', userId)
     try {
       const [{ data: profileData }, { data: memberships }] = await Promise.all([
         supabase.from('profiles').select('*').eq('id', userId).single(),
@@ -161,6 +146,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .select('story_id, stories(*)')
           .eq('user_id', userId),
       ])
+
+      console.log('[DIAG] fetchProfileAndStories results: profile=', profileData ? 'found' : 'null', 'stories=', memberships?.length ?? 0)
 
       if (profileData) setProfile(profileData as ProfileType)
 
@@ -177,8 +164,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem('activeStoryId', storyList[0].id)
       }
     } catch (e) {
-      console.error(e)
+      console.error('[DIAG] fetchProfileAndStories error:', e)
     } finally {
+      console.log('[DIAG] fetchProfileAndStories complete, isLoading=false')
       setIsLoading(false)
     }
   }
@@ -210,7 +198,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [user, activeStoryId])
 
   const signOut = async () => {
-    // Clear state immediately so UI responds without waiting for network
+    console.log('[DIAG] signOut called')
     setSession(null)
     setUser(null)
     _setActiveStoryId(null)
@@ -218,7 +206,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setProfile(null)
     setIsLoading(false)
     localStorage.removeItem('activeStoryId')
-    // Fire-and-forget with 5s timeout (clears server-side session)
     Promise.race([
       supabase.auth.signOut(),
       new Promise(resolve => setTimeout(resolve, 5000)),

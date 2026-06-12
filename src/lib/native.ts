@@ -1,5 +1,5 @@
 import { Capacitor } from '@capacitor/core'
-import { supabase, nativeRedirectUrl } from './supabase'
+import { supabase } from './supabase'
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera'
 import { Geolocation } from '@capacitor/geolocation'
 import { Filesystem, Directory } from '@capacitor/filesystem'
@@ -32,51 +32,62 @@ export async function setupNativeApp() {
   if (!isNative) return
   setTimeout(() => SplashScreen.hide(), 500)
   registerPushNotifications().catch(console.error)
+  App.addListener('appStateChange', ({ isActive }) => {
+    console.log(`[DIAG] appStateChange: isActive=${isActive}`)
+    if (isActive) {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        console.log('[DIAG] appStateChange getSession:', session ? `session found (user=${session.user.id})` : 'no session')
+      })
+    }
+  })
   App.addListener('backButton', () => {
     const handled = onBackPress?.() ?? false
     if (!handled) App.exitApp()
   })
   App.addListener('appUrlOpen', async (data) => {
-    if (!data.url.startsWith(nativeRedirectUrl)) return
+    const rawUrl = data.url
+    console.log('[DIAG] appUrlOpen fired, url=', rawUrl)
 
-    const url = new URL(data.url)
-    const errorDesc = url.searchParams.get('error_description') || url.searchParams.get('error')
-    if (errorDesc) { console.error('OAuth error:', errorDesc); return }
+    if (rawUrl.includes('code=') || rawUrl.includes('access_token')) {
+      const url = new URL(rawUrl)
+      console.log('[DIAG] appUrlOpen: found code= or access_token in URL')
 
-    // PKCE flow — exchange code for session
-    const code = url.searchParams.get('code')
-    if (code) {
-      const { data: authData, error } = await supabase.auth.exchangeCodeForSession(code)
-      // If this was a Google Calendar linkIdentity, save the provider_token immediately
-      if (!error && authData?.session?.provider_token && authData.session.user) {
-        await supabase.from('user_secrets').upsert({
-          user_id: authData.session.user.id,
-          name: 'google_calendar_token',
-          value: authData.session.provider_token,
-        }, { onConflict: 'user_id,name' })
-        const updates: Record<string, unknown> = {
-          google_calendar_enabled: true,
+      const code = url.searchParams.get('code')
+      if (code) {
+        console.log('[DIAG] appUrlOpen: calling exchangeCodeForSession with code=', code.slice(0, 20) + '...')
+        const { data: authData, error } = await supabase.auth.exchangeCodeForSession(code)
+        console.log('[DIAG] exchangeCodeForSession result: error=', error ?? 'none', 'session=', authData?.session ? 'obtained' : 'null')
+        // If this was a Google Calendar linkIdentity, save the provider_token immediately
+        if (!error && authData?.session?.provider_token && authData.session.user) {
+          await supabase.from('user_secrets').upsert({
+            user_id: authData.session.user.id,
+            name: 'google_calendar_token',
+            value: authData.session.provider_token,
+          }, { onConflict: 'user_id,name' })
+          const updates: Record<string, unknown> = {
+            google_calendar_enabled: true,
+          }
+          const googleAvatar = authData.session.user.user_metadata?.avatar_url as string | undefined
+                            ?? authData.session.user.user_metadata?.picture as string | undefined
+          if (googleAvatar) {
+            const { data: existing } = await supabase
+              .from('profiles').select('avatar_url').eq('id', authData.session.user.id).single()
+            if (!existing?.avatar_url) updates.avatar_url = googleAvatar
+          }
+          supabase.from('profiles').update(updates).eq('id', authData.session.user.id).then(undefined, console.error)
         }
-        const googleAvatar = authData.session.user.user_metadata?.avatar_url as string | undefined
-                          ?? authData.session.user.user_metadata?.picture as string | undefined
-        if (googleAvatar) {
-          const { data: existing } = await supabase
-            .from('profiles').select('avatar_url').eq('id', authData.session.user.id).single()
-          if (!existing?.avatar_url) updates.avatar_url = googleAvatar
-        }
-        supabase.from('profiles').update(updates).eq('id', authData.session.user.id).then(undefined, console.error)
+        return
       }
-      return
-    }
 
-    // Implicit flow fallback — tokens in hash fragment
-    const hash = data.url.includes('#') ? data.url.split('#')[1] : ''
-    if (hash) {
-      const params = new URLSearchParams(hash)
-      const accessToken = params.get('access_token')
-      const refreshToken = params.get('refresh_token')
-      if (accessToken) {
-        await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken ?? '' })
+      // Implicit flow fallback — tokens in hash fragment
+      const hash = rawUrl.includes('#') ? rawUrl.split('#')[1] : ''
+      if (hash) {
+        const params = new URLSearchParams(hash)
+        const accessToken = params.get('access_token')
+        const refreshToken = params.get('refresh_token')
+        if (accessToken) {
+          await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken ?? '' })
+        }
       }
     }
   })
