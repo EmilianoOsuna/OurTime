@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from './supabase'
 import { useAuth } from '../context/AuthContext'
-import { enableNativePushNotifications, isNative, syncNativePushToken } from './native'
+import { enableNativePushNotifications, getNativePushTarget, isNative, syncNativePushToken } from './native'
 import { savePushSubscription } from './pushSubscriptions'
 
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined
@@ -92,16 +92,27 @@ export async function sendPushToStoryMembers(
 }
 
 export async function sendTestPushNotification() {
+  let testTarget: { platform: string; installationId?: string; endpoint?: string } | null = null
+  if (isNative) {
+    testTarget = await getNativePushTarget()
+  } else if ('serviceWorker' in navigator && 'PushManager' in window) {
+    const registration = await navigator.serviceWorker.ready
+    const subscription = await registration.pushManager.getSubscription()
+    if (subscription) testTarget = { platform: 'web', endpoint: subscription.endpoint }
+  }
+  if (!testTarget) throw new Error('Este dispositivo todavía no tiene una suscripción registrada.')
+
   const { data, error } = await supabase.functions.invoke('send-push', {
     body: {
       test_self: true,
+      test_target: testTarget,
       title: 'OurTime está listo',
       body: 'Las notificaciones funcionan correctamente en este dispositivo.',
       url: '/',
     },
   })
   if (error) throw error
-  if (!data || data.sent < 1) {
+  if (!data || data.sent !== 1) {
     const detail = data?.failed?.join('\n') || 'Este dispositivo todavía no tiene una suscripción registrada.'
     throw new Error(detail)
   }

@@ -165,7 +165,7 @@ Deno.serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) throw new Error('Unauthorized')
 
-    const { story_id, title, body, url, test_self } = await req.json()
+    const { story_id, title, body, url, test_self, test_target } = await req.json()
     const sender_id = user.id
 
     if (test_self !== true) {
@@ -214,11 +214,22 @@ Deno.serve(async (req) => {
 
     if (!profiles?.length) return Response.json({ sent: 0, total: 0, failed: [], reason: 'No subscriptions' }, { headers: corsHeaders })
 
-    const deliveries = profiles.flatMap(profile => {
+    let deliveries = profiles.flatMap(profile => {
       const stored = profile.push_subscription
       const subscriptions = Array.isArray(stored) ? stored : [stored]
       return subscriptions.filter(Boolean).map(sub => ({ profileId: profile.id, sub }))
     })
+
+    if (test_self === true) {
+      if (!test_target) throw new Error('Missing test_target')
+      deliveries = deliveries.filter(({ sub }) => {
+        if (test_target.platform === 'web') return sub.endpoint === test_target.endpoint
+        return sub.platform === test_target.platform && sub.installationId === test_target.installationId
+      })
+      if (deliveries.length !== 1) {
+        return Response.json({ sent: 0, total: deliveries.length, failed: [], reason: 'Current device subscription not found' }, { headers: corsHeaders })
+      }
+    }
 
     const results = await Promise.allSettled(
       deliveries.map(({ sub }) => {

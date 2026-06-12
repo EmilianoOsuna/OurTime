@@ -144,6 +144,16 @@ async function setupPushListeners(): Promise<void> {
 
   PN.addListener('pushNotificationReceived', (notification: any) => {
     console.log('Push received:', notification)
+    if (Capacitor.getPlatform() !== 'android') return
+    void LocalNotifications.schedule({
+      notifications: [{
+        id: Math.floor(Date.now() % 2_147_483_647),
+        title: notification.title ?? 'OurTime',
+        body: notification.body ?? '',
+        channelId: 'ourtime_messages',
+        extra: notification.data ?? {},
+      }],
+    }).catch(console.error)
   })
 
   PN.addListener('pushNotificationActionPerformed', (action: any) => {
@@ -158,6 +168,14 @@ export async function syncNativePushToken(): Promise<boolean> {
   if (!token) return false
   await savePushToken(token)
   return true
+}
+
+export async function getNativePushTarget(): Promise<{ platform: string; installationId: string } | null> {
+  if (!isNative) return null
+  const { value: token } = await Preferences.get({ key: PUSH_TOKEN_KEY })
+  if (!token) return null
+  const { identifier: installationId } = await Device.getId()
+  return { platform: Capacitor.getPlatform(), installationId }
 }
 
 export async function enableNativePushNotifications(): Promise<boolean> {
