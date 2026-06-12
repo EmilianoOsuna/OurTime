@@ -43,17 +43,7 @@ Deno.serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) throw new Error('Unauthorized')
 
-    const { plan_id } = await req.json() as { plan_id: string }
-
-    const { data: plan, error: planErr } = await supabase
-      .from('plans')
-      .select('*')
-      .eq('id', plan_id)
-      .single()
-
-    if (planErr || !plan) {
-      return new Response(JSON.stringify({ error: 'Plan not found' }), { status: 404, headers: CORS })
-    }
+    const { plan_id, test_connection } = await req.json() as { plan_id?: string; test_connection?: boolean }
 
     // Read google_calendar_token from user_secrets (or legacy profiles column)
     const { data: secrets } = await supabase
@@ -74,7 +64,7 @@ Deno.serve(async (req) => {
       provider_token = profile?.google_calendar_token ?? null
     }
     if (!provider_token) {
-      return new Response(JSON.stringify({ error: 'Google Calendar not connected' }), { status: 400, headers: CORS })
+      return Response.json({ error: 'Google Calendar not connected', detail: 'Desconecta y vuelve a conectar Google Calendar desde tu perfil.' }, { headers: CORS })
     }
 
     if (refreshToken && expiresAt <= Date.now()) {
@@ -84,6 +74,29 @@ Deno.serve(async (req) => {
         { user_id: user.id, name: 'google_calendar_token', value: refreshed.accessToken },
         { user_id: user.id, name: 'google_calendar_token_expires_at', value: String(refreshed.expiresAt) },
       ], { onConflict: 'user_id,name' })
+    }
+
+    if (test_connection === true) {
+      const testResponse = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary', {
+        headers: { Authorization: `Bearer ${provider_token}` },
+      })
+      if (!testResponse.ok) {
+        const detail = await testResponse.text()
+        return Response.json({ error: 'Google Calendar connection failed', detail, google_status: testResponse.status }, { headers: CORS })
+      }
+      const calendar = await testResponse.json()
+      return Response.json({ connected: true, calendar: calendar.summary ?? calendar.id }, { headers: CORS })
+    }
+
+    if (!plan_id) return Response.json({ error: 'Missing plan_id' }, { headers: CORS })
+    const { data: plan, error: planErr } = await supabase
+      .from('plans')
+      .select('*')
+      .eq('id', plan_id)
+      .single()
+
+    if (planErr || !plan) {
+      return Response.json({ error: 'Plan not found', detail: planErr?.message }, { headers: CORS })
     }
 
     // Build Google Calendar event
@@ -121,14 +134,15 @@ Deno.serve(async (req) => {
 
     if (!gcalRes.ok) {
       const errBody = await gcalRes.text()
-      return new Response(JSON.stringify({ error: 'Google Calendar error', detail: errBody }), {
-        status: gcalRes.status, headers: CORS,
-      })
+      return Response.json({ error: 'Google Calendar error', detail: errBody, google_status: gcalRes.status }, { headers: CORS })
     }
 
     const gcalEvent = await gcalRes.json()
     return new Response(JSON.stringify({ google_event_id: gcalEvent.id }), { headers: CORS })
   } catch (e) {
-    return new Response(JSON.stringify({ error: String(e) }), { status: 500, headers: CORS })
+    return Response.json({
+      error: 'Google Calendar setup error',
+      detail: e instanceof Error ? e.message : String(e),
+    }, { headers: CORS })
   }
 })

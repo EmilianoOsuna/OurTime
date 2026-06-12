@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from './supabase'
 import { useAuth } from '../context/AuthContext'
-import { enableNativePushNotifications, getNativePushTarget, isNative, syncNativePushToken } from './native'
+import { enableNativePushNotifications, getNativePushTarget, isNative, showNativeNotificationTest, syncNativePushToken } from './native'
 import { savePushSubscription } from './pushSubscriptions'
 
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined
@@ -94,6 +94,7 @@ export async function sendPushToStoryMembers(
 export async function sendTestPushNotification() {
   let testTarget: { platform: string; installationId?: string; endpoint?: string } | null = null
   if (isNative) {
+    await showNativeNotificationTest()
     testTarget = await getNativePushTarget()
   } else if ('serviceWorker' in navigator && 'PushManager' in window) {
     const registration = await navigator.serviceWorker.ready
@@ -130,7 +131,30 @@ export async function syncPlanToGoogleCalendar(planId: string) {
   const { data, error } = await supabase.functions.invoke('sync-google-calendar', {
     body: { plan_id: planId },
   })
-  if (error) throw error
+  if (error) {
+    const response = (error as { context?: Response }).context
+    if (response) {
+      const payload = await response.clone().json().catch(() => null)
+      throw new Error(payload?.detail || payload?.error || error.message)
+    }
+    throw error
+  }
+  if (data?.error) throw new Error(data.detail || data.error)
+  return data
+}
+
+export async function testGoogleCalendarConnection() {
+  const { data, error } = await supabase.functions.invoke('sync-google-calendar', {
+    body: { test_connection: true },
+  })
+  if (error) {
+    const response = (error as { context?: Response }).context
+    if (response) {
+      const payload = await response.clone().json().catch(() => null)
+      throw new Error(payload?.detail || payload?.error || error.message)
+    }
+    throw error
+  }
   if (data?.error) throw new Error(data.detail || data.error)
   return data
 }

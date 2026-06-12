@@ -11,7 +11,7 @@ import { supabase, nativeRedirectUrl } from '../lib/supabase'
 import { Browser, isNative } from '../lib/native'
 import type { PlanType, PersonDisplay, StoryType } from '../lib/supabase'
 import { useToast } from '../context/ToastContext'
-import { sendTestPushNotification, usePushNotifications } from '../lib/usePushNotifications'
+import { sendTestPushNotification, testGoogleCalendarConnection, usePushNotifications } from '../lib/usePushNotifications'
 
 const CAT_COLOR: Record<string, string> = {
   pareja:  'var(--orange)',
@@ -824,6 +824,18 @@ function GoogleCalendarSection() {
     setConnected(false)
   }
 
+  const testConnection = async () => {
+    setSyncing(true)
+    try {
+      const result = await testGoogleCalendarConnection()
+      toast({ icon: 'check', title: 'Google Calendar conectado', body: result?.calendar ? `Calendario: ${result.calendar}` : 'La conexión funciona correctamente.' })
+    } catch (error) {
+      toast({ icon: 'x', title: 'Falló Google Calendar', body: error instanceof Error ? error.message : 'No se pudo validar la conexión.' })
+    } finally {
+      setSyncing(false)
+    }
+  }
+
   return (
     <div className="card" style={{ padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 14 }}>
       <div style={{ width: 40, height: 40, borderRadius: 12, background: connected ? '#EBF5FB' : 'var(--card-2)',
@@ -837,13 +849,22 @@ function GoogleCalendarSection() {
         </div>
       </div>
       {connected ? (
-        <button onClick={disconnect} style={{
-          border: '1.5px solid var(--line)', background: 'transparent', borderRadius: 10,
-          padding: '8px 12px', fontSize: 12.5, fontWeight: 600, color: 'var(--ink-soft)',
-          cursor: 'pointer', fontFamily: 'var(--font-ui)', flexShrink: 0,
-        }}>
-          Desconectar
-        </button>
+        <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+          <button onClick={testConnection} disabled={syncing} style={{
+            border: '1.5px solid #1976D2', background: 'transparent', borderRadius: 10,
+            padding: '8px 10px', fontSize: 12.5, fontWeight: 700, color: '#1976D2',
+            cursor: 'pointer', fontFamily: 'var(--font-ui)', opacity: syncing ? 0.6 : 1,
+          }}>
+            {syncing ? '…' : 'Probar'}
+          </button>
+          <button onClick={disconnect} style={{
+            border: '1.5px solid var(--line)', background: 'transparent', borderRadius: 10,
+            padding: '8px 10px', fontSize: 12.5, fontWeight: 600, color: 'var(--ink-soft)',
+            cursor: 'pointer', fontFamily: 'var(--font-ui)',
+          }}>
+            Desconectar
+          </button>
+        </div>
       ) : (
         <button onClick={connect} disabled={syncing} style={{
           border: 'none', background: '#1976D2', borderRadius: 10,

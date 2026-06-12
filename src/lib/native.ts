@@ -178,11 +178,42 @@ export async function getNativePushTarget(): Promise<{ platform: string; install
   return { platform: Capacitor.getPlatform(), installationId }
 }
 
+export async function showNativeNotificationTest(): Promise<void> {
+  if (!isNative) return
+  const current = await LocalNotifications.checkPermissions()
+  const permission = current.display === 'prompt'
+    ? await LocalNotifications.requestPermissions()
+    : current
+  if (permission.display !== 'granted') {
+    throw new Error('Android tiene bloqueadas las notificaciones de OurTime. Actívalas en Ajustes > Apps > Our Time > Notificaciones.')
+  }
+  if (Capacitor.getPlatform() === 'android') {
+    await LocalNotifications.createChannel({
+      id: 'ourtime_messages',
+      name: 'Actividad de OurTime',
+      description: 'Mensajes, momentos y actividad de tus historias',
+      importance: 5,
+      visibility: 1,
+      vibration: true,
+    })
+  }
+  await LocalNotifications.schedule({
+    notifications: [{
+      id: Math.floor(Date.now() % 2_147_483_647),
+      title: 'Prueba local de OurTime',
+      body: 'Android permite mostrar notificaciones en este dispositivo.',
+      channelId: 'ourtime_messages',
+    }],
+  })
+}
+
 export async function enableNativePushNotifications(): Promise<boolean> {
   if (!isNative) return false
   await setupPushListeners()
   const permission = await PushNotifications.requestPermissions()
   if (permission.receive !== 'granted') return false
+  const displayPermission = await LocalNotifications.requestPermissions()
+  if (displayPermission.display !== 'granted') return false
   if (Capacitor.getPlatform() === 'android') {
     await PushNotifications.createChannel({
       id: 'ourtime_messages',
