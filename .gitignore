@@ -31,3 +31,9 @@ playwright-report/
 
 android/app/google-services.json
 .opencode/pilot-audit.log.*
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+!.env.example
