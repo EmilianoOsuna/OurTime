@@ -17,7 +17,7 @@ const CAT_ICON: Record<string, string> = {
 interface Props { onClose: () => void; onCreated: () => void; parentPlanId?: string }
 
 export const NewPlanSheet: React.FC<Props> = ({ onClose, onCreated, parentPlanId }) => {
-  const { activeStoryId } = useAuth()
+  const { activeStoryId, stories } = useAuth()
   const { push } = useToast()
   const [title, setTitle]         = useState('')
   const [cat, setCat]             = useState<string>('salida')
@@ -54,7 +54,15 @@ export const NewPlanSheet: React.FC<Props> = ({ onClose, onCreated, parentPlanId
         body: `«${title.trim()}» fue añadido a la historia`,
         read: false,
       }).then(undefined, console.error)
-      sendPushToStoryMembers(activeStoryId, user.id, '¡Nuevo momento!', `«${title.trim()}» fue añadido a la historia`).catch(console.error)
+      const storyName = stories.find(story => story.id === activeStoryId)?.name ?? 'tu historia'
+      sendPushToStoryMembers(
+        activeStoryId,
+        user.id,
+        `Nuevo momento · ${storyName}`,
+        `«${title.trim()}» fue añadido`,
+        `/?shortcut=calendar&story=${encodeURIComponent(activeStoryId)}&plan=${encodeURIComponent(newPlan?.id ?? '')}`,
+        { event_type: 'plan_created', target_id: newPlan?.id },
+      ).catch(console.error)
       if (newPlan?.id) {
         syncPlanToGoogleCalendar(newPlan.id).catch(error => {
           push({ icon: 'x', title: 'No se sincronizó con Google Calendar', body: error instanceof Error ? error.message : 'Inténtalo de nuevo.' })

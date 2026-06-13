@@ -25,6 +25,11 @@ const config: CapacitorConfig = {
       backgroundColor: '#f4eee4',
       style: 'dark',
     },
+    SocialLogin: {
+      providers: {
+        google: true,
+      },
+    },
   },
 };
 

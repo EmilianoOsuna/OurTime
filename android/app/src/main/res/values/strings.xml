@@ -4,4 +4,11 @@
     <string name="title_activity_main">Our Time</string>
     <string name="package_name">com.ourtime.app</string>
     <string name="custom_url_scheme">com.ourtime.app</string>
+    <string name="widget_description">Accesos rápidos a momentos, chat y galería</string>
+    <string name="shortcut_new_moment_short">Nuevo momento</string>
+    <string name="shortcut_new_moment_long">Crear un nuevo momento</string>
+    <string name="shortcut_chat_short">Chat</string>
+    <string name="shortcut_chat_long">Abrir el chat de OurTime</string>
+    <string name="shortcut_memory_short">Nuevo recuerdo</string>
+    <string name="shortcut_memory_long">Añadir un recuerdo</string>
 </resources>

@@ -1,0 +1,5 @@
+ALTER TABLE stories
+  ADD COLUMN IF NOT EXISTS cover_position_x SMALLINT NOT NULL DEFAULT 50
+    CHECK (cover_position_x BETWEEN 0 AND 100),
+  ADD COLUMN IF NOT EXISTS cover_position_y SMALLINT NOT NULL DEFAULT 50
+    CHECK (cover_position_y BETWEEN 0 AND 100);

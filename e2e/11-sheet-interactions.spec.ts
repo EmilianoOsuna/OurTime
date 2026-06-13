@@ -25,11 +25,28 @@ test('cerrar con drag no bloquea el siguiente clic', async ({ page }) => {
   const x = box!.x + box!.width / 2
   const startY = box!.y + box!.height / 2
 
-  await handle.dispatchEvent('pointerdown', { pointerId: 7, pointerType: 'touch', clientX: x, clientY: startY, buttons: 1 })
-  await handle.dispatchEvent('pointermove', { pointerId: 7, pointerType: 'touch', clientX: x, clientY: startY + 180, buttons: 1 })
-  await handle.dispatchEvent('pointerup', { pointerId: 7, pointerType: 'touch', clientX: x, clientY: startY + 180, buttons: 0 })
+  await page.mouse.move(x, startY)
+  await page.mouse.down()
+  await page.mouse.move(x, startY + 180, { steps: 8 })
+  await page.mouse.up()
 
-  await expect(page.locator('[data-testid="bottom-sheet-root"]')).not.toBeVisible()
   await page.getByRole('button', { name: 'Agenda' }).click()
+  await expect(page.locator('[data-testid="bottom-sheet-root"]')).not.toBeVisible()
   await expect(page.getByText('Agenda', { exact: true }).first()).toBeVisible()
+})
+
+test('un drag parcial no consume el primer toque en un botón del modal', async ({ page }) => {
+  const handle = page.locator('[data-testid="bottom-sheet-handle"]')
+  const box = await handle.boundingBox()
+  expect(box).not.toBeNull()
+  const x = box!.x + box!.width / 2
+  const startY = box!.y + box!.height / 2
+
+  await page.mouse.move(x, startY)
+  await page.mouse.down()
+  await page.mouse.move(x, startY + 60, { steps: 5 })
+  await page.mouse.up()
+
+  await page.getByRole('button', { name: /Nuevo momento/ }).tap()
+  await expect(page.getByPlaceholder('Cena sorpresa en…')).toBeVisible()
 })

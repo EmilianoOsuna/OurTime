@@ -43,7 +43,11 @@ Deno.serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) throw new Error('Unauthorized')
 
-    const { plan_id, test_connection } = await req.json() as { plan_id?: string; test_connection?: boolean }
+    const { plan_id, action = 'sync', test_connection } = await req.json() as {
+      plan_id?: string
+      action?: 'sync' | 'delete'
+      test_connection?: boolean
+    }
 
     // Read google_calendar_token from user_secrets (or legacy profiles column)
     const { data: secrets } = await supabase
@@ -102,7 +106,7 @@ Deno.serve(async (req) => {
     if (!plan_id) return Response.json({ error: 'Missing plan_id' }, { headers: CORS })
     const { data: plan, error: planErr } = await supabase
       .from('plans')
-      .select('*')
+      .select('*, stories(name)')
       .eq('id', plan_id)
       .single()
 
@@ -110,22 +114,69 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Plan not found', detail: planErr?.message }, { headers: CORS })
     }
 
-    // Build Google Calendar event
+    const { data: storedEvent } = await supabase
+      .from('plan_calendar_events')
+      .select('google_event_id')
+      .eq('plan_id', plan_id)
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    const eventUrl = storedEvent?.google_event_id
+      ? `https://www.googleapis.com/calendar/v3/calendars/primary/events/${encodeURIComponent(storedEvent.google_event_id)}`
+      : null
+
+    if (action === 'delete') {
+      if (!eventUrl) return Response.json({ deleted: false, reason: 'Event was not synchronized' }, { headers: CORS })
+      let deleteResponse = await fetch(eventUrl, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${provider_token}` },
+      })
+      if (deleteResponse.status === 401 && refreshToken) {
+        const refreshed = await refreshGoogleToken(refreshToken)
+        provider_token = refreshed.accessToken
+        deleteResponse = await fetch(eventUrl, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${provider_token}` },
+        })
+      }
+      if (!deleteResponse.ok && deleteResponse.status !== 404 && deleteResponse.status !== 410) {
+        return Response.json({
+          error: 'Google Calendar delete error',
+          detail: await deleteResponse.text(),
+          google_status: deleteResponse.status,
+        }, { headers: CORS })
+      }
+      await supabase.from('plan_calendar_events')
+        .delete().eq('plan_id', plan_id).eq('user_id', user.id)
+      return Response.json({ deleted: true }, { headers: CORS })
+    }
+
+    // Build a useful event instead of only copying the title.
     const startDate = plan.plan_date.slice(0, 10)
     const end = new Date(`${startDate}T00:00:00Z`)
     end.setUTCDate(end.getUTCDate() + 1)
     const endDate = end.toISOString().slice(0, 10)
+    const storyName = plan.stories?.name ?? 'OurTime'
+    const details = [
+      `Historia: ${storyName}`,
+      `Tipo: ${plan.type}`,
+      plan.budget_amount != null ? `Presupuesto estimado: ${plan.budget_amount}` : null,
+      plan.description ? `\n${plan.description}` : null,
+    ].filter(Boolean).join('\n')
     const event = {
-      summary: plan.title,
+      summary: `${plan.title} · ${storyName}`,
       location: plan.place ?? undefined,
-      description: plan.description ?? undefined,
+      description: details,
       start: { date: startDate },
       end: { date: endDate },
+      extendedProperties: {
+        private: { ourtime_plan_id: plan.id, ourtime_story_id: plan.story_id },
+      },
     }
 
     const sendEvent = (token: string) => fetch(
-      'https://www.googleapis.com/calendar/v3/calendars/primary/events', {
-        method: 'POST',
+      eventUrl ?? 'https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+        method: eventUrl ? 'PUT' : 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -149,6 +200,12 @@ Deno.serve(async (req) => {
     }
 
     const gcalEvent = await gcalRes.json()
+    await supabase.from('plan_calendar_events').upsert({
+      plan_id,
+      user_id: user.id,
+      google_event_id: gcalEvent.id,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'plan_id,user_id' })
     return new Response(JSON.stringify({ google_event_id: gcalEvent.id }), { headers: CORS })
   } catch (e) {
     return Response.json({

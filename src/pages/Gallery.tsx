@@ -11,6 +11,8 @@ import { useConfirm } from '../components/ui/ConfirmDialog'
 interface Memory {
   id: string
   image_url: string
+  position_x?: number
+  position_y?: number
   caption: string | null
   created_at: string
   plan_id?: string | null
@@ -42,6 +44,7 @@ function MemoryCard({ m, onOpen, delay, me }: { m: Memory; onOpen: () => void; d
         <img src={m.image_url} alt="" loading="lazy" decoding="async"
           onLoad={e => { (e.target as HTMLImageElement).style.opacity = '1' }}
           style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block',
+            objectPosition: `${m.position_x ?? 50}% ${m.position_y ?? 50}%`,
             opacity: 0, transition: 'opacity 0.4s' }} />
       </div>
       <div style={{ padding: '10px 12px 12px', textAlign: 'left' }}>
@@ -109,7 +112,7 @@ function useColCount() {
 export default function Gallery({ memories, setMemories, onImageClick, me }: {
   memories: Memory[]
   setMemories: (m: Memory[]) => void
-  onImageClick: (url: string) => void
+  onImageClick: (m: Memory) => void
   me: PersonDisplay
 }) {
   const { activeStoryId } = useAuth()
@@ -208,7 +211,7 @@ export default function Gallery({ memories, setMemories, onImageClick, me }: {
     const availableForPicker = memories.filter(m => m.album_id !== activeAlbumId)
     const pickerCols = makeCols(availableForPicker)
     return (
-      <div className="ot-scroll page-enter" style={{ paddingBottom: 130 }}>
+      <div className="page-enter" style={{ paddingBottom: 130 }}>
         <div style={{ padding: '8px 22px 0' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
             <button onClick={() => setActiveAlbumId(null)} style={{
@@ -242,7 +245,7 @@ export default function Gallery({ memories, setMemories, onImageClick, me }: {
             {cols.map((col, ci) => (
               <div key={ci} style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {col.map((m, i) => (
-                  <MemoryCard key={m.id} m={m} onOpen={() => onImageClick(m.image_url)} delay={i * 0.04} me={me} />
+                  <MemoryCard key={m.id} m={m} onOpen={() => onImageClick(m)} delay={i * 0.04} me={me} />
                 ))}
               </div>
             ))}
@@ -297,7 +300,8 @@ export default function Gallery({ memories, setMemories, onImageClick, me }: {
                             transition: 'boxShadow .15s',
                           }}>
                             <img src={m.image_url} alt="" loading="lazy" style={{
-                              width: '100%', aspectRatio: '1', objectFit: 'cover', display: 'block' }} />
+                              width: '100%', aspectRatio: '1', objectFit: 'cover', display: 'block',
+                              objectPosition: `${m.position_x ?? 50}% ${m.position_y ?? 50}%` }} />
                             {pickerSelected.has(m.id) && (
                               <div style={{ position: 'absolute', top: 6, right: 6, width: 22, height: 22,
                                 borderRadius: '50%', background: 'var(--orange)',
@@ -328,7 +332,7 @@ export default function Gallery({ memories, setMemories, onImageClick, me }: {
 
   // ── Main view ──
   return (
-    <div className="ot-scroll page-enter" style={{ paddingBottom: 130 }}>
+    <div className="page-enter" style={{ paddingBottom: 130 }}>
       <div style={{ padding: '8px 22px 0' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
           <div>
@@ -425,7 +429,7 @@ export default function Gallery({ memories, setMemories, onImageClick, me }: {
             {makeCols(filtered).map((col, ci) => (
               <div key={ci} style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {col.map((m, i) => (
-                  <MemoryCard key={m.id} m={m} onOpen={() => onImageClick(m.image_url)} delay={i * 0.04} me={me} />
+                  <MemoryCard key={m.id} m={m} onOpen={() => onImageClick(m)} delay={i * 0.04} me={me} />
                 ))}
               </div>
             ))}

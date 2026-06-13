@@ -236,7 +236,8 @@ function NextHero({ plan, no, onClick }: { plan: PlanType; no: number; onClick: 
         {plan.cover_url
           ? <img src={plan.cover_url} alt="" loading="lazy" decoding="async"
               onLoad={e => { (e.target as HTMLImageElement).style.opacity = '0.9' }}
-              style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0, transition: 'opacity 0.4s' }} />
+              style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0, transition: 'opacity 0.4s',
+                objectPosition: `${plan.cover_position_x ?? 50}% ${plan.cover_position_y ?? 50}%` }} />
           : <span className="ph-label" style={{ position: 'absolute', bottom: 12, right: 12 }}>foto del plan</span>
         }
         <div style={{ position: 'absolute', top: 14, left: 14 }}><CatTag cat={plan.type} /></div>

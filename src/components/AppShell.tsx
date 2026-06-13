@@ -4,8 +4,9 @@ import { useAuth } from '../context/AuthContext'
 import type { ProfileType } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { buildPerson, type PersonDisplay, type StoryType } from '../lib/supabase'
-import { setBackHandler, isNative } from '../lib/native'
+import { consumeNativeNavigationUrl, setBackHandler, isNative } from '../lib/native'
 import { invokeTopBack, consumeIgnorePop } from '../lib/backStack'
+import { recoverNextClickAfterDrag } from '../lib/recoverClickAfterDrag'
 
 import type { NotifItem } from './NotificationsPanel'
 
@@ -13,7 +14,7 @@ const Dashboard = lazy(() => import('../pages/Dashboard'))
 const Calendar = lazy(() => import('../pages/Calendar'))
 const Gallery = lazy(() => import('../pages/Gallery'))
 const Finances = lazy(() => import('../pages/Finances'))
-const Chat = lazy(() => import('../pages/Chat'))
+import Chat from '../pages/Chat'
 const PlanDetail = lazy(() => import('../pages/PlanDetail').then(m => ({ default: m.PlanDetail })))
 const ProfileScreen = lazy(() => import('../pages/Profile').then(m => ({ default: m.ProfileScreen })))
 const NotificationsPanel = lazy(() => import('./NotificationsPanel').then(m => ({ default: m.NotificationsPanel })))
@@ -26,6 +27,8 @@ const EditStorySheet = lazy(() => import('./sheets/EditStorySheet').then(m => ({
 import { Icon } from './ui/Icon'
 import { Avatar } from './ui/Avatar'
 import { usePushNotifications } from '../lib/usePushNotifications'
+import { useToast } from '../context/ToastContext'
+import { Lightbox } from './ui/Lightbox'
 
 const CAT_COLOR: Record<string, string> = {
   pareja:  'var(--orange)',
@@ -71,6 +74,7 @@ function useUnreadCount(activeStoryId: string | null, userId: string | undefined
 
 export default function AppShell() {
   const { activeStoryId, stories, setActiveStoryId, profile, user } = useAuth()
+  const { push: toast } = useToast()
   usePushNotifications()
   const [tab, setTab] = useState<Tab>(() => {
     const params = new URLSearchParams(window.location.search)
@@ -91,7 +95,7 @@ export default function AppShell() {
   const [allCalendarPlans, setAllCalendarPlans] = useState<any[]>([])
   const [memories, setMemories] = useState<any[]>([])
   const [, setTransactions] = useState<any[]>([])
-  const [lightbox, setLightbox] = useState<string | null>(null)
+  const [lightbox, setLightbox] = useState<{ url: string; id?: string } | null>(null)
   const [partner, setPartner] = useState<ProfileType | null>(null)
   const [storyCode, setStoryCode] = useState<string | null>(null)
   const [unreadRefreshKey, setUnreadRefreshKey] = useState(0)
@@ -306,22 +310,53 @@ export default function AppShell() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [])
 
-  // Handle push notification taps — SW sends OT_NAVIGATE when app is already open
-  useEffect(() => {
-    if (!('serviceWorker' in navigator)) return
-    const handler = (event: MessageEvent) => {
-      if (event.data?.type !== 'OT_NAVIGATE') return
-      const url = new URL(event.data.url, window.location.origin)
-      const shortcut = url.searchParams.get('shortcut')
-      if (shortcut === 'chat')    { go('chat') }
-      else if (shortcut === 'gallery') { go('gallery') }
-      else if (shortcut === 'calendar') { go('calendar') }
-      else if (shortcut === 'newplan') { setOverlay({ type: 'newplan' }) }
-      else if (shortcut === 'memory')  { setOverlay({ type: 'memory' }) }
+  const handleNavigationUrl = useCallback(async (rawUrl: string) => {
+    const url = new URL(rawUrl, window.location.origin)
+    const targetStoryId = url.searchParams.get('story')
+    const targetPlanId = url.searchParams.get('plan')
+    const shortcut = url.searchParams.get('shortcut')
+
+    if (targetStoryId && stories.some(story => story.id === targetStoryId)) {
+      setActiveStoryId(targetStoryId)
     }
-    navigator.serviceWorker.addEventListener('message', handler)
-    return () => navigator.serviceWorker.removeEventListener('message', handler)
-  }, [go])
+    if (targetPlanId) {
+      const { data } = await supabase.from('plans').select('*').eq('id', targetPlanId).maybeSingle()
+      if (data) {
+        setOverlay({ type: 'plan', data })
+        return
+      }
+    }
+    if (shortcut === 'chat') go('chat')
+    else if (shortcut === 'gallery') go('gallery')
+    else if (shortcut === 'calendar') go('calendar')
+    else if (shortcut === 'finance') go('finance')
+    else if (shortcut === 'newplan') setOverlay({ type: 'newplan' })
+    else if (shortcut === 'memory') setOverlay({ type: 'memory' })
+  }, [go, setActiveStoryId, stories])
+
+  // Handle web-push, FCM, local notification and native deep-link taps.
+  useEffect(() => {
+    const serviceWorkerHandler = (event: MessageEvent) => {
+      if (event.data?.type !== 'OT_NAVIGATE') return
+      void handleNavigationUrl(event.data.url)
+    }
+    const nativeHandler = (event: Event) => {
+      const detail = (event as CustomEvent<{ url?: string }>).detail
+      if (detail?.url) void handleNavigationUrl(detail.url)
+    }
+    if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', serviceWorkerHandler)
+    window.addEventListener('ourtime:navigate', nativeHandler)
+
+    const pendingNativeUrl = consumeNativeNavigationUrl()
+    if (pendingNativeUrl) void handleNavigationUrl(pendingNativeUrl)
+    const initialParams = new URLSearchParams(window.location.search)
+    if (initialParams.has('plan') || initialParams.has('story')) void handleNavigationUrl(window.location.href)
+
+    return () => {
+      if ('serviceWorker' in navigator) navigator.serviceWorker.removeEventListener('message', serviceWorkerHandler)
+      window.removeEventListener('ourtime:navigate', nativeHandler)
+    }
+  }, [handleNavigationUrl])
 
   // Accent color — override --orange* based on active story category
   useEffect(() => {
@@ -388,6 +423,29 @@ export default function AppShell() {
       .then(({ data }) => data && setTransactions(data))
   }
 
+  const deleteMemory = useCallback(async (id: string, url: string) => {
+    try {
+      const { error } = await supabase.from('memories').delete().eq('id', id)
+      if (error) throw error
+
+      try {
+        const parts = url.split('/storage/v1/object/public/Fotos/')
+        if (parts.length > 1 && parts[1]) {
+          const path = decodeURIComponent(parts[1])
+          await supabase.storage.from('Fotos').remove([path])
+        }
+      } catch (err) {
+        console.error('Failed to remove image from storage bucket:', err)
+      }
+
+      setMemories(prev => prev.filter(m => m.id !== id))
+      toast({ icon: 'trash', eyebrow: 'Recuerdo', title: 'Foto eliminada de la galería' })
+    } catch (err: any) {
+      toast({ icon: 'x', title: 'Error al eliminar', body: err.message })
+      throw err
+    }
+  }, [toast])
+
   // Realtime subscriptions
   useEffect(() => {
     if (!activeStoryId) return
@@ -415,6 +473,7 @@ export default function AppShell() {
     const loadNotifs = () =>
       supabase.from('notifications').select('*')
         .eq('story_id', activeStoryId)
+        .neq('actor_id', user?.id ?? '')
         .order('created_at', { ascending: false })
         .limit(40)
         .then(({ data }) => {
@@ -436,7 +495,7 @@ export default function AppShell() {
         filter: `story_id=eq.${activeStoryId}` }, loadNotifs)
       .subscribe()
     return () => { supabase.removeChannel(ch) }
-  }, [activeStoryId])
+  }, [activeStoryId, user?.id])
 
   const unreadCount = useUnreadCount(activeStoryId, user?.id, unreadRefreshKey)
   const unreadNotifs = notifications.filter(n => !n.read).length
@@ -460,11 +519,15 @@ export default function AppShell() {
             me={me} partner={partnerDisplay} unreadNotifs={unreadNotifs} />,
     calendar: <Calendar plans={allCalendarPlans} onOpenPlan={openPlan} />,
     gallery: <Gallery memories={memories} setMemories={setMemories}
-               onImageClick={(url: string) => setLightbox(url)} me={me} />,
+               onImageClick={(m: any) => setLightbox({ url: m.image_url, id: m.id })} me={me} />,
     finance: <Finances />,
     chat: <Chat key={activeStoryId} me={me} partner={partnerDisplay}
              storyName={stories.find(s => s.id === activeStoryId)?.name}
              storyCoverUrl={stories.find(s => s.id === activeStoryId)?.cover_url ?? null}
+             storyCoverPosition={{
+               x: stories.find(s => s.id === activeStoryId)?.cover_position_x ?? 50,
+               y: stories.find(s => s.id === activeStoryId)?.cover_position_y ?? 50,
+             }}
              onBack={leaveChat} />,
   }
 
@@ -478,9 +541,10 @@ export default function AppShell() {
       }>
       <motion.div
         key={tab}
-        initial={{ opacity: 0, y: 12 }}
+        initial={{ opacity: 0, y: tab === 'chat' ? 0 : 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, ease }}
+        style={tab === 'chat' ? { position: 'fixed', inset: 0, zIndex: 10, minHeight: '100dvh' } : undefined}
       >
         {screen[tab]}
       </motion.div>
@@ -550,7 +614,14 @@ export default function AppShell() {
       <Suspense fallback={null}>
       {notifsVisible && <NotificationsPanel onClose={closeNotifs} items={notifications} />}
       </Suspense>
-      {lightbox && <Lightbox url={lightbox} onClose={() => setLightbox(null)} />}
+      {lightbox && (
+        <Lightbox
+          url={lightbox.url}
+          memoryId={lightbox.id}
+          onDelete={deleteMemory}
+          onClose={() => setLightbox(null)}
+        />
+      )}
       {storySwitcherOpen && (
         <StorySwitcherSheet
           stories={stories}
@@ -573,20 +644,7 @@ export default function AppShell() {
   )
 }
 
-function Lightbox({ url, onClose }: { url: string; onClose: () => void }) {
-  return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 99, background: 'rgba(0,0,0,0.88)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(6px)',
-      WebkitBackdropFilter: 'blur(6px)', animation: 'fadeIn .2s both' }}>
-      <div style={{ maxWidth: '92%', maxHeight: '82%', borderRadius: 16, overflow: 'hidden',
-        boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }}>
-        <img src={url} alt="" decoding="async"
-          onLoad={e => { (e.target as HTMLImageElement).style.opacity = '1' }}
-          style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', opacity: 0, transition: 'opacity 0.3s' }} />
-      </div>
-    </div>
-  )
-}
+
 
 function NavBar({ tab, setTab, onFab, me, onProfileOpen, stories, activeStoryId, unreadCount }: {
   tab: Tab
@@ -673,76 +731,62 @@ function StorySwitcherSheet({ stories, activeStoryId, adminStoryIds, onSelect, o
 }) {
   const y = useMotionValue(0)
   const backdropOpacity = useTransform(y, [0, 500], [1, 0])
-  const rootRef = useRef<HTMLDivElement>(null)
-  const dragState = useRef({
-    pointerId: -1, startY: 0, dragging: false,
-    lastY: 0, lastTime: 0, velocity: 0,
-  })
+  const backdropRef = useRef<HTMLDivElement>(null)
+  const sheetRef = useRef<HTMLDivElement>(null)
+  const closing = useRef(false)
+  const gesture = useRef({ startY: 0, lastY: 0, lastTime: 0, velocity: 0, dragging: false })
 
-  const dragPointerDown = (e: React.PointerEvent) => {
-    if (e.pointerType === 'mouse') return
-    dragState.current.pointerId = e.pointerId
-    e.currentTarget.setPointerCapture(e.pointerId)
-    dragState.current.startY = e.clientY
-    dragState.current.dragging = false
-    dragState.current.lastY = e.clientY
-    dragState.current.lastTime = performance.now()
-    dragState.current.velocity = 0
-  }
-  const dragPointerMove = (e: React.PointerEvent) => {
-    if (dragState.current.pointerId !== e.pointerId) return
-    const dy = e.clientY - dragState.current.startY
-    if (dy > 5) dragState.current.dragging = true
-    if (dragState.current.dragging) {
-      e.preventDefault()
-      const resisted = dy > 200 ? 200 + (dy - 200) * 0.25 : Math.max(0, dy)
-      y.set(resisted)
-      const now = performance.now()
-      if (now - dragState.current.lastTime > 20) {
-        dragState.current.velocity = (e.clientY - dragState.current.lastY) / (now - dragState.current.lastTime) * 1000
-        dragState.current.lastY = e.clientY
-        dragState.current.lastTime = now
-      }
-    }
-  }
-  const dragPointerUp = (e: React.PointerEvent, cancelled = false) => {
-    if (dragState.current.pointerId !== e.pointerId) return
-    if (dragState.current.dragging && !cancelled) {
-      const vy = Math.min(Math.max(dragState.current.velocity, -3000), 3000)
-      if (y.get() > 120 || vy > 800) {
-        if (rootRef.current) rootRef.current.style.visibility = 'hidden'
-        onClose()
-      } else {
-        animate(y, 0, {
-          type: 'spring', damping: 35, stiffness: 300, mass: 0.6,
-          velocity: vy,
-        })
-      }
-    }
-    if (cancelled) y.set(0)
-    if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId)
-    dragState.current.pointerId = -1
-    dragState.current.dragging = false
+  const close = (afterDrag = false) => {
+    if (closing.current) return
+    closing.current = true
+    if (afterDrag) recoverNextClickAfterDrag()
+    if (backdropRef.current) backdropRef.current.style.pointerEvents = 'none'
+    if (sheetRef.current) sheetRef.current.style.pointerEvents = 'none'
+    animate(y, window.innerHeight, { duration: 0.2, ease: 'easeOut' }).then(onClose)
   }
 
-  const dragProps = {
-    onPointerDown: dragPointerDown, onPointerMove: dragPointerMove,
-    onPointerUp: dragPointerUp, onPointerCancel: (e: React.PointerEvent) => dragPointerUp(e, true),
+  const onTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0]
+    if (!touch || closing.current) return
+    y.stop()
+    gesture.current = { startY: touch.clientY, lastY: touch.clientY,
+      lastTime: performance.now(), velocity: 0, dragging: false }
+  }
+  const onTouchMove = (e: React.TouchEvent) => {
+    const touch = e.touches[0]
+    if (!touch || closing.current) return
+    const dy = touch.clientY - gesture.current.startY
+    if (dy <= 0) { y.set(0); return }
+    gesture.current.dragging = true
+    y.set(dy > 200 ? 200 + (dy - 200) * 0.25 : dy)
+    const now = performance.now()
+    if (now - gesture.current.lastTime > 20) {
+      gesture.current.velocity = (touch.clientY - gesture.current.lastY) / (now - gesture.current.lastTime) * 1000
+      gesture.current.lastY = touch.clientY
+      gesture.current.lastTime = now
+    }
+  }
+  const finishTouch = () => {
+    if (!gesture.current.dragging || closing.current) return
+    const shouldClose = y.get() > 120 || gesture.current.velocity > 800
+    gesture.current.dragging = false
+    if (shouldClose) close(true)
+    else animate(y, 0, { type: 'spring', damping: 35, stiffness: 300, mass: 0.6 })
   }
 
   return (
-    <div ref={rootRef} style={{ position: 'fixed', inset: 0, zIndex: 85, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-      <motion.div style={{ position: 'absolute', inset: 0, opacity: backdropOpacity,
-        background: 'rgba(0,0,0,0.4)', }} onClick={() => {
-          if (rootRef.current) rootRef.current.style.visibility = 'hidden'
-          onClose()
-        }} />
+    <div style={{ position: 'fixed', inset: 0, zIndex: 85, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+      <motion.div ref={backdropRef} style={{ position: 'absolute', inset: 0, opacity: backdropOpacity,
+        background: 'rgba(0,0,0,0.4)', }} onClick={() => close()} />
       <motion.div
-        style={{ y, touchAction: 'none', position: 'relative', background: 'var(--card)',
-          borderRadius: '24px 24px 0 0', padding: '20px 20px 40px', willChange: 'transform' }}
-        {...dragProps}>
-        <div style={{ width: 36, height: 4, borderRadius: 2, background: 'var(--line)',
-          margin: '0 auto 20px', flexShrink: 0 }} />
+        ref={sheetRef}
+        style={{ y, position: 'relative', background: 'var(--card)',
+          borderRadius: '24px 24px 0 0', padding: '12px 20px 40px', willChange: 'transform' }}>
+        <div onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={finishTouch}
+          onTouchCancel={() => { gesture.current.dragging = false; y.set(0) }}
+          style={{ display: 'flex', justifyContent: 'center', padding: '0 0 16px', touchAction: 'none' }}>
+          <div style={{ width: 36, height: 4, borderRadius: 2, background: 'var(--line)', flexShrink: 0 }} />
+        </div>
         <div className="eyebrow" style={{ marginBottom: 14, color: 'var(--ink-soft)' }}>Tus Historias</div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
@@ -760,7 +804,8 @@ function StorySwitcherSheet({ stories, activeStoryId, adminStoryIds, onSelect, o
                   <div style={{ width: 38, height: 38, borderRadius: 11, flexShrink: 0, overflow: 'hidden',
                     background: color, display: 'flex', alignItems: 'center', justifyContent: 'center',
                     backgroundImage: s.cover_url ? `url(${s.cover_url})` : undefined,
-                    backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                    backgroundSize: 'cover',
+                    backgroundPosition: `${s.cover_position_x ?? 50}% ${s.cover_position_y ?? 50}%` }}>
                     {!s.cover_url && <Icon name={s.category === 'pareja' ? 'heartFill' : s.category === 'amigos' ? 'users' : s.category === 'familia' ? 'home' : 'tag'} size={18} style={{ color: '#fff' }} />}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>

@@ -32,6 +32,8 @@ export type StoryType = {
   name: string
   category: 'pareja' | 'amigos' | 'familia' | 'otro'
   cover_url: string | null
+  cover_position_x: number
+  cover_position_y: number
   invite_code: string
   created_by: string
   created_at: string
@@ -63,6 +65,8 @@ export type PlanType = {
   budget_amount: number | null
   actual_amount: number | null
   created_at: string
+  cover_position_x?: number
+  cover_position_y?: number
 }
 
 export type MemoryType = {
@@ -71,6 +75,8 @@ export type MemoryType = {
   plan_id: string | null
   album_id: string | null
   image_url: string
+  position_x: number
+  position_y: number
   caption: string | null
   created_at: string
 }
@@ -123,12 +129,8 @@ export type PersonDisplay = {
   avatar_url?: string | null
 }
 
-export function imageUrl(url: string | null | undefined, width = 400): string | null {
-  if (!url) return null
-  if (url.includes('/storage/v1/object/public/')) {
-    return url.replace('/object/public/', '/render/image/public/') + `?width=${width}&quality=80&format=webp`
-  }
-  return url
+export function imageUrl(url: string | null | undefined, _width = 400): string | null {
+  return url || null
 }
 
 export function buildPerson(

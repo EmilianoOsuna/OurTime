@@ -97,9 +97,6 @@ test.describe('Auth — Flujo de registro', () => {
 test.describe('Auth — Flujo de login', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/')
-    const startButton = page.getByRole('button', { name: 'Empezar', exact: true })
-    await expect(startButton).toBeVisible()
-    await startButton.click()
     await expect(page.getByText('Ya tengo cuenta — Iniciar sesión')).toBeVisible()
     await page.getByText('Ya tengo cuenta — Iniciar sesión').click()
   })

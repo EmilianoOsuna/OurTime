@@ -145,10 +145,11 @@ export async function sendPushToStoryMembers(
   senderId: string,
   title: string,
   body: string,
-  url = '/'
+  url = '/',
+  metadata: { event_type?: string; target_id?: string } = {},
 ) {
   const { data, error } = await supabase.functions.invoke('send-push', {
-    body: { story_id: storyId, sender_id: senderId, title, body, url },
+    body: { story_id: storyId, sender_id: senderId, title, body, url, ...metadata },
   })
   if (error) throw error
   if (data?.failed?.length) throw new Error(data.failed.join('\n'))
@@ -198,7 +199,18 @@ export async function syncPlanToGoogleCalendar(planId: string) {
     .eq('id', user.id)
     .single()
   if (!profile?.google_calendar_enabled) return null
-  return invokeCalendarFunction({ plan_id: planId })
+  return invokeCalendarFunction({ plan_id: planId, action: 'sync' })
+}
+
+export async function deletePlanFromGoogleCalendar(planId: string) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+  const { data: profile } = await supabase.from('profiles')
+    .select('google_calendar_enabled')
+    .eq('id', user.id)
+    .single()
+  if (!profile?.google_calendar_enabled) return null
+  return invokeCalendarFunction({ plan_id: planId, action: 'delete' })
 }
 
 export async function testGoogleCalendarConnection() {

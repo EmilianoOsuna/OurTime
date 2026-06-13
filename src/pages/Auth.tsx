@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { supabase, nativeRedirectUrl } from '../lib/supabase'
-import { Browser, isNative } from '../lib/native'
+import { supabase } from '../lib/supabase'
+import { isNative } from '../lib/native'
+import { SocialLogin } from '@capgo/capacitor-social-login'
 import { Icon } from '../components/ui/Icon'
 
 type Flow = 'welcome' | 'register' | 'login' | 'forgot'
@@ -85,16 +86,51 @@ export default function Auth({ onAuth }: { onAuth: () => void }) {
     setLoading(true)
     setError('')
     try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: isNative ? nativeRedirectUrl : window.location.origin,
-          skipBrowserRedirect: isNative,
-        },
-      })
-      if (error) throw error
-      if (isNative && data.url) await Browser.open({ url: data.url })
-    } catch (e: any) { setError(e.message); setLoading(false) }
+      if (isNative) {
+        // Native Google Sign-In on mobile devices
+        const result = await SocialLogin.login({
+          provider: 'google',
+          options: {
+            scopes: ['email', 'profile'],
+            style: 'bottom',
+          },
+        })
+
+        if (result.result.responseType === 'online' && result.result.idToken) {
+          const { data, error } = await supabase.auth.signInWithIdToken({
+            provider: 'google',
+            token: result.result.idToken,
+          })
+          if (error) throw error
+          if (data.session) {
+            onAuth()
+          } else {
+            throw new Error('No se pudo establecer la sesión nativa.')
+          }
+        } else {
+          throw new Error('Inicio de sesión cancelado o respuesta de Google no compatible.')
+        }
+      } else {
+        // Web-based Google OAuth redirect
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: window.location.origin,
+            skipBrowserRedirect: false,
+          },
+        })
+        if (error) throw error
+      }
+    } catch (e: unknown) {
+      const errMsg = e instanceof Error ? e.message : String(e)
+      // If the user simply cancelled or closed the prompt, don't show it as a loud error card
+      if (errMsg.includes('cancel') || errMsg.includes('Cancel') || errMsg.includes('12501')) {
+        console.log('[Auth] Google sign-in cancelled by user')
+      } else {
+        setError(errMsg)
+      }
+      setLoading(false)
+    }
   }
 
   return (

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="new_moment"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut"
+        android:shortcutShortLabel="@string/shortcut_new_moment_short"
+        android:shortcutLongLabel="@string/shortcut_new_moment_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.ourtime.app"
+            android:targetClass="com.ourtime.app.MainActivity"
+            android:data="ourtime://open?shortcut=newplan" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="open_chat"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut"
+        android:shortcutShortLabel="@string/shortcut_chat_short"
+        android:shortcutLongLabel="@string/shortcut_chat_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.ourtime.app"
+            android:targetClass="com.ourtime.app.MainActivity"
+            android:data="ourtime://open?shortcut=chat" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="add_memory"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut"
+        android:shortcutShortLabel="@string/shortcut_memory_short"
+        android:shortcutLongLabel="@string/shortcut_memory_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.ourtime.app"
+            android:targetClass="com.ourtime.app.MainActivity"
+            android:data="ourtime://open?shortcut=memory" />
+    </shortcut>
+</shortcuts>

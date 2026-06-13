@@ -11,9 +11,6 @@ export async function loginUser(page: Page) {
   if (fabVisible) return
 
   // Wait for auth screen
-  const startButton = page.getByRole('button', { name: 'Empezar', exact: true })
-  await expect(startButton).toBeVisible({ timeout: 10_000 })
-  await startButton.click()
   await expect(page.getByText('Crear cuenta')).toBeVisible({ timeout: 10_000 })
   await page.getByText('Ya tengo cuenta — Iniciar sesión').click()
   await expect(page.getByPlaceholder('mateo@correo.com')).toBeVisible()

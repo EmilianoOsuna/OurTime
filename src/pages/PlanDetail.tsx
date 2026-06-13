@@ -11,6 +11,8 @@ import { toRoman, fmtDate, fmtDateShort, countdown, CAT_META } from '../lib/chap
 import { compressToWebP } from '../lib/imageUtils'
 import { NewPlanSheet } from '../components/sheets/NewPlanSheet'
 import type { PlanType } from '../lib/supabase'
+import { deletePlanFromGoogleCalendar, syncPlanToGoogleCalendar } from '../lib/usePushNotifications'
+import { Lightbox } from '../components/ui/Lightbox'
 
 type PlanCategory = PlanType['type']
 
@@ -35,7 +37,7 @@ const INPUT_STYLE: React.CSSProperties = {
   outline: 'none', appearance: 'none', WebkitAppearance: 'none',
 }
 
-interface Memory { id: string; image_url: string; caption: string | null; created_at: string }
+interface Memory { id: string; image_url: string; caption: string | null; created_at: string; position_x?: number; position_y?: number }
 
 function RoundBtn({ icon, onClick }: { icon: string; onClick?: () => void }) {
   return (
@@ -99,7 +101,7 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
   }, [!!activeSubPlan])
 
   // Memory lightbox
-  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null)
+  const [lightboxMemory, setLightboxMemory] = useState<Memory | null>(null)
 
   // Past plan prompt
   const [pastPromptDismissed, setPastPromptDismissed] = useState(false)
@@ -114,6 +116,38 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
   const [coverUrl, setCoverUrl] = useState<string | null>(initialPlan.cover_url)
   const [uploadingCover, setUploadingCover] = useState(false)
   const coverInputRef = useRef<HTMLInputElement>(null)
+  const [coverPosition, setCoverPosition] = useState({
+    x: initialPlan.cover_position_x ?? 50,
+    y: initialPlan.cover_position_y ?? 50,
+  })
+  const coverDragRef = useRef<{ pointerId: number; startClientX: number; startClientY: number; x: number; y: number } | null>(null)
+
+  const startCoverDrag = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!editing || !coverUrl) return
+    e.currentTarget.setPointerCapture(e.pointerId)
+    coverDragRef.current = {
+      pointerId: e.pointerId,
+      startClientX: e.clientX,
+      startClientY: e.clientY,
+      x: coverPosition.x,
+      y: coverPosition.y,
+    }
+  }
+
+  const moveCover = (e: React.PointerEvent<HTMLDivElement>) => {
+    const drag = coverDragRef.current
+    if (!drag || drag.pointerId !== e.pointerId) return
+    const rect = e.currentTarget.getBoundingClientRect()
+    const clamp = (value: number) => Math.max(0, Math.min(100, Math.round(value)))
+    setCoverPosition({
+      x: clamp(drag.x - ((e.clientX - drag.startClientX) / rect.width) * 100),
+      y: clamp(drag.y - ((e.clientY - drag.startClientY) / rect.height) * 100),
+    })
+  }
+
+  const endCoverDrag = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (coverDragRef.current?.pointerId === e.pointerId) coverDragRef.current = null
+  }
 
   // Memory upload
   const [uploadingMemory, setUploadingMemory] = useState(false)
@@ -199,16 +233,24 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
       description: editDesc.trim() || null,
       place: editPlace.trim() || null,
       budget_amount: editBudget ? +editBudget : null,
+      cover_position_x: coverPosition.x,
+      cover_position_y: coverPosition.y,
     }
     await supabase.from('plans').update(updates).eq('id', plan.id)
     setPlan(p => ({ ...p, ...updates }))
     setSaving(false)
     setEditing(false)
     push({ icon: 'edit', eyebrow: 'Momento', title: 'Cambios guardados' })
+    syncPlanToGoogleCalendar(plan.id).catch(console.error)
     onUpdated?.()
   }
 
   const cancelPlan = async () => {
+    try {
+      await deletePlanFromGoogleCalendar(plan.id)
+    } catch (error) {
+      push({ icon: 'x', eyebrow: 'Google Calendar', title: 'No se pudo eliminar el evento', body: error instanceof Error ? error.message : 'Inténtalo de nuevo.' })
+    }
     await supabase.from('plans').update({ status: 'cancelado' }).eq('id', plan.id)
     push({ icon: 'x', eyebrow: 'Momento', title: 'Momento cancelado' })
     onUpdated?.()
@@ -239,9 +281,10 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
       if (error) throw error
       const { data: { publicUrl } } = supabase.storage.from('Fotos').getPublicUrl(path)
       const url = publicUrl + '?t=' + Date.now()
-      await supabase.from('plans').update({ cover_url: url }).eq('id', plan.id)
+      await supabase.from('plans').update({ cover_url: url, cover_position_x: 50, cover_position_y: 50 }).eq('id', plan.id)
       setCoverUrl(url)
-      setPlan(p => ({ ...p, cover_url: url }))
+      setCoverPosition({ x: 50, y: 50 })
+      setPlan(p => ({ ...p, cover_url: url, cover_position_x: 50, cover_position_y: 50 }))
       onUpdated?.()
     } catch {
       push({ icon: 'x', eyebrow: 'Error', title: 'No se pudo subir la foto' })
@@ -286,19 +329,41 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
       {/* Hero */}
       <div
         className={coverUrl ? '' : ('ph' + (blue ? ' blue' : ''))}
-        style={{ height: 250, position: 'relative', flexShrink: 0, overflow: 'hidden',
+        onPointerDown={startCoverDrag}
+        onPointerMove={moveCover}
+        onPointerUp={endCoverDrag}
+        onPointerCancel={endCoverDrag}
+        style={{
+          height: 250, position: 'relative', flexShrink: 0, overflow: 'hidden',
           background: coverUrl ? '#111' : undefined,
-          borderRadius: '0 0 28px 28px' }}
+          borderRadius: '0 0 28px 28px',
+          cursor: (editing && coverUrl) ? 'grab' : 'default',
+          touchAction: (editing && coverUrl) ? 'none' : 'auto',
+        }}
       >
         {coverUrl && (
           <img src={coverUrl} alt="" loading="eager" decoding="async"
             onLoad={e => { (e.target as HTMLImageElement).style.opacity = '0.9' }}
-            style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0, transition: 'opacity 0.4s' }} />
+            style={{
+              width: '100%', height: '100%', objectFit: 'cover', opacity: 0, transition: 'opacity 0.4s',
+              objectPosition: `${coverPosition.x}% ${coverPosition.y}%`,
+              userSelect: 'none', pointerEvents: 'none'
+            }} />
         )}
         {!coverUrl && (
           <span className="ph-label" style={{ position: 'absolute', bottom: 20, right: 16 }}>
             foto del momento
           </span>
+        )}
+        {editing && coverUrl && (
+          <div style={{
+            position: 'absolute', left: 18, bottom: 60,
+            background: 'rgba(0,0,0,0.55)', color: '#fff', borderRadius: 8,
+            padding: '5px 9px', fontSize: 11, fontWeight: 700, pointerEvents: 'none',
+            zIndex: 2, backdropFilter: 'blur(4px)',
+          }}>
+            Arrastra para reacomodar
+          </div>
         )}
 
         <input ref={coverInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleCoverUpload} />
@@ -307,7 +372,7 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
         {/* Upload overlay spinner */}
         {uploadingCover && (
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3 }}>
             <div style={{ width: 34, height: 34, borderRadius: '50%', border: '3px solid #fff',
               borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite' }} />
           </div>
@@ -318,19 +383,19 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
           position: 'absolute', top: 56, left: 18, width: 42, height: 42,
           borderRadius: '50%', border: 'none', background: 'var(--card)',
           cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: 'var(--sh-sm)', color: 'var(--ink)',
+          boxShadow: 'var(--sh-sm)', color: 'var(--ink)', zIndex: 3,
         }}>
           <Icon name="chevD" size={22} />
         </button>
 
         {/* Top-right: camera + edit */}
-        <div style={{ position: 'absolute', top: 56, right: 18, display: 'flex', gap: 8 }}>
+        <div style={{ position: 'absolute', top: 56, right: 18, display: 'flex', gap: 8, zIndex: 3 }}>
           <RoundBtn icon="camera" onClick={() => coverInputRef.current?.click()} />
           {!editing && <RoundBtn icon="edit" onClick={startEdit} />}
         </div>
 
         {/* Category tag */}
-        <div style={{ position: 'absolute', bottom: 20, left: 18 }}>
+        <div style={{ position: 'absolute', bottom: 20, left: 18, zIndex: 3 }}>
           <CatTag cat={editing ? editType : plan.type} />
         </div>
       </div>
@@ -655,12 +720,13 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
             {memories.length > 0 ? (
               <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4 }} className="ot-scroll">
                 {memories.slice(0, 8).map((m) => (
-                  <button key={m.id} onClick={() => setLightboxUrl(m.image_url)}
+                  <button key={m.id} onClick={() => setLightboxMemory(m)}
                     style={{ width: 108, height: 134, borderRadius: 14, flexShrink: 0, overflow: 'hidden',
                       background: 'var(--card-2)', border: 'none', padding: 0, cursor: 'pointer' }}>
                     <img src={m.image_url} alt="" loading="lazy" decoding="async"
                       onLoad={e => { (e.target as HTMLImageElement).style.opacity = '1' }}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0, transition: 'opacity 0.35s', display: 'block' }} />
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0, transition: 'opacity 0.35s', display: 'block',
+                        objectPosition: `${m.position_x ?? 50}% ${m.position_y ?? 50}%` }} />
                   </button>
                 ))}
                 <button onClick={() => memoryInputRef.current?.click()}
@@ -716,26 +782,30 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
       )}
 
       {/* Memory lightbox */}
-      {lightboxUrl && (
-        <div onClick={() => setLightboxUrl(null)} style={{
-          position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.9)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)',
-          animation: 'fadeIn .18s both',
-        }}>
-          <button onClick={() => setLightboxUrl(null)} style={{
-            position: 'absolute', top: 56, right: 18, width: 40, height: 40,
-            borderRadius: '50%', border: 'none', background: 'rgba(255,255,255,0.15)',
-            cursor: 'pointer', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <Icon name="x" size={20} />
-          </button>
-          <div style={{ maxWidth: '92vw', maxHeight: '80vh', borderRadius: 16, overflow: 'hidden' }}>
-            <img src={lightboxUrl} alt="" decoding="async"
-              onLoad={e => { (e.target as HTMLImageElement).style.opacity = '1' }}
-              style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', opacity: 0, transition: 'opacity 0.3s' }} />
-          </div>
-        </div>
+      {lightboxMemory && (
+        <Lightbox
+          url={lightboxMemory.image_url}
+          memoryId={lightboxMemory.id}
+          onDelete={async (id, url) => {
+            const { error } = await supabase.from('memories').delete().eq('id', id)
+            if (error) throw error
+
+            try {
+              const parts = url.split('/storage/v1/object/public/Fotos/')
+              if (parts.length > 1 && parts[1]) {
+                const path = decodeURIComponent(parts[1])
+                await supabase.storage.from('Fotos').remove([path])
+              }
+            } catch (err) {
+              console.error('Failed to remove image from storage bucket:', err)
+            }
+
+            setMemories(ms => ms.filter(x => x.id !== id))
+            push({ icon: 'trash', eyebrow: 'Recuerdo', title: 'Foto eliminada' })
+            onUpdated?.()
+          }}
+          onClose={() => setLightboxMemory(null)}
+        />
       )}
 
       {/* New sub-momento sheet */}

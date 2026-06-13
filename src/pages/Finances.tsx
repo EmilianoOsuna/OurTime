@@ -5,6 +5,8 @@ import { Segmented } from '../components/ui/Segmented'
 import { fmtDateShort } from '../lib/chapterUtils'
 import { useCurrency } from '../context/CurrencyContext'
 import { useAuth } from '../context/AuthContext'
+import { useToast } from '../context/ToastContext'
+import { EditAction } from '../components/ui/EditAction'
 import type { PlanType } from '../lib/supabase'
 
 const TYPE_ICONS: Record<string, string> = {
@@ -41,6 +43,7 @@ function inPeriod(dateStr: string, period: 'mensual' | 'semanal' | null) {
 export default function Finances() {
   const { fmt } = useCurrency()
   const { activeStoryId, stories, refreshStories } = useAuth()
+  const { push: toast } = useToast()
   const [plans, setPlans] = useState<PlanType[]>([])
   const [loading, setLoading] = useState(true)
   const [seg, setSeg] = useState(0)
@@ -90,10 +93,15 @@ export default function Finances() {
     const val = parseFloat(budgetInput)
     if (isNaN(val) || val < 0) return
     setSavingBudget(true)
-    await supabase.from('stories').update({
-      budget: val || null,
+    const { error } = await supabase.from('stories').update({
+      budget: val,
       budget_period: periodInput,
     }).eq('id', activeStoryId)
+    if (error) {
+      setSavingBudget(false)
+      toast({ icon: 'x', title: 'No se pudo guardar el presupuesto', body: error.message })
+      return
+    }
     await refreshStories()
     setSavingBudget(false)
     setEditingBudget(false)
@@ -131,19 +139,24 @@ export default function Finances() {
           <div style={{
             position: 'absolute', right: -30, top: -30, width: 130, height: 130, borderRadius: '50%',
             background: 'radial-gradient(circle, rgba(241,119,32,0.35), transparent 70%)',
+            pointerEvents: 'none',
           }} />
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div className="eyebrow" style={{ color: 'var(--hero-soft)' }}>
               {budget !== null ? `Saldo · ${periodLabel}` : periodFullLabel}
             </div>
-            <button onClick={() => { setBudgetInput(String(budget ?? '')); setPeriodInput(budgetPeriod ?? 'mensual'); setEditingBudget(true) }}
-              style={{ border: 'none', background: 'transparent', cursor: 'pointer',
-                fontSize: 12, fontWeight: 600, color: 'var(--hero-soft)', fontFamily: 'var(--font-ui)',
-                display: 'flex', alignItems: 'center', gap: 4, padding: 0 }}>
-              <Icon name="edit" size={13} style={{ color: 'var(--hero-soft)' }} />
-              {budget !== null ? 'Editar' : 'Añadir presupuesto'}
-            </button>
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <EditAction
+                label={budget !== null ? 'Editar' : 'Añadir presupuesto'}
+                tone="onDark"
+                onClick={() => {
+                  setBudgetInput(budget === null ? '' : String(budget))
+                  setPeriodInput(budgetPeriod)
+                  setEditingBudget(true)
+                }}
+              />
+            </div>
           </div>
 
           {editingBudget ? (
@@ -167,12 +180,12 @@ export default function Finances() {
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
                 <button onClick={saveBudget} disabled={savingBudget} style={{
-                  flex: 1, border: 'none', background: 'rgba(255,255,255,0.2)', color: 'var(--hero-text)',
+                  flex: 1, border: 'none', background: '#fff', color: 'var(--ink)',
                   borderRadius: 10, padding: '11px', fontWeight: 700, cursor: 'pointer',
                   fontFamily: 'var(--font-ui)', fontSize: 14,
                 }}>{savingBudget ? '…' : 'Guardar'}</button>
                 <button onClick={() => setEditingBudget(false)} style={{
-                  border: 'none', background: 'transparent', color: 'var(--hero-soft)',
+                  border: 'none', background: 'transparent', color: '#fff',
                   borderRadius: 10, padding: '11px 14px', cursor: 'pointer', fontFamily: 'var(--font-ui)', fontSize: 13,
                 }}>Cancelar</button>
               </div>

@@ -122,7 +122,14 @@ async function getFCMAccessToken(): Promise<string> {
   return data.access_token
 }
 
-async function sendFCM(deviceToken: string, title: string, body: string, tag: string, url: string) {
+async function sendFCM(
+  deviceToken: string,
+  title: string,
+  body: string,
+  tag: string,
+  url: string,
+  metadata: Record<string, string>,
+) {
   const accessToken = await getFCMAccessToken()
   const projectId = getFCMServiceAccount().project_id
   const fcmUrl = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`
@@ -132,7 +139,7 @@ async function sendFCM(deviceToken: string, title: string, body: string, tag: st
       token: deviceToken,
       notification: { title, body },
       android: { notification: { sound: 'default', tag, channel_id: 'ourtime_messages' } },
-      data: { url },
+      data: { url, ...metadata },
     },
   }
 
@@ -165,8 +172,10 @@ Deno.serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) throw new Error('Unauthorized')
 
-    const { story_id, title, body, url, test_self, test_target } = await req.json()
+    const { story_id, title, body, url, event_type, target_id, test_self, test_target } = await req.json()
     const sender_id = user.id
+    let notificationTitle = String(title ?? 'OurTime')
+    const notificationBody = String(body ?? '')
 
     if (test_self !== true) {
       const { count: recentCount, error: countErr } = await supabase
@@ -196,6 +205,17 @@ Deno.serve(async (req) => {
       if (membershipError) throw membershipError
       if (!membership) throw new Error('Forbidden')
 
+      const [{ data: story }, { data: sender }] = await Promise.all([
+        supabase.from('stories').select('name').eq('id', story_id).single(),
+        supabase.from('profiles').select('full_name').eq('id', sender_id).single(),
+      ])
+      const storyName = story?.name ?? 'OurTime'
+      const senderName = sender?.full_name ?? 'Alguien'
+      if (event_type === 'message') notificationTitle = `${senderName} · ${storyName}`
+      else if (event_type === 'plan_created') notificationTitle = `Nuevo momento · ${storyName}`
+      else if (event_type === 'memory_created') notificationTitle = `Nuevo recuerdo · ${storyName}`
+      else if (event_type === 'expense_created') notificationTitle = `Nuevo gasto · ${storyName}`
+
       const { data: members, error: membersError } = await supabase
         .from('story_members')
         .select('user_id')
@@ -220,6 +240,8 @@ Deno.serve(async (req) => {
       return subscriptions.filter(Boolean).map(sub => ({ profileId: profile.id, sub }))
     })
 
+    if (test_self !== true) deliveries = deliveries.filter(({ profileId }) => profileId !== sender_id)
+
     if (test_self === true) {
       if (!test_target) throw new Error('Missing test_target')
       deliveries = deliveries.filter(({ sub }) => {
@@ -234,10 +256,29 @@ Deno.serve(async (req) => {
     const results = await Promise.allSettled(
       deliveries.map(({ sub }) => {
         if (sub.endpoint) {
-          return webpush.sendNotification(sub, JSON.stringify({ title, body, tag: story_id, url: url ?? '/' }))
+          return webpush.sendNotification(sub, JSON.stringify({
+            title: notificationTitle,
+            body: notificationBody,
+            tag: `${story_id}:${event_type ?? 'activity'}`,
+            url: url ?? '/',
+            story_id,
+            event_type: event_type ?? 'activity',
+            target_id: target_id ?? '',
+          }))
         }
         if (sub.platform === 'android' && sub.token) {
-          return sendFCM(sub.token, title, body, story_id, url ?? '/')
+          return sendFCM(
+            sub.token,
+            notificationTitle,
+            notificationBody,
+            `${story_id}:${event_type ?? 'activity'}`,
+            url ?? '/',
+            {
+              story_id: String(story_id ?? ''),
+              event_type: String(event_type ?? 'activity'),
+              target_id: String(target_id ?? ''),
+            },
+          )
         }
         return Promise.reject(new Error('Unsupported push subscription'))
       })

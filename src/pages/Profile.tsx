@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Icon } from '../components/ui/Icon'
+import { EditAction } from '../components/ui/EditAction'
 import { Avatar } from '../components/ui/Avatar'
 import { compressToWebP } from '../lib/imageUtils'
 import { PresenceDot } from '../components/ui/PresenceDot'
@@ -11,6 +12,7 @@ import { supabase, nativeRedirectUrl } from '../lib/supabase'
 import { Browser, isNative } from '../lib/native'
 import type { PlanType, PersonDisplay, StoryType } from '../lib/supabase'
 import { useToast } from '../context/ToastContext'
+import { useConfirm } from '../components/ui/ConfirmDialog'
 import { sendTestPushNotification, testGoogleCalendarConnection, usePushNotifications } from '../lib/usePushNotifications'
 
 const CAT_COLOR: Record<string, string> = {
@@ -47,6 +49,7 @@ export function ProfileScreen({ plans, onClose, onGoToFinance, storyCode, isAdmi
   const { profile, user, signOut, refreshProfile, refreshStories, stories, activeStoryId, setActiveStoryId } = useAuth()
   const { currency, setCurrency, fmt } = useCurrency()
   const { push: toast } = useToast()
+  const confirm = useConfirm()
 
   const [editing, setEditing] = useState(false)
   const [editName, setEditName] = useState(profile?.full_name || '')
@@ -112,6 +115,31 @@ export function ProfileScreen({ plans, onClose, onGoToFinance, storyCode, isAdmi
       .eq('user_id', target.userId)
     setMembers(ms => ms.map(m => m.userId === target.userId ? { ...m, permissionLevel: newLevel } : m))
     setSelectedMember(prev => prev ? { ...prev, permissionLevel: newLevel } : null)
+  }
+
+  const expelMember = async (target: StoryMember) => {
+    if (!activeStoryId) return
+    const ok = await confirm({
+      title: 'Expulsar de la historia',
+      body: `¿Estás seguro de que quieres expulsar a ${target.name} de esta historia? Perderá acceso inmediato a todos los momentos, recuerdos y chats.`,
+      danger: true,
+      confirmLabel: 'Expulsar',
+    })
+    if (!ok) return
+
+    try {
+      const { error } = await supabase.from('story_members')
+        .delete()
+        .eq('story_id', activeStoryId)
+        .eq('user_id', target.userId)
+      if (error) throw error
+
+      setMembers(ms => ms.filter(m => m.userId !== target.userId))
+      setSelectedMember(null)
+      toast({ icon: 'trash', eyebrow: 'Miembro', title: 'Miembro expulsado', body: `${target.name} ya no forma parte de la historia.` })
+    } catch (e: any) {
+      toast({ icon: 'x', title: 'Error', body: e.message })
+    }
   }
 
   const saveRole = async () => {
@@ -287,13 +315,7 @@ export function ProfileScreen({ plans, onClose, onGoToFinance, storyCode, isAdmi
               <span className="eyebrow">Esta Historia</span>
               <div style={{ display: 'flex', gap: 8 }}>
                 {onEditStory && (
-                  <button onClick={() => onEditStory(activeStory)} style={{
-                    border: 'none', background: 'transparent', cursor: 'pointer',
-                    fontSize: 13, fontWeight: 600, color: 'var(--orange)', fontFamily: 'var(--font-ui)',
-                    padding: 0, display: 'flex', alignItems: 'center', gap: 4,
-                  }}>
-                    <Icon name="edit" size={13} /> {isAdmin ? 'Editar' : 'Opciones'}
-                  </button>
+                  <EditAction label={isAdmin ? 'Editar' : 'Opciones'} onClick={() => onEditStory(activeStory)} />
                 )}
               </div>
             </div>
@@ -323,13 +345,7 @@ export function ProfileScreen({ plans, onClose, onGoToFinance, storyCode, isAdmi
                       Miembros · {members.length}
                     </div>
                     {!editingRole && (
-                      <button onClick={() => setEditingRole(true)} style={{
-                        border: 'none', background: 'transparent', cursor: 'pointer',
-                        fontSize: 12, fontWeight: 600, color: 'var(--orange)', fontFamily: 'var(--font-ui)', padding: 0,
-                        display: 'flex', alignItems: 'center', gap: 3,
-                      }}>
-                        <Icon name="edit" size={12} /> Mi rol
-                      </button>
+                      <EditAction onClick={() => setEditingRole(true)} />
                     )}
                   </div>
                   {editingRole && (
@@ -436,11 +452,7 @@ export function ProfileScreen({ plans, onClose, onGoToFinance, storyCode, isAdmi
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
             <span className="eyebrow">Tu perfil</span>
             {!editing && (
-              <button onClick={() => { setEditName(profile?.full_name || ''); setEditBirthday(profile?.birthday || ''); setEditNickname(profile?.nickname || ''); setEditing(true) }}
-                style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, fontWeight: 600,
-                  color: 'var(--orange)', padding: 0, fontFamily: 'var(--font-ui)' }}>
-                Editar
-              </button>
+              <EditAction onClick={() => { setEditName(profile?.full_name || ''); setEditBirthday(profile?.birthday || ''); setEditNickname(profile?.nickname || ''); setEditing(true) }} />
             )}
           </div>
 
@@ -702,6 +714,17 @@ export function ProfileScreen({ plans, onClose, onGoToFinance, storyCode, isAdmi
                 </button>
               )}
             </div>
+            {isAdmin && (
+              <button onClick={() => expelMember(selectedMember)} style={{
+                marginTop: 12, width: '100%', border: 'none', background: 'rgba(220, 38, 38, 0.1)',
+                color: '#dc2626', borderRadius: 14, padding: '13px', fontFamily: 'var(--font-ui)',
+                fontWeight: 700, fontSize: 14.5, cursor: 'pointer', display: 'flex',
+                alignItems: 'center', justifyContent: 'center', gap: 8,
+              }}>
+                <Icon name="trash" size={16} />
+                Expulsar de la Historia
+              </button>
+            )}
             <button onClick={() => setSelectedMember(null)} style={{
               marginTop: 16, width: '100%', border: '1.5px solid var(--line)', background: 'transparent',
               borderRadius: 14, padding: '13px', fontFamily: 'var(--font-ui)', fontWeight: 600,
@@ -788,14 +811,25 @@ function GoogleCalendarSection() {
 
   useEffect(() => {
     if (!user) return
-    ;(async () => {
+    const refreshConnection = async () => {
       const [{ data: profileData }, { data: tokenData }] = await Promise.all([
         supabase.from('profiles').select('google_calendar_enabled').eq('id', user.id).single(),
         supabase.from('user_secrets').select('value').eq('user_id', user.id).eq('name', 'google_calendar_token').maybeSingle(),
       ])
       setConnected(Boolean(profileData?.google_calendar_enabled && tokenData?.value))
       setGcalLoading(false)
-    })()
+      setSyncing(false)
+    }
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') void refreshConnection()
+    }
+    void refreshConnection()
+    window.addEventListener('focus', refreshConnection)
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => {
+      window.removeEventListener('focus', refreshConnection)
+      document.removeEventListener('visibilitychange', handleVisibility)
+    }
   }, [user])
 
   const connect = async () => {

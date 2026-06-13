@@ -19,6 +19,7 @@ import { Network } from '@capacitor/network'
 import { Toast } from '@capacitor/toast'
 import { ScreenOrientation } from '@capacitor/screen-orientation'
 import { savePushSubscription } from './pushSubscriptions'
+import { SocialLogin } from '@capgo/capacitor-social-login'
 
 export const isNative = Capacitor.isNativePlatform()
 export const isWeb = !isNative
@@ -27,6 +28,19 @@ let onBackPress: (() => boolean) | null = null
 const PUSH_TOKEN_KEY = 'ourtime_push_token'
 let pushListenersReady = false
 let registrationWaiter: ((registered: boolean) => void) | null = null
+let pendingNavigationUrl: string | null = null
+
+function dispatchNavigation(url: string | undefined) {
+  if (!url) return
+  pendingNavigationUrl = url
+  window.dispatchEvent(new CustomEvent('ourtime:navigate', { detail: { url } }))
+}
+
+export function consumeNativeNavigationUrl(): string | null {
+  const url = pendingNavigationUrl
+  pendingNavigationUrl = null
+  return url
+}
 
 export function setBackHandler(handler: () => boolean) {
   onBackPress = handler
@@ -34,6 +48,30 @@ export function setBackHandler(handler: () => boolean) {
 
 export async function setupNativeApp() {
   if (!isNative) return
+
+  // Initialize Native Google Sign-In with Web Client ID from environment variables
+  const webClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
+  if (webClientId) {
+    SocialLogin.initialize({
+      google: {
+        webClientId,
+        mode: 'online',
+      },
+    }).catch((err) => {
+      console.error('[DIAG] Failed to initialize SocialLogin:', err)
+    })
+  } else {
+    console.warn('[DIAG] VITE_GOOGLE_CLIENT_ID is missing from environment variables.')
+  }
+
+  if ('serviceWorker' in navigator) {
+    const registrations = await navigator.serviceWorker.getRegistrations().catch(() => [])
+    await Promise.all(registrations.map(registration => registration.unregister()))
+  }
+  if ('caches' in window) {
+    const cacheNames = await caches.keys().catch(() => [])
+    await Promise.all(cacheNames.map(cacheName => caches.delete(cacheName)))
+  }
   setTimeout(() => SplashScreen.hide(), 500)
   setupPushListeners().catch(console.error)
   App.addListener('appStateChange', ({ isActive }) => {
@@ -107,7 +145,12 @@ export async function setupNativeApp() {
         }
       }
     }
+    dispatchNavigation(rawUrl)
   })
+  App.getLaunchUrl().then(result => {
+    const url = result?.url
+    if (url && !url.includes('code=') && !url.includes('access_token')) dispatchNavigation(url)
+  }).catch(console.error)
 }
 
 async function savePushToken(token: string): Promise<void> {
@@ -158,6 +201,11 @@ async function setupPushListeners(): Promise<void> {
 
   PN.addListener('pushNotificationActionPerformed', (action: any) => {
     console.log('Push action:', action)
+    dispatchNavigation(action.notification?.data?.url ?? action.notification?.data?.link)
+  })
+
+  LocalNotifications.addListener('localNotificationActionPerformed', (action: any) => {
+    dispatchNavigation(action.notification?.extra?.url ?? action.notification?.extra?.link)
   })
 }
 

@@ -26,7 +26,7 @@ const CATS_IN = [
 interface Props { onClose: () => void; onCreated: () => void }
 
 export const MoneySheet: React.FC<Props> = ({ onClose, onCreated }) => {
-  const { activeStoryId } = useAuth()
+  const { activeStoryId, stories } = useAuth()
   const { push } = useToast()
   const { currency } = useCurrency()
   const sym = CURRENCIES[currency].symbol
@@ -70,7 +70,15 @@ export const MoneySheet: React.FC<Props> = ({ onClose, onCreated }) => {
       title: (kind === 'ingreso' ? '+' : '–') + sym + (+amt).toLocaleString('es-ES'),
       body: label.trim() })
     if (user?.id && kind === 'gasto') {
-      sendPushToStoryMembers(activeStoryId, user.id, 'Nuevo gasto registrado', `${sym}${(+amt).toLocaleString('es-ES')} · ${label.trim()}`).catch(console.error)
+      const storyName = stories.find(story => story.id === activeStoryId)?.name ?? 'tu historia'
+      sendPushToStoryMembers(
+        activeStoryId,
+        user.id,
+        `Nuevo gasto · ${storyName}`,
+        `${sym}${(+amt).toLocaleString('es-ES')} · ${label.trim()}`,
+        `/?shortcut=finance&story=${encodeURIComponent(activeStoryId)}`,
+        { event_type: 'expense_created', target_id: planId || undefined },
+      ).catch(console.error)
     }
     onCreated()
     onClose()

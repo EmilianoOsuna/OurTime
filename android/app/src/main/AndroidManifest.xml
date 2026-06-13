@@ -10,6 +10,10 @@
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
 
+        <meta-data
+            android:name="android.app.shortcuts"
+            android:resource="@xml/shortcuts" />
+
         <activity
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode|navigation|density"
             android:name=".MainActivity"
@@ -30,7 +34,25 @@
                 <data android:scheme="ourtime" android:host="callback" />
             </intent-filter>
 
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="ourtime" android:host="open" />
+            </intent-filter>
+
         </activity>
+
+        <receiver
+            android:name=".OurTimeWidget"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/ourtime_widget_info" />
+        </receiver>
 
         <provider
             android:name="androidx.core.content.FileProvider"

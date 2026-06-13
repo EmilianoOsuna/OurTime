@@ -40,10 +40,11 @@ interface Props {
   partner: PersonDisplay | null
   storyName?: string
   storyCoverUrl?: string | null
+  storyCoverPosition?: { x: number; y: number }
   onBack: () => void
 }
 
-export default function Chat({ me, partner, storyName, storyCoverUrl, onBack }: Props) {
+export default function Chat({ me, partner, storyName, storyCoverUrl, storyCoverPosition, onBack }: Props) {
   const { activeStoryId, user } = useAuth()
   const [messages, setMessages] = useState<MessageType[]>([])
   const [text, setText] = useState('')
@@ -63,6 +64,7 @@ export default function Chat({ me, partner, storyName, storyCoverUrl, onBack }: 
   useEffect(() => {
     if (!activeStoryId) return
     setLoading(true)
+    setMessages([])
     supabase.from('messages').select('*')
       .eq('story_id', activeStoryId)
       .order('created_at', { ascending: true })
@@ -127,9 +129,10 @@ export default function Chat({ me, partner, storyName, storyCoverUrl, onBack }: 
     } else {
       sendPushToStoryMembers(
         activeStoryId, user.id,
-        me.name || 'Nuevo mensaje',
+        `${me.name || 'Alguien'} · ${storyName || 'OurTime'}`,
         trimmed.length > 80 ? trimmed.slice(0, 80) + '…' : trimmed,
-        '/?shortcut=chat'
+        `/?shortcut=chat&story=${encodeURIComponent(activeStoryId)}`,
+        { event_type: 'message' },
       ).catch(console.error)
     }
     setSending(false)
@@ -147,6 +150,7 @@ export default function Chat({ me, partner, storyName, storyCoverUrl, onBack }: 
       position: 'fixed', inset: 0, zIndex: 10,
       display: 'flex', flexDirection: 'column',
       background: 'var(--paper)',
+      minHeight: '100dvh', height: '100dvh',
     }}>
       {/* ── Header ── */}
       <div style={{
@@ -167,7 +171,8 @@ export default function Chat({ me, partner, storyName, storyCoverUrl, onBack }: 
 
         <div style={{ position: 'relative', flexShrink: 0 }}>
           {storyCoverUrl ? (
-            <img src={storyCoverUrl} alt="" style={{ width: 40, height: 40, borderRadius: 12, objectFit: 'cover' }} />
+            <img src={storyCoverUrl} alt="" style={{ width: 40, height: 40, borderRadius: 12, objectFit: 'cover',
+              objectPosition: `${storyCoverPosition?.x ?? 50}% ${storyCoverPosition?.y ?? 50}%` }} />
           ) : (
             <div style={{ width: 40, height: 40, borderRadius: 12, background: 'var(--orange-tint)',
               color: 'var(--orange-deep)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -189,14 +194,20 @@ export default function Chat({ me, partner, storyName, storyCoverUrl, onBack }: 
 
       {/* ── Messages ── */}
       <div className="ot-scroll" style={{
-        flex: 1, overflowY: 'auto',
+        flex: 1, minHeight: 0, overflowY: 'auto',
         padding: '14px 14px 8px',
         display: 'flex', flexDirection: 'column', gap: 2,
       }}>
         {loading && (
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{ width: 28, height: 28, borderRadius: '50%', border: '3px solid var(--orange)',
-              borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite' }} />
+          <div aria-label="Cargando mensajes" style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: 10, paddingBottom: 12 }}>
+            {[58, 72, 46, 66].map((width, index) => (
+              <div key={width} style={{
+                width: `${width}%`, height: index === 1 ? 58 : 42, borderRadius: 18,
+                alignSelf: index % 2 === 0 ? 'flex-start' : 'flex-end',
+                background: index % 2 === 0 ? 'var(--card)' : 'var(--orange-tint)',
+                opacity: 0.7, animation: `pulse 1.4s ease-in-out ${index * 0.08}s infinite alternate`,
+              }} />
+            ))}
           </div>
         )}
 
@@ -245,10 +256,11 @@ export default function Chat({ me, partner, storyName, storyCoverUrl, onBack }: 
                 marginBottom: nextSame ? 2 : 10,
                 marginTop: !prevSame && !showDate && idx > 0 ? 4 : 0,
               }}>
-                {/* Avatar placeholder — keeps alignment even when hidden */}
-                <div style={{ width: 30, flexShrink: 0, alignSelf: 'flex-end' }}>
-                  {!isMe && !nextSame && <Avatar person={person} size={30} />}
-                </div>
+                {!isMe && (
+                  <div style={{ width: 30, flexShrink: 0, alignSelf: 'flex-end' }}>
+                    {!nextSame && <Avatar person={person} size={30} />}
+                  </div>
+                )}
 
                 <div style={{ display: 'flex', flexDirection: 'column',
                   alignItems: isMe ? 'flex-end' : 'flex-start', maxWidth: '74%' }}>

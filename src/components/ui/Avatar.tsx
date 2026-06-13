@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { imageUrl } from '../../lib/supabase'
 
 interface Person {
@@ -14,8 +14,10 @@ export function Avatar({ person, size = 40, ring = true, style = {} }: {
   ring?: boolean
   style?: React.CSSProperties
 }) {
+  const [failed, setFailed] = useState(false)
+  useEffect(() => setFailed(false), [person.avatar_url])
   const shadow = ring ? '0 0 0 2px rgba(255,255,255,0.6)' : 'none'
-  if (person.avatar_url) {
+  if (person.avatar_url && !failed) {
     return (
       <div style={{
         width: size, height: size, borderRadius: '50%',
@@ -24,11 +26,11 @@ export function Avatar({ person, size = 40, ring = true, style = {} }: {
         <img
           src={imageUrl(person.avatar_url, size * 2) ?? ''}
           alt={person.name}
-          loading="lazy"
+          loading="eager"
           decoding="async"
-          onLoad={e => { (e.target as HTMLImageElement).style.opacity = '1' }}
+          onError={() => setFailed(true)}
           style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block',
-            opacity: 0, transition: 'opacity 0.3s' }}
+            background: person.color }}
         />
       </div>
     )

@@ -28,7 +28,12 @@ export const EditStorySheet: React.FC<Props> = ({ story, onClose, onUpdated, isA
   const [category, setCategory] = useState<StoryType['category']>(story.category)
   const [coverPreview, setCoverPreview] = useState<string | null>(story.cover_url)
   const [coverFile, setCoverFile] = useState<File | null>(null)
+  const [coverPosition, setCoverPosition] = useState({
+    x: story.cover_position_x ?? 50,
+    y: story.cover_position_y ?? 50,
+  })
   const coverObjectUrlRef = useRef<string | null>(null)
+  const coverDragRef = useRef<{ pointerId: number; startClientX: number; startClientY: number; x: number; y: number } | null>(null)
 
   useEffect(() => {
     return () => { if (coverObjectUrlRef.current) URL.revokeObjectURL(coverObjectUrlRef.current) }
@@ -39,6 +44,8 @@ export const EditStorySheet: React.FC<Props> = ({ story, onClose, onUpdated, isA
   const [confirmDelete, setConfirmDelete] = useState(false)
 
   const hasChanges = name.trim() !== story.name || category !== story.category || coverFile !== null
+    || coverPosition.x !== (story.cover_position_x ?? 50)
+    || coverPosition.y !== (story.cover_position_y ?? 50)
   const ok = name.trim().length > 0 && hasChanges
 
   const handleCoverFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -49,6 +56,33 @@ export const EditStorySheet: React.FC<Props> = ({ story, onClose, onUpdated, isA
     const url = URL.createObjectURL(f)
     coverObjectUrlRef.current = url
     setCoverPreview(url)
+  }
+
+  const startCoverDrag = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!coverPreview) return
+    e.currentTarget.setPointerCapture(e.pointerId)
+    coverDragRef.current = {
+      pointerId: e.pointerId,
+      startClientX: e.clientX,
+      startClientY: e.clientY,
+      x: coverPosition.x,
+      y: coverPosition.y,
+    }
+  }
+
+  const moveCover = (e: React.PointerEvent<HTMLDivElement>) => {
+    const drag = coverDragRef.current
+    if (!drag || drag.pointerId !== e.pointerId) return
+    const rect = e.currentTarget.getBoundingClientRect()
+    const clamp = (value: number) => Math.max(0, Math.min(100, Math.round(value)))
+    setCoverPosition({
+      x: clamp(drag.x - ((e.clientX - drag.startClientX) / rect.width) * 100),
+      y: clamp(drag.y - ((e.clientY - drag.startClientY) / rect.height) * 100),
+    })
+  }
+
+  const endCoverDrag = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (coverDragRef.current?.pointerId === e.pointerId) coverDragRef.current = null
   }
 
   const save = async () => {
@@ -69,7 +103,13 @@ export const EditStorySheet: React.FC<Props> = ({ story, onClose, onUpdated, isA
         coverUrl = publicUrl
       }
       const { error } = await supabase.from('stories')
-        .update({ name: name.trim(), category, cover_url: coverUrl })
+        .update({
+          name: name.trim(),
+          category,
+          cover_url: coverUrl,
+          cover_position_x: coverPosition.x,
+          cover_position_y: coverPosition.y,
+        })
         .eq('id', story.id)
       if (error) throw error
     } catch (e: any) {
@@ -105,33 +145,52 @@ export const EditStorySheet: React.FC<Props> = ({ story, onClose, onUpdated, isA
           <>
             {/* Cover image */}
             <input id="story-cover" type="file" accept="image/*" style={{ display: 'none' }} onChange={handleCoverFile} />
-            <div onClick={() => document.getElementById('story-cover')?.click()}
+            <div
+              onPointerDown={startCoverDrag}
+              onPointerMove={moveCover}
+              onPointerUp={endCoverDrag}
+              onPointerCancel={endCoverDrag}
               style={{
-                height: 140, borderRadius: 18, overflow: 'hidden', cursor: 'pointer',
+                height: 140, borderRadius: 18, overflow: 'hidden', cursor: coverPreview ? 'grab' : 'default',
                 marginBottom: 20, position: 'relative',
                 background: coverPreview ? '#111' : 'var(--orange-tint)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
+                touchAction: 'none',
               }}>
               {coverPreview ? (
-                <img src={coverPreview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.85 }} />
+                <img src={coverPreview} alt="" draggable={false} style={{
+                  width: '100%', height: '100%', objectFit: 'cover', opacity: 0.85,
+                  objectPosition: `${coverPosition.x}% ${coverPosition.y}%`, userSelect: 'none',
+                }} />
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, color: 'var(--orange)' }}>
+                <button type="button" onPointerDown={e => e.stopPropagation()} onClick={() => document.getElementById('story-cover')?.click()} style={{
+                  border: 'none', background: 'transparent', cursor: 'pointer',
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, color: 'var(--orange)',
+                }}>
                   <Icon name="camera" size={28} />
                   <span style={{ fontSize: 12, fontWeight: 700, fontFamily: 'var(--font-ui)', color: 'var(--orange-deep)' }}>
                     Añadir portada
                   </span>
-                </div>
+                </button>
               )}
-              <div style={{
+              {coverPreview && <div style={{
+                position: 'absolute', left: 10, bottom: 10,
+                background: 'rgba(0,0,0,0.55)', color: '#fff', borderRadius: 8,
+                padding: '5px 9px', fontSize: 11, fontWeight: 700, pointerEvents: 'none',
+              }}>
+                Arrastra para reacomodar
+              </div>}
+              <button type="button" onPointerDown={e => e.stopPropagation()} onClick={() => document.getElementById('story-cover')?.click()} style={{
                 position: 'absolute', bottom: 10, right: 10,
                 background: 'rgba(0,0,0,0.55)', color: '#fff',
+                border: 'none', cursor: 'pointer',
                 borderRadius: 8, padding: '5px 9px',
                 fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-ui)',
                 display: 'flex', alignItems: 'center', gap: 5,
                 backdropFilter: 'blur(4px)',
               }}>
                 <Icon name="camera" size={12} /> {coverPreview ? 'Cambiar' : 'Subir foto'}
-              </div>
+              </button>
             </div>
 
             <label className="field-label">Nombre</label>
