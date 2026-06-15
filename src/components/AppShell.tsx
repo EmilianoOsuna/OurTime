@@ -29,6 +29,7 @@ import { Avatar } from './ui/Avatar'
 import { usePushNotifications } from '../lib/usePushNotifications'
 import { useToast } from '../context/ToastContext'
 import { Lightbox } from './ui/Lightbox'
+import { DashboardSkeleton, CalendarSkeleton, GallerySkeleton, FinancesSkeleton, ChatSkeleton } from './ui/Skeletons'
 
 const CAT_COLOR: Record<string, string> = {
   pareja:  'var(--orange)',
@@ -92,6 +93,7 @@ export default function AppShell() {
   const [notifsVisible, setNotifsVisible] = useState(false)
   const [storySwitcherOpen, setStorySwitcherOpen] = useState(false)
   const [plans, setPlans] = useState<any[]>([])
+  const [loadingPlans, setLoadingPlans] = useState(true)
   const [allCalendarPlans, setAllCalendarPlans] = useState<any[]>([])
   const [memories, setMemories] = useState<any[]>([])
   const [, setTransactions] = useState<any[]>([])
@@ -135,6 +137,7 @@ export default function AppShell() {
     setTransactions([])
     setStoryCode(null)
     setIsAdmin(false)
+    setLoadingPlans(true)
   }, [activeStoryId])
 
   // Track which stories the user is admin of (for StorySwitcher edit buttons)
@@ -156,7 +159,12 @@ export default function AppShell() {
     supabase.from('plans').select('*').eq('story_id', activeStoryId).neq('status', 'cancelado')
       .order('plan_date', { ascending: false })
       .limit(50)
-      .then(({ data }) => { if (data) setPlans(data) })
+      .then(({ data }) => {
+        if (data) setPlans(data)
+        setLoadingPlans(false)
+      }, () => {
+        setLoadingPlans(false)
+      })
 
     supabase.from('memories').select('*').eq('story_id', activeStoryId)
       .order('created_at', { ascending: false })
@@ -516,7 +524,8 @@ export default function AppShell() {
             onProfileOpen={() => setOverlay({ type: 'profile' })}
             onNewPlan={() => setOverlay({ type: 'newplan' })}
             onStorySwitcher={() => setStorySwitcherOpen(true)}
-            me={me} partner={partnerDisplay} unreadNotifs={unreadNotifs} />,
+            me={me} partner={partnerDisplay} unreadNotifs={unreadNotifs}
+            loading={loadingPlans} />,
     calendar: <Calendar plans={allCalendarPlans} onOpenPlan={openPlan} />,
     gallery: <Gallery memories={memories} setMemories={setMemories}
                onImageClick={(m: any) => setLightbox({ url: m.image_url, id: m.id })} me={me} />,
@@ -534,6 +543,11 @@ export default function AppShell() {
   return (
     <div style={{ minHeight: '100vh', background: 'var(--paper)', position: 'relative' }}>
       <Suspense fallback={
+        tab === 'home' ? <DashboardSkeleton /> :
+        tab === 'calendar' ? <CalendarSkeleton /> :
+        tab === 'gallery' ? <GallerySkeleton /> :
+        tab === 'finance' ? <FinancesSkeleton /> :
+        tab === 'chat' ? <ChatSkeleton /> :
         <div style={{ padding: '80px 22px', display: 'flex', justifyContent: 'center' }}>
           <div style={{ width: 32, height: 32, borderRadius: '50%', border: '3px solid var(--orange)',
             borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite' }} />

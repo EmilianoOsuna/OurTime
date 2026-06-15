@@ -42,6 +42,7 @@ function DuplicateAccountScreen({ onSignOut }: { onSignOut: () => void }) {
 const Auth = lazy(() => import('./pages/Auth'))
 const Onboarding = lazy(() => import('./pages/Onboarding'))
 const AppShell = lazy(() => import('./components/AppShell'))
+import { DashboardSkeleton } from './components/ui/Skeletons'
 
 function Spinner() {
   return (
@@ -87,10 +88,12 @@ function AppInner() {
   }, [user, refreshProfile, refreshStories])
 
   // Keep loading while auth is initializing OR session exists but profile hasn't loaded yet
-  if (stateLoading || isLoading || (session && !profile)) return <Spinner />
+  if (stateLoading || isLoading || (session && !profile)) {
+    return session ? <DashboardSkeleton /> : <Spinner />
+  }
 
   return (
-    <Suspense fallback={<Spinner />}>
+    <Suspense fallback={session ? <DashboardSkeleton /> : <Spinner />}>
       {!session
         ? <Auth onAuth={handleAuth} />
         : likelyDuplicateAccount

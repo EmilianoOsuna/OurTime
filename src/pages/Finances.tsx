@@ -7,6 +7,7 @@ import { useCurrency } from '../context/CurrencyContext'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import { EditAction } from '../components/ui/EditAction'
+import { FinancesSkeleton } from '../components/ui/Skeletons'
 import type { PlanType } from '../lib/supabase'
 
 const TYPE_ICONS: Record<string, string> = {
@@ -117,12 +118,7 @@ export default function Finances() {
   const periodFullLabel = budgetPeriod === 'semanal' ? 'Presupuesto semanal' : 'Presupuesto mensual'
 
   if (loading) {
-    return (
-      <div style={{ minHeight: '50vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: 32, height: 32, borderRadius: '50%', border: '3px solid var(--orange)',
-          borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite' }} />
-      </div>
-    )
+    return <FinancesSkeleton />
   }
 
   return (
@@ -180,7 +176,7 @@ export default function Finances() {
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
                 <button onClick={saveBudget} disabled={savingBudget} style={{
-                  flex: 1, border: 'none', background: '#fff', color: 'var(--ink)',
+                  flex: 1, border: 'none', background: '#fff', color: '#211D18',
                   borderRadius: 10, padding: '11px', fontWeight: 700, cursor: 'pointer',
                   fontFamily: 'var(--font-ui)', fontSize: 14,
                 }}>{savingBudget ? '…' : 'Guardar'}</button>

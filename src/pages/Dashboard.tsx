@@ -10,12 +10,13 @@ import type { PlanType, PersonDisplay } from '../lib/supabase'
 import type { Tab } from '../components/AppShell'
 
 
+import { DashboardSkeleton } from '../components/ui/Skeletons'
+
 function daysTogether(since: string) {
   return Math.floor((Date.now() - new Date(since.slice(0,10) + 'T00:00:00Z').getTime()) / 86400000)
 }
 
-
-export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpen, onNewPlan, onStorySwitcher, me, partner, unreadNotifs = 0 }: {
+export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpen, onNewPlan, onStorySwitcher, me, partner, unreadNotifs = 0, loading = false }: {
   plans: PlanType[]
   go: (t: Tab) => void
   onBell: () => void
@@ -26,11 +27,16 @@ export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpe
   me: PersonDisplay
   partner: PersonDisplay | null
   unreadNotifs?: number
+  loading?: boolean
 }) {
   const { activeStoryId, stories, profile } = useAuth()
   const activeStory = stories.find(s => s.id === activeStoryId) ?? null
 
   const since = (activeStory?.start_date || profile?.anniversary_date) || ''
+
+  if (loading) {
+    return <DashboardSkeleton />
+  }
 
   const upcoming = plans.filter(p => p.status === 'pendiente').sort((a, b) => a.plan_date.localeCompare(b.plan_date))
   const past = plans.filter(p => p.status === 'completado').sort((a, b) => b.plan_date.localeCompare(a.plan_date))

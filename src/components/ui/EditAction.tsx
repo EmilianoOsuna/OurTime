@@ -23,7 +23,7 @@ export function EditAction({ label = 'Editar', onClick, disabled = false, color 
         cursor: disabled ? 'default' : 'pointer',
         fontSize: 13,
         fontWeight: 600,
-        color: onDark ? 'var(--ink)' : color,
+        color: onDark ? '#211D18' : color,
         fontFamily: 'var(--font-ui)',
         padding: '6px 10px',
         display: 'inline-flex',

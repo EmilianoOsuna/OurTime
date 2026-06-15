@@ -87,12 +87,19 @@ export default function Auth({ onAuth }: { onAuth: () => void }) {
     setError('')
     try {
       if (isNative) {
+        // Clear native session cache first to force account picker
+        try {
+          await SocialLogin.logout({ provider: 'google' })
+        } catch (_) {}
+
         // Native Google Sign-In on mobile devices
         const result = await SocialLogin.login({
           provider: 'google',
           options: {
-            scopes: ['email', 'profile'],
+            scopes: ['email', 'profile', 'https://www.googleapis.com/auth/calendar.events'],
             style: 'bottom',
+            filterByAuthorizedAccounts: false,
+            autoSelectEnabled: false,
           },
         })
 
@@ -103,7 +110,27 @@ export default function Auth({ onAuth }: { onAuth: () => void }) {
           })
           if (error) throw error
           if (data.session) {
-            onAuth()
+            onAuth() // transition screen immediately
+
+            // If the native login successfully returned an access token, save it to automatically connect Google Calendar in background
+            if (result.result.accessToken?.token) {
+              const userId = data.session.user.id
+              Promise.all([
+                supabase.from('user_secrets').upsert({
+                  user_id: userId,
+                  name: 'google_calendar_token',
+                  value: result.result.accessToken.token,
+                }, { onConflict: 'user_id,name' }),
+                supabase.from('user_secrets').upsert({
+                  user_id: userId,
+                  name: 'google_calendar_token_expires_at',
+                  value: String(Date.now() + 50 * 60 * 1000),
+                }, { onConflict: 'user_id,name' }),
+                supabase.from('profiles').update({
+                  google_calendar_enabled: true,
+                }).eq('id', userId)
+              ]).catch(console.error)
+            }
           } else {
             throw new Error('No se pudo establecer la sesión nativa.')
           }
@@ -111,12 +138,14 @@ export default function Auth({ onAuth }: { onAuth: () => void }) {
           throw new Error('Inicio de sesión cancelado o respuesta de Google no compatible.')
         }
       } else {
-        // Web-based Google OAuth redirect
+        // Web-based Google OAuth redirect requesting Calendar scope and offline access to get the refresh token
         const { error } = await supabase.auth.signInWithOAuth({
           provider: 'google',
           options: {
             redirectTo: window.location.origin,
             skipBrowserRedirect: false,
+            scopes: 'email profile https://www.googleapis.com/auth/calendar.events',
+            queryParams: { access_type: 'offline', prompt: 'consent', include_granted_scopes: 'true' },
           },
         })
         if (error) throw error
