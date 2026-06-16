@@ -13,7 +13,8 @@ import { Browser, isNative } from '../lib/native'
 import type { PlanType, PersonDisplay, StoryType } from '../lib/supabase'
 import { useToast } from '../context/ToastContext'
 import { useConfirm } from '../components/ui/ConfirmDialog'
-import { sendTestPushNotification, testGoogleCalendarConnection, usePushNotifications } from '../lib/usePushNotifications'
+import { connectGoogleCalendarWithCode, sendTestPushNotification, testGoogleCalendarConnection, usePushNotifications } from '../lib/usePushNotifications'
+import { requestGoogleCalendarCode } from '../lib/googleWeb'
 
 const CAT_COLOR: Record<string, string> = {
   pareja:  'var(--orange)',
@@ -834,17 +835,31 @@ function GoogleCalendarSection() {
 
   const connect = async () => {
     setSyncing(true)
+    if (!isNative) {
+      try {
+        const { code, redirectUri } = await requestGoogleCalendarCode(GCAL_SCOPE)
+        await connectGoogleCalendarWithCode(code, redirectUri)
+        setConnected(true)
+        toast({ icon: 'check', title: 'Google Calendar conectado', body: 'Ya puedes sincronizar momentos con tu calendario.' })
+      } catch (error) {
+        toast({ icon: 'x', title: 'Error al conectar', body: error instanceof Error ? error.message : 'No se pudo conectar Google Calendar.' })
+      } finally {
+        setSyncing(false)
+      }
+      return
+    }
+
     const googleAlreadyLinked = user?.identities?.some(identity => identity.provider === 'google')
     const oauthOptions = {
       scopes: GCAL_SCOPE,
-      redirectTo: isNative ? nativeRedirectUrl : window.location.origin,
+      redirectTo: nativeRedirectUrl,
       queryParams: { access_type: 'offline', prompt: 'consent', include_granted_scopes: 'true' },
-      skipBrowserRedirect: isNative,
+      skipBrowserRedirect: true,
     }
     const { data, error } = googleAlreadyLinked
       ? await supabase.auth.signInWithOAuth({ provider: 'google', options: oauthOptions })
       : await supabase.auth.linkIdentity({ provider: 'google', options: oauthOptions })
-    if (!error && isNative && data.url) await Browser.open({ url: data.url })
+    if (!error && data.url) await Browser.open({ url: data.url })
     if (error) { toast({ icon: 'x', title: 'Error al conectar', body: error.message }); setSyncing(false) }
     // On success this redirects to Google — no further code runs here
   }

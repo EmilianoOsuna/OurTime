@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../lib/supabase'
 import { isNative } from '../lib/native'
 import { SocialLogin } from '@capgo/capacitor-social-login'
 import { Icon } from '../components/ui/Icon'
+import { hasGoogleClientId, renderGoogleSignInButton } from '../lib/googleWeb'
 
 type Flow = 'welcome' | 'register' | 'login' | 'forgot'
 
@@ -26,6 +27,53 @@ function GoogleBtn({ onClick, loading }: { onClick: () => void; loading: boolean
       Continuar con Google
     </button>
   )
+}
+
+function GoogleWebBtn({
+  onSuccess,
+  onError,
+  setBusy,
+}: {
+  onSuccess: () => void
+  onError: (message: string) => void
+  setBusy: (busy: boolean) => void
+}) {
+  const containerRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+    if (!hasGoogleClientId()) {
+      onError('VITE_GOOGLE_CLIENT_ID no está configurado.')
+      return
+    }
+
+    let cancelled = false
+    void renderGoogleSignInButton(
+      container,
+      () => {
+        if (cancelled) return
+        setBusy(false)
+        onSuccess()
+      },
+      (message) => {
+        if (cancelled) return
+        setBusy(false)
+        onError(message)
+      },
+    ).catch((error) => {
+      if (cancelled) return
+      setBusy(false)
+      onError(error instanceof Error ? error.message : String(error))
+    })
+
+    return () => {
+      cancelled = true
+      container.innerHTML = ''
+    }
+  }, [onError, onSuccess, setBusy])
+
+  return <div ref={containerRef} style={{ marginTop: 12, display: 'flex', justifyContent: 'center' }} />
 }
 
 export default function Auth({ onAuth }: { onAuth: () => void }) {
@@ -207,7 +255,15 @@ export default function Auth({ onAuth }: { onAuth: () => void }) {
                   <span style={{ fontSize: 12, color: 'var(--ink-faint)', fontWeight: 600, letterSpacing: '0.05em' }}>O</span>
                   <span style={{ flex: 1, height: 1, background: 'var(--line)' }} />
                 </div>
-                <GoogleBtn onClick={handleGoogle} loading={loading} />
+                {isNative ? (
+                  <GoogleBtn onClick={handleGoogle} loading={loading} />
+                ) : (
+                  <GoogleWebBtn
+                    onSuccess={onAuth}
+                    onError={setError}
+                    setBusy={setLoading}
+                  />
+                )}
                 {error && (
                   <div style={{ fontSize: 13, color: '#c0392b', background: 'rgba(192,57,43,0.08)',
                     padding: '10px 14px', borderRadius: 10, fontWeight: 500, marginTop: 12 }}>{error}</div>

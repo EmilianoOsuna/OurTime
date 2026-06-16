@@ -58,6 +58,29 @@ async function invokeCalendarFunction(body: Record<string, unknown>) {
   return payload
 }
 
+export async function connectGoogleCalendarWithCode(code: string, redirectUri: string) {
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) throw new Error('Supabase no está configurado.')
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+  if (sessionError || !session) throw new Error('Tu sesión expiró. Vuelve a iniciar sesión.')
+
+  const response = await fetch(`${SUPABASE_URL}/functions/v1/connect-google-calendar`, {
+    method: 'POST',
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${session.access_token}`,
+      'Content-Type': 'application/json',
+      'X-Requested-With': 'XmlHttpRequest',
+    },
+    body: JSON.stringify({ code, redirect_uri: redirectUri }),
+  })
+  const text = await response.text()
+  const payload = text ? JSON.parse(text) : null
+  if (!response.ok || payload?.error) {
+    throw new Error(payload?.error || `Google Calendar respondió ${response.status}.`)
+  }
+  return payload
+}
+
 function urlBase64ToUint8Array(base64: string): Uint8Array {
   const padding = '='.repeat((4 - base64.length % 4) % 4)
   const b64 = (base64 + padding).replace(/-/g, '+').replace(/_/g, '/')
