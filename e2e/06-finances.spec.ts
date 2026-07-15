@@ -4,7 +4,7 @@ import { loginUser } from './helpers/auth'
 test.describe('Finances — Presupuesto/Gasto', () => {
   test.beforeEach(async ({ page }) => {
     await loginUser(page)
-    await page.getByText('Gasto').click()
+    await page.getByText('Fondo', { exact: true }).click()
     await page.waitForTimeout(600)
   })
 

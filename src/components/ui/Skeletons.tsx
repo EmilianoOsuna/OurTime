@@ -1,54 +1,96 @@
 
 export function DashboardSkeleton() {
   return (
-    <div style={{ padding: '8px 22px 150px' }}>
+    <div className="anim-up" style={{ padding: '8px 22px 150px' }}>
       {/* Header Skeleton */}
       <div style={{ padding: '8px 0 6px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
         <div style={{ width: '60%' }}>
-          <div className="skeleton" style={{ width: 100, height: 10, marginBottom: 10 }} />
-          <div className="skeleton" style={{ width: '100%', height: 28 }} />
+          <div className="skeleton" style={{ width: 100, height: 12, marginBottom: 7, borderRadius: 4 }} />
+          <div className="skeleton" style={{ width: '85%', height: 34, borderRadius: 6 }} />
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div className="skeleton" style={{ width: 80, height: 32, borderRadius: 999 }} />
           <div className="skeleton" style={{ width: 44, height: 44, borderRadius: '50%' }} />
         </div>
       </div>
 
       {/* Presence Card Skeleton */}
-      <div className="ot-card" style={{ marginTop: 16, padding: '12px 15px', display: 'flex', alignItems: 'center', gap: 13 }}>
-        <div className="skeleton" style={{ width: 38, height: 38, borderRadius: '50%' }} />
-        <div style={{ flex: 1 }}>
-          <div className="skeleton" style={{ width: 120, height: 12, marginBottom: 6 }} />
-          <div className="skeleton" style={{ width: 180, height: 10 }} />
+      <div className="ot-card" style={{ marginTop: 16, padding: '12px 15px', display: 'flex', alignItems: 'center', gap: 13, border: 'none' }}>
+        <div style={{ position: 'relative', width: 60, height: 38 }}>
+          <div className="skeleton" style={{ position: 'absolute', left: 0, width: 38, height: 38, borderRadius: '50%', border: '2px solid var(--card)' }} />
+          <div className="skeleton" style={{ position: 'absolute', left: 22, width: 38, height: 38, borderRadius: '50%', border: '2px solid var(--card)' }} />
         </div>
-        <div className="skeleton" style={{ width: 32, height: 22 }} />
+        <div style={{ flex: 1, marginLeft: 4 }}>
+          <div className="skeleton" style={{ width: '60%', height: 14, marginBottom: 6, borderRadius: 4 }} />
+          <div className="skeleton" style={{ width: '40%', height: 12, borderRadius: 4 }} />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+          <div className="skeleton" style={{ width: 32, height: 24, borderRadius: 4 }} />
+          <div className="skeleton" style={{ width: 20, height: 10, borderRadius: 4 }} />
+        </div>
       </div>
 
       {/* Next moment hero skeleton */}
-      <div style={{ marginTop: 24 }}>
-        <div className="skeleton" style={{ width: 120, height: 10, marginBottom: 12 }} />
-        <div className="ot-card" style={{ width: '100%', overflow: 'hidden', padding: 0, boxShadow: 'var(--sh-md)' }}>
-          <div className="skeleton" style={{ width: '100%', height: 150, borderRadius: 0 }} />
+      <div style={{ marginTop: 20 }}>
+        <div className="skeleton" style={{ width: 140, height: 12, marginBottom: 12, borderRadius: 4 }} />
+        <div className="ot-card" style={{ width: '100%', overflow: 'hidden', padding: 0, boxShadow: 'var(--sh-md)', border: 'none' }}>
+          <div style={{ position: 'relative', height: 150 }}>
+            <div className="skeleton" style={{ width: '100%', height: '100%', borderRadius: 0 }} />
+            <div className="skeleton" style={{ position: 'absolute', top: 14, left: 14, width: 44, height: 26, borderRadius: 12 }} />
+            <div className="skeleton" style={{ position: 'absolute', top: 12, right: 14, width: 80, height: 26, borderRadius: 999 }} />
+          </div>
           <div style={{ padding: '16px 18px 18px' }}>
-            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-              <div className="skeleton" style={{ width: 28, height: 28 }} />
-              <div className="skeleton" style={{ flex: 1, height: 22 }} />
+            <div style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
+              <div className="skeleton" style={{ width: 36, height: 34, borderRadius: 6 }} />
+              <div className="skeleton" style={{ flex: 1, height: 22, borderRadius: 6 }} />
             </div>
-            <div className="skeleton" style={{ width: 150, height: 11, marginTop: 14 }} />
+            <div style={{ display: 'flex', gap: 14, marginTop: 12 }}>
+              <div className="skeleton" style={{ width: 100, height: 14, borderRadius: 4 }} />
+              <div className="skeleton" style={{ width: 140, height: 14, borderRadius: 4 }} />
+            </div>
           </div>
         </div>
       </div>
 
+      {/* Upcoming plans skeleton */}
+      <div style={{ marginTop: 22 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+          <div className="skeleton" style={{ width: 80, height: 12, borderRadius: 4 }} />
+          <div style={{ flex: 1, height: 1, background: 'var(--line)' }} />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {[1, 2].map(i => (
+            <div key={i} className="ot-card" style={{ padding: '13px 15px', display: 'flex', alignItems: 'center', gap: 12, border: 'none' }}>
+              <div className="skeleton" style={{ width: 38, height: 38, borderRadius: 11, flexShrink: 0 }} />
+              <div style={{ flex: 1 }}>
+                <div className="skeleton" style={{ width: '70%', height: 15, marginBottom: 6, borderRadius: 4 }} />
+                <div className="skeleton" style={{ width: '40%', height: 12, borderRadius: 4 }} />
+              </div>
+              <div className="skeleton" style={{ width: 16, height: 16, borderRadius: '50%', flexShrink: 0 }} />
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Timeline skeleton */}
-      <div style={{ marginTop: 24 }}>
-        <div className="skeleton" style={{ width: 100, height: 10, marginBottom: 16 }} />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          {[1, 2, 3].map(i => (
-            <div key={i} style={{ display: 'flex', gap: 16 }}>
-              <div className="skeleton" style={{ width: 42, height: 42, borderRadius: '50%', flexShrink: 0 }} />
-              <div className="ot-card" style={{ flex: 1, padding: '13px 15px' }}>
-                <div className="skeleton" style={{ width: 60, height: 10, marginBottom: 8 }} />
-                <div className="skeleton" style={{ width: '80%', height: 14, marginBottom: 8 }} />
-                <div className="skeleton" style={{ width: 100, height: 10 }} />
+      <div style={{ marginTop: 26 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+          <div className="skeleton" style={{ width: 110, height: 12, borderRadius: 4 }} />
+          <div style={{ flex: 1, height: 1, background: 'var(--line)' }} />
+          <div className="skeleton" style={{ width: 70, height: 12, borderRadius: 4 }} />
+        </div>
+        
+        <div style={{ position: 'relative', marginTop: 14 }}>
+          <div style={{ position: 'absolute', left: 22, top: 24, bottom: 30, width: 2, background: 'var(--card-2)' }} />
+          {[1, 2].map((i) => (
+            <div key={i} style={{ display: 'flex', gap: 16, marginBottom: 18 }}>
+              <div style={{ width: 46, display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
+                <div className="skeleton" style={{ width: 42, height: 42, borderRadius: '50%', border: '2px solid var(--card)', position: 'relative', zIndex: 1 }} />
+              </div>
+              <div className="ot-card" style={{ flex: 1, padding: '13px 15px', border: 'none', position: 'relative', overflow: 'hidden' }}>
+                <div className="skeleton" style={{ width: 60, height: 14, marginBottom: 8, borderRadius: 4 }} />
+                <div className="skeleton" style={{ width: '85%', height: 18, marginBottom: 10, borderRadius: 4 }} />
+                <div className="skeleton" style={{ width: 120, height: 13, borderRadius: 4 }} />
               </div>
             </div>
           ))}

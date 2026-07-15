@@ -57,7 +57,7 @@ test.describe('Visual — Screenshots exhaustivos de todas las pantallas', () =>
 
   test('app: finances (tab Gasto)', async ({ page }) => {
     await loginUser(page)
-    await page.getByText('Gasto').click()
+    await page.getByText('Fondo', { exact: true }).click()
     await page.waitForTimeout(800)
     await page.screenshot({ path: 'playwright-review/visual-08-finances.png', fullPage: true })
   })
@@ -150,7 +150,7 @@ test.describe('Visual — Dark mode', () => {
 
   test('dark: finances', async ({ page }) => {
     await loginUser(page)
-    await page.getByText('Gasto').click()
+    await page.getByText('Fondo', { exact: true }).click()
     await page.waitForTimeout(800)
     await page.screenshot({ path: 'playwright-review/dark-06-finances.png', fullPage: true })
   })
@@ -167,7 +167,7 @@ test.describe('Visual — Desktop viewport', () => {
 
   test('desktop: finances', async ({ page }) => {
     await loginUser(page)
-    await page.getByText('Gasto').click()
+    await page.getByText('Fondo', { exact: true }).click()
     await page.waitForTimeout(800)
     await page.screenshot({ path: 'playwright-review/desktop-02-finances.png', fullPage: true })
   })

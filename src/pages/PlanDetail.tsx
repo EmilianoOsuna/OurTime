@@ -7,7 +7,7 @@ import { Confetti } from '../components/ui/Confetti'
 import { DatePicker } from '../components/ui/DatePicker'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
-import { toRoman, fmtDate, fmtDateShort, countdown, CAT_META } from '../lib/chapterUtils'
+import { fmtDate, fmtDateShort, countdown, CAT_META } from '../lib/chapterUtils'
 import { compressToWebP } from '../lib/imageUtils'
 import { NewPlanSheet } from '../components/sheets/NewPlanSheet'
 import type { PlanType } from '../lib/supabase'
@@ -52,10 +52,9 @@ function RoundBtn({ icon, onClick }: { icon: string; onClick?: () => void }) {
   )
 }
 
-export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }: {
+export function PlanDetail({ plan: initialPlan, onClose, onUpdated }: {
   plan: PlanType
   onClose: () => void
-  chapterNo?: number
   onUpdated?: () => void
 }) {
   const { activeStoryId } = useAuth()
@@ -155,7 +154,6 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
 
   const meta = CAT_META[plan.type] || { tone: 'orange' as const }
   const blue = meta.tone === 'blue'
-  const no = chapterNo ?? 1
   const now = new Date()
   const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
   const isFuture = plan.plan_date > todayStr
@@ -336,7 +334,7 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
         style={{
           height: 250, position: 'relative', flexShrink: 0, overflow: 'hidden',
           background: coverUrl ? '#111' : undefined,
-          borderRadius: '0 0 28px 28px',
+          borderRadius: '0 0 var(--r-md) var(--r-md)',
           cursor: (editing && coverUrl) ? 'grab' : 'default',
           touchAction: (editing && coverUrl) ? 'none' : 'auto',
         }}
@@ -358,7 +356,7 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
         {editing && coverUrl && (
           <div style={{
             position: 'absolute', left: 18, bottom: 60,
-            background: 'rgba(0,0,0,0.55)', color: '#fff', borderRadius: 8,
+            background: 'rgba(0,0,0,0.55)', color: 'var(--paper)', borderRadius: 8,
             padding: '5px 9px', fontSize: 11, fontWeight: 700, pointerEvents: 'none',
             zIndex: 2, backdropFilter: 'blur(4px)',
           }}>
@@ -373,7 +371,7 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
         {uploadingCover && (
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)',
             display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3 }}>
-            <div style={{ width: 34, height: 34, borderRadius: '50%', border: '3px solid #fff',
+            <div style={{ width: 34, height: 34, borderRadius: '50%', border: '3px solid var(--paper)',
               borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite' }} />
           </div>
         )}
@@ -406,7 +404,7 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
           <div className="card" style={{ padding: '20px 18px 22px', boxShadow: 'var(--sh-md)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <span className="eyebrow" style={{ color: blue ? 'var(--blue-deep)' : 'var(--orange-deep)' }}>
-                · Momento {toRoman(no)} ·
+                · El momento ·
               </span>
               {editing
                 ? <span className="chip-tag" style={{ background: 'var(--blue-tint)', color: 'var(--blue-deep)' }}>Editando</span>
@@ -442,7 +440,7 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
                         padding: '7px 14px', borderRadius: 999, border: 'none', cursor: 'pointer',
                         fontSize: 13, fontWeight: 600,
                         background: editType === c.value ? 'var(--orange)' : 'var(--card-2)',
-                        color: editType === c.value ? '#fff' : 'var(--ink-soft)',
+                        color: editType === c.value ? 'var(--paper)' : 'var(--ink-soft)',
                         boxShadow: editType === c.value ? '0 2px 8px rgba(241,119,32,.35)' : 'inset 0 0 0 1px var(--line)',
                         transition: 'all .15s',
                       }}>
@@ -487,8 +485,8 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
                       <Icon name="trash" size={15} /> Cancelar momento
                     </button>
                   ) : (
-                    <div style={{ borderRadius: 14, background: 'rgba(192,57,43,0.06)', padding: '14px 16px' }}>
-                      <div style={{ fontSize: 13.5, fontWeight: 600, color: '#c0392b', marginBottom: 10, textAlign: 'center' }}>
+                    <div style={{ borderRadius: 14, background: 'var(--card-2)', padding: '14px 16px', border: '1px solid var(--line-soft)' }}>
+                      <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--ink)', marginBottom: 10, textAlign: 'center' }}>
                         ¿Confirmar cancelación?
                       </div>
                       <div style={{ display: 'flex', gap: 10 }}>
@@ -500,8 +498,8 @@ export function PlanDetail({ plan: initialPlan, onClose, chapterNo, onUpdated }:
                           No, volver
                         </button>
                         <button onClick={cancelPlan} style={{
-                          flex: 1, border: 'none', background: '#c0392b', cursor: 'pointer',
-                          borderRadius: 12, padding: '9px 0', fontSize: 13.5, fontWeight: 700, color: '#fff',
+                          flex: 1, border: 'none', background: 'var(--ink)', cursor: 'pointer',
+                          borderRadius: 12, padding: '9px 0', fontSize: 13.5, fontWeight: 700, color: 'var(--paper)',
                           fontFamily: 'var(--font-ui)',
                         }}>
                           Sí, cancelar

@@ -9,12 +9,16 @@ interface Props {
 }
 
 export const BottomSheet: React.FC<Props> = ({ onClose, children, maxHeight = '92%' }) => {
-  const y = useMotionValue(0)
-  const backdropOpacity = useTransform(y, [0, 500], [1, 0])
+  const y = useMotionValue(typeof window !== 'undefined' ? window.innerHeight : 800)
+  const backdropOpacity = useTransform(y, [0, typeof window !== 'undefined' ? window.innerHeight : 800], [1, 0])
   const closing = useRef(false)
   const backdropRef = useRef<HTMLDivElement>(null)
   const sheetRef = useRef<HTMLDivElement>(null)
   const gesture = useRef({ startY: 0, lastY: 0, lastTime: 0, velocity: 0, dragging: false })
+
+  React.useEffect(() => {
+    animate(y, 0, { type: 'spring', damping: 25, stiffness: 200 })
+  }, [])
 
   const close = (afterDrag = false) => {
     if (closing.current) return

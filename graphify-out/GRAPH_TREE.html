@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>/ — graphify tree viewer</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f9f9f9;
+      color: #333;
+    }
+    h1 {
+      margin: 20px 0 0 24px;
+      font-size: 2.2rem;
+      font-weight: bold;
+      color: #1e3a56;
+    }
+    .controls {
+      margin: 20px 0 15px 24px;
+    }
+    button {
+      margin-right: 10px;
+      padding: 8px 18px;
+      background: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background 0.2s ease-in-out;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    button:active {
+      background: #004085;
+    }
+    #tree-container {
+      width: calc(100vw - 48px); /* Adjust for body margin/padding */
+      height: 85vh;
+      overflow: auto;
+      border-radius: 8px;
+      background: #fff;
+      margin-left: 24px;
+      margin-right: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      border: 1px solid #ddd;
+    }
+    svg {
+      background: #fff;
+      border-radius: 8px;
+      display: block; /* Important for D3 */
+    }
+    .node circle {
+      stroke-width: 2.5px;
+    }
+    .node text { /* Base style for the <text> container */
+      font: 13px 'Segoe UI', sans-serif;
+      paint-order: stroke fill; /* Ensures text is readable over lines */
+      stroke: #fff; /* White halo */
+      stroke-width: 3px; /* Halo thickness */
+      stroke-linejoin: round;
+      stroke-opacity: 0.85; /* Halo opacity */
+    }
+    .link {
+      fill: none;
+      stroke-opacity: 0.7;
+      stroke-width: 2px;
+    }
+  </style>
+</head>
+<body>
+  <h1>/ — Knowledge Graph</h1>
+  <div class="controls">
+    <button onclick="expandAll()">Expand All</button>
+    <button onclick="collapseAll()">Collapse All</button>
+    <button onclick="resetView()">Reset View</button>
+  </div>
+  <div id="tree-container">
+    <svg id="tree-svg" width="6000" height="8000"></svg>
+  </div>
+
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script>
+    const initialJsonData = {"name":"/","total_count":818,"children":[{"name":".specify","total_count":64,"children":[{"name":"extensions","total_count":34,"children":[{"name":"agent-context","total_count":3,"children":[{"name":"scripts","total_count":3,"children":[{"name":"bash","total_count":1,"children":[{"name":"update-agent-context.sh","total_count":1,"children":[{"name":"update-agent-context.sh script","total_count":1,"children":[]}]}]},{"name":"powershell","total_count":2,"children":[{"name":"update-agent-context.ps1","total_count":2,"children":[{"name":"Get-ConfigValue()","total_count":1,"children":[]},{"name":"Test-ConfigObject()","total_count":1,"children":[]}]}]}]}]},{"name":"git","total_count":31,"children":[{"name":"scripts","total_count":31,"children":[{"name":"bash","total_count":18,"children":[{"name":"auto-commit.sh","total_count":2,"children":[{"name":"_find_project_root()","total_count":1,"children":[]},{"name":"auto-commit.sh script","total_count":1,"children":[]}]},{"name":"create-new-feature.sh","total_count":10,"children":[{"name":"_byte_length()","total_count":1,"children":[]},{"name":"_extract_highest_number()","total_count":1,"children":[]},{"name":"_find_project_root()","total_count":1,"children":[]},{"name":"check_existing_branches()","total_count":1,"children":[]},{"name":"clean_branch_name()","total_count":1,"children":[]},{"name":"create-new-feature.sh script","total_count":1,"children":[]},{"name":"generate_branch_name()","total_count":1,"children":[]},{"name":"get_highest_from_branches()","total_count":1,"children":[]},{"name":"get_highest_from_remote_refs()","total_count":1,"children":[]},{"name":"get_highest_from_specs()","total_count":1,"children":[]}]},{"name":"git-common.sh","total_count":4,"children":[{"name":"check_feature_branch()","total_count":1,"children":[]},{"name":"git-common.sh script","total_count":1,"children":[]},{"name":"has_git()","total_count":1,"children":[]},{"name":"spec_kit_effective_branch_name()","total_count":1,"children":[]}]},{"name":"initialize-repo.sh","total_count":2,"children":[{"name":"_find_project_root()","total_count":1,"children":[]},{"name":"initialize-repo.sh script","total_count":1,"children":[]}]}]},{"name":"powershell","total_count":13,"children":[{"name":"auto-commit.ps1","total_count":1,"children":[{"name":"Find-ProjectRoot()","total_count":1,"children":[]}]},{"name":"create-new-feature.ps1","total_count":8,"children":[{"name":"ConvertTo-CleanBranchName()","total_count":1,"children":[]},{"name":"Find-ProjectRoot()","total_count":1,"children":[]},{"name":"Get-BranchName()","total_count":1,"children":[]},{"name":"Get-HighestNumberFromBranches()","total_count":1,"children":[]},{"name":"Get-HighestNumberFromNames()","total_count":1,"children":[]},{"name":"Get-HighestNumberFromRemoteRefs()","total_count":1,"children":[]},{"name":"Get-HighestNumberFromSpecs()","total_count":1,"children":[]},{"name":"Get-NextBranchNumber()","total_count":1,"children":[]}]},{"name":"git-common.ps1","total_count":3,"children":[{"name":"Get-SpecKitEffectiveBranchName()","total_count":1,"children":[]},{"name":"Test-FeatureBranch()","total_count":1,"children":[]},{"name":"Test-HasGit()","total_count":1,"children":[]}]},{"name":"initialize-repo.ps1","total_count":1,"children":[{"name":"Find-ProjectRoot()","total_count":1,"children":[]}]}]}]}]}]},{"name":"scripts","total_count":30,"children":[{"name":"bash","total_count":30,"children":[{"name":"check-prerequisites.sh","total_count":1,"children":[{"name":"check-prerequisites.sh script","total_count":1,"children":[]}]},{"name":"common.sh","total_count":19,"children":[{"name":"check_dir()","total_count":1,"children":[]},{"name":"check_feature_branch()","total_count":1,"children":[]},{"name":"check_file()","total_count":1,"children":[]},{"name":"common.sh script","total_count":1,"children":[]},{"name":"feature_json_matches_feature_dir()","total_count":1,"children":[]},{"name":"find_feature_dir_by_prefix()","total_count":1,"children":[]},{"name":"find_specify_root()","total_count":1,"children":[]},{"name":"format_speckit_command()","total_count":1,"children":[]},{"name":"get_current_branch()","total_count":1,"children":[]},{"name":"get_feature_paths()","total_count":1,"children":[]},{"name":"get_invoke_separator()","total_count":1,"children":[]},{"name":"get_repo_root()","total_count":1,"children":[]},{"name":"has_git()","total_count":1,"children":[]},{"name":"has_jq()","total_count":1,"children":[]},{"name":"json_escape()","total_count":1,"children":[]},{"name":"read_feature_json_feature_directory()","total_count":1,"children":[]},{"name":"resolve_template()","total_count":1,"children":[]},{"name":"resolve_template_content()","total_count":1,"children":[]},{"name":"spec_kit_effective_branch_name()","total_count":1,"children":[]}]},{"name":"create-new-feature.sh","total_count":8,"children":[{"name":"_extract_highest_number()","total_count":1,"children":[]},{"name":"check_existing_branches()","total_count":1,"children":[]},{"name":"clean_branch_name()","total_count":1,"children":[]},{"name":"create-new-feature.sh script","total_count":1,"children":[]},{"name":"generate_branch_name()","total_count":1,"children":[]},{"name":"get_highest_from_branches()","total_count":1,"children":[]},{"name":"get_highest_from_remote_refs()","total_count":1,"children":[]},{"name":"get_highest_from_specs()","total_count":1,"children":[]}]},{"name":"setup-plan.sh","total_count":1,"children":[{"name":"setup-plan.sh script","total_count":1,"children":[]}]},{"name":"setup-tasks.sh","total_count":1,"children":[{"name":"setup-tasks.sh script","total_count":1,"children":[]}]}]}]}]},{"name":"android","total_count":23,"children":[{"name":"app","total_count":16,"children":[{"name":"src","total_count":14,"children":[{"name":"androidTest","total_count":2,"children":[{"name":"java","total_count":2,"children":[{"name":"com","total_count":2,"children":[{"name":"getcapacitor","total_count":2,"children":[{"name":"myapp","total_count":2,"children":[{"name":"ExampleInstrumentedTest.java","total_count":2,"children":[{"name":".useAppContext()","total_count":1,"children":[]},{"name":"ExampleInstrumentedTest","total_count":1,"children":[]}]}]}]}]}]}]},{"name":"main","total_count":10,"children":[{"name":"java","total_count":10,"children":[{"name":"com","total_count":10,"children":[{"name":"ourtime","total_count":10,"children":[{"name":"app","total_count":10,"children":[{"name":"MainActivity.java","total_count":7,"children":[{"name":".clearStaleWebViewData()","total_count":1,"children":[]},{"name":".currentVersionCode()","total_count":1,"children":[]},{"name":".deleteRecursively()","total_count":1,"children":[]},{"name":".IHaveModifiedTheMainActivityForTheUseWithSocialLoginPlugin()","total_count":1,"children":[]},{"name":".onActivityResult()","total_count":1,"children":[]},{"name":".onCreate()","total_count":1,"children":[]},{"name":"MainActivity","total_count":1,"children":[]}]},{"name":"OurTimeWidget.java","total_count":3,"children":[{"name":".onUpdate()","total_count":1,"children":[]},{"name":".open()","total_count":1,"children":[]},{"name":"OurTimeWidget","total_count":1,"children":[]}]}]}]}]}]}]},{"name":"test","total_count":2,"children":[{"name":"java","total_count":2,"children":[{"name":"com","total_count":2,"children":[{"name":"getcapacitor","total_count":2,"children":[{"name":"myapp","total_count":2,"children":[{"name":"ExampleUnitTest.java","total_count":2,"children":[{"name":".addition_isCorrect()","total_count":1,"children":[]},{"name":"ExampleUnitTest","total_count":1,"children":[]}]}]}]}]}]}]}]},{"name":"build.gradle","total_count":1,"children":[]},{"name":"capacitor.build.gradle","total_count":1,"children":[]}]},{"name":"gradlew","total_count":3,"children":[{"name":"die()","total_count":1,"children":[]},{"name":"gradlew script","total_count":1,"children":[]},{"name":"warn()","total_count":1,"children":[]}]},{"name":"build.gradle","total_count":1,"children":[]},{"name":"capacitor.settings.gradle","total_count":1,"children":[]},{"name":"settings.gradle","total_count":1,"children":[]},{"name":"variables.gradle","total_count":1,"children":[]}]},{"name":"capacitor.config.ts","total_count":1,"children":[{"name":"config","total_count":1,"children":[]}]},{"name":"dev-dist","total_count":153,"children":[{"name":"workbox-1e60b829.js","total_count":151,"children":[{"name":"._awaitComplete()","total_count":1,"children":[]},{"name":"._ensureResponseSafeToCache()","total_count":1,"children":[]},{"name":"._getCacheExpiration()","total_count":1,"children":[]},{"name":"._getDateHeaderTimestamp()","total_count":1,"children":[]},{"name":"._getId()","total_count":1,"children":[]},{"name":"._getNetworkPromise()","total_count":1,"children":[]},{"name":"._getResponse()","total_count":1,"children":[]},{"name":"._getTimeoutPromise()","total_count":1,"children":[]},{"name":"._handle()","total_count":1,"children":[]},{"name":"._handle()","total_count":1,"children":[]},{"name":"._handle()","total_count":1,"children":[]},{"name":"._handle()","total_count":1,"children":[]},{"name":"._handleFetch()","total_count":1,"children":[]},{"name":"._handleInstall()","total_count":1,"children":[]},{"name":"._isResponseDateFresh()","total_count":1,"children":[]},{"name":"._match()","total_count":1,"children":[]},{"name":"._upgradeDb()","total_count":1,"children":[]},{"name":"._upgradeDbAndDeleteOldDbs()","total_count":1,"children":[]},{"name":"._useDefaultCacheabilityPluginIfNeeded()","total_count":1,"children":[]},{"name":".activate()","total_count":1,"children":[]},{"name":".addCacheListener()","total_count":1,"children":[]},{"name":".addFetchListener()","total_count":1,"children":[]},{"name":".addToCacheList()","total_count":1,"children":[]},{"name":".cacheDidUpdate()","total_count":1,"children":[]},{"name":".cachedResponseWillBeUsed()","total_count":1,"children":[]},{"name":".cachedResponseWillBeUsed()","total_count":1,"children":[]},{"name":".cacheKeyWillBeUsed()","total_count":1,"children":[]},{"name":".cacheMatch()","total_count":1,"children":[]},{"name":".cachePut()","total_count":1,"children":[]},{"name":".cacheWillUpdate()","total_count":1,"children":[]},{"name":".constructor()","total_count":1,"children":[]},{"name":".constructor()","total_count":1,"children":[]},{"name":".constructor()","total_count":1,"children":[]},{"name":".constructor()","total_count":1,"children":[]},{"name":".constructor()","total_count":1,"children":[]},{"name":".constructor()","total_count":1,"children":[]},{"name":".constructor()","total_count":1,"children":[]},{"name":".constructor()","total_count":1,"children":[]},{"name":".constructor()","total_count":1,"children":[]},{"name":".constructor()","total_count":1,"children":[]},{"name":".constructor()","total_count":1,"children":[]},{"name":".constructor()","total_count":1,"children":[]},{"name":".constructor()","total_count":1,"children":[]},{"name":".constructor()","total_count":1,"children":[]},{"name":".constructor()","total_count":1,"children":[]},{"name":".constructor()","total_count":1,"children":[]},{"name":".constructor()","total_count":1,"children":[]},{"name":".constructor()","total_count":1,"children":[]},{"name":".constructor()","total_count":1,"children":[]},{"name":".constructor()","total_count":1,"children":[]},{"name":".createHandlerBoundToURL()","total_count":1,"children":[]},{"name":".delete()","total_count":1,"children":[]},{"name":".deleteCacheAndMetadata()","total_count":1,"children":[]},{"name":".destroy()","total_count":1,"children":[]},{"name":".doneWaiting()","total_count":1,"children":[]},{"name":".expireEntries()","total_count":1,"children":[]},{"name":".expireEntries()","total_count":1,"children":[]},{"name":".fetch()","total_count":1,"children":[]},{"name":".fetchAndCachePut()","total_count":1,"children":[]},{"name":".findMatchingRoute()","total_count":1,"children":[]},{"name":".getCachedURLs()","total_count":1,"children":[]},{"name":".getCacheKey()","total_count":1,"children":[]},{"name":".getCacheKeyForURL()","total_count":1,"children":[]},{"name":".getDb()","total_count":1,"children":[]},{"name":".getIntegrityForCacheKey()","total_count":1,"children":[]},{"name":".getTimestamp()","total_count":1,"children":[]},{"name":".getURLsToCacheKeys()","total_count":1,"children":[]},{"name":".handle()","total_count":1,"children":[]},{"name":".handleAll()","total_count":1,"children":[]},{"name":".handleRequest()","total_count":1,"children":[]},{"name":".handlerWillStart()","total_count":1,"children":[]},{"name":".hasCallback()","total_count":1,"children":[]},{"name":".install()","total_count":1,"children":[]},{"name":".isResponseCacheable()","total_count":1,"children":[]},{"name":".isURLExpired()","total_count":1,"children":[]},{"name":".iterateCallbacks()","total_count":1,"children":[]},{"name":".matchPrecache()","total_count":1,"children":[]},{"name":".precache()","total_count":1,"children":[]},{"name":".registerRoute()","total_count":1,"children":[]},{"name":".routes()","total_count":1,"children":[]},{"name":".runCallbacks()","total_count":1,"children":[]},{"name":".setCatchHandler()","total_count":1,"children":[]},{"name":".setCatchHandler()","total_count":1,"children":[]},{"name":".setDefaultHandler()","total_count":1,"children":[]},{"name":".setTimestamp()","total_count":1,"children":[]},{"name":".strategy()","total_count":1,"children":[]},{"name":".unregisterRoute()","total_count":1,"children":[]},{"name":".updateTimestamp()","total_count":1,"children":[]},{"name":".waitUntil()","total_count":1,"children":[]},{"name":"_extends()","total_count":1,"children":[]},{"name":"_nestedGroup()","total_count":1,"children":[]},{"name":"addRoute()","total_count":1,"children":[]},{"name":"CacheableResponse","total_count":1,"children":[]},{"name":"CacheableResponsePlugin","total_count":1,"children":[]},{"name":"cacheDonePromiseForTransaction()","total_count":1,"children":[]},{"name":"CacheExpiration","total_count":1,"children":[]},{"name":"CacheFirst","total_count":1,"children":[]},{"name":"cacheMatchIgnoreParams()","total_count":1,"children":[]},{"name":"CacheTimestampsModel","total_count":1,"children":[]},{"name":"cacheWillUpdate()","total_count":1,"children":[]},{"name":"canConstructResponseFromBodyStream()","total_count":1,"children":[]},{"name":"cleanupOutdatedCaches()","total_count":1,"children":[]},{"name":"clientsClaim()","total_count":1,"children":[]},{"name":"copyResponse()","total_count":1,"children":[]},{"name":"createCacheKey()","total_count":1,"children":[]},{"name":"createHandlerBoundToURL()","total_count":1,"children":[]},{"name":"Deferred","total_count":1,"children":[]},{"name":"deleteDB()","total_count":1,"children":[]},{"name":"dontWaitFor()","total_count":1,"children":[]},{"name":"executeQuotaErrorCallbacks()","total_count":1,"children":[]},{"name":"ExpirationPlugin","total_count":1,"children":[]},{"name":"generateURLVariations()","total_count":1,"children":[]},{"name":"get()","total_count":1,"children":[]},{"name":"getCursorAdvanceMethods()","total_count":1,"children":[]},{"name":"getIdbProxyableTypes()","total_count":1,"children":[]},{"name":"getMethod()","total_count":1,"children":[]},{"name":"has()","total_count":1,"children":[]},{"name":"NavigationRoute","total_count":1,"children":[]},{"name":"NetworkFirst","total_count":1,"children":[]},{"name":"openDB()","total_count":1,"children":[]},{"name":"precache()","total_count":1,"children":[]},{"name":"precacheAndRoute()","total_count":1,"children":[]},{"name":"PrecacheCacheKeyPlugin","total_count":1,"children":[]},{"name":"PrecacheController","total_count":1,"children":[]},{"name":"PrecacheInstallReportPlugin","total_count":1,"children":[]},{"name":"PrecacheRoute","total_count":1,"children":[]},{"name":"PrecacheStrategy","total_count":1,"children":[]},{"name":"printCleanupDetails()","total_count":1,"children":[]},{"name":"printInstallDetails()","total_count":1,"children":[]},{"name":"promisifyRequest()","total_count":1,"children":[]},{"name":"RegExpRoute","total_count":1,"children":[]},{"name":"registerQuotaErrorCallback()","total_count":1,"children":[]},{"name":"registerRoute()","total_count":1,"children":[]},{"name":"removeIgnoredSearchParams()","total_count":1,"children":[]},{"name":"replaceTraps()","total_count":1,"children":[]},{"name":"Route","total_count":1,"children":[]},{"name":"Router","total_count":1,"children":[]},{"name":"set()","total_count":1,"children":[]},{"name":"StaleWhileRevalidate","total_count":1,"children":[]},{"name":"Strategy","total_count":1,"children":[]},{"name":"StrategyHandler","total_count":1,"children":[]},{"name":"stripParams()","total_count":1,"children":[]},{"name":"timeout()","total_count":1,"children":[]},{"name":"TODO: `state` should never be undefined...","total_count":1,"children":[]},{"name":"TODO: Remove this log message in v4.","total_count":1,"children":[]},{"name":"toRequest()","total_count":1,"children":[]},{"name":"transformCachableValue()","total_count":1,"children":[]},{"name":"waitUntil()","total_count":1,"children":[]},{"name":"WorkboxError","total_count":1,"children":[]},{"name":"wrap()","total_count":1,"children":[]},{"name":"wrapFunction()","total_count":1,"children":[]}]},{"name":"registerSW.js","total_count":1,"children":[]},{"name":"sw.js","total_count":1,"children":[]}]},{"name":"e2e","total_count":13,"children":[{"name":"global-setup.ts","total_count":1,"children":[{"name":"globalSetup()","total_count":1,"children":[]}]},{"name":"helpers","total_count":1,"children":[{"name":"auth.ts","total_count":1,"children":[{"name":"loginUser()","total_count":1,"children":[]}]}]},{"name":"01-auth.spec.ts","total_count":1,"children":[]},{"name":"02-navigation.spec.ts","total_count":1,"children":[]},{"name":"03-dashboard.spec.ts","total_count":1,"children":[]},{"name":"04-calendar.spec.ts","total_count":1,"children":[]},{"name":"05-gallery.spec.ts","total_count":1,"children":[]},{"name":"06-finances.spec.ts","total_count":1,"children":[]},{"name":"07-profile.spec.ts","total_count":1,"children":[]},{"name":"08-visual.spec.ts","total_count":1,"children":[]},{"name":"09-accessibility.spec.ts","total_count":1,"children":[]},{"name":"10-plan-detail.spec.ts","total_count":1,"children":[]},{"name":"11-sheet-interactions.spec.ts","total_count":1,"children":[]}]},{"name":"package.json","total_count":119,"children":[{"name":"@capacitor/android","total_count":1,"children":[]},{"name":"@capacitor/android","total_count":1,"children":[]},{"name":"@capacitor/app","total_count":1,"children":[]},{"name":"@capacitor/app","total_count":1,"children":[]},{"name":"@capacitor/browser","total_count":1,"children":[]},{"name":"@capacitor/browser","total_count":1,"children":[]},{"name":"@capacitor/camera","total_count":1,"children":[]},{"name":"@capacitor/camera","total_count":1,"children":[]},{"name":"@capacitor/cli","total_count":1,"children":[]},{"name":"@capacitor/cli","total_count":1,"children":[]},{"name":"@capacitor/clipboard","total_count":1,"children":[]},{"name":"@capacitor/clipboard","total_count":1,"children":[]},{"name":"@capacitor/core","total_count":1,"children":[]},{"name":"@capacitor/core","total_count":1,"children":[]},{"name":"@capacitor/device","total_count":1,"children":[]},{"name":"@capacitor/device","total_count":1,"children":[]},{"name":"@capacitor/dialog","total_count":1,"children":[]},{"name":"@capacitor/dialog","total_count":1,"children":[]},{"name":"@capacitor/filesystem","total_count":1,"children":[]},{"name":"@capacitor/filesystem","total_count":1,"children":[]},{"name":"@capacitor/geolocation","total_count":1,"children":[]},{"name":"@capacitor/geolocation","total_count":1,"children":[]},{"name":"@capacitor/haptics","total_count":1,"children":[]},{"name":"@capacitor/haptics","total_count":1,"children":[]},{"name":"@capacitor/local-notifications","total_count":1,"children":[]},{"name":"@capacitor/local-notifications","total_count":1,"children":[]},{"name":"@capacitor/network","total_count":1,"children":[]},{"name":"@capacitor/network","total_count":1,"children":[]},{"name":"@capacitor/preferences","total_count":1,"children":[]},{"name":"@capacitor/preferences","total_count":1,"children":[]},{"name":"@capacitor/push-notifications","total_count":1,"children":[]},{"name":"@capacitor/push-notifications","total_count":1,"children":[]},{"name":"@capacitor/screen-orientation","total_count":1,"children":[]},{"name":"@capacitor/screen-orientation","total_count":1,"children":[]},{"name":"@capacitor/share","total_count":1,"children":[]},{"name":"@capacitor/splash-screen","total_count":1,"children":[]},{"name":"@capacitor/splash-screen","total_count":1,"children":[]},{"name":"@capacitor/status-bar","total_count":1,"children":[]},{"name":"@capacitor/status-bar","total_count":1,"children":[]},{"name":"@capacitor/toast","total_count":1,"children":[]},{"name":"@capacitor/toast","total_count":1,"children":[]},{"name":"@capgo/capacitor-social-login","total_count":1,"children":[]},{"name":"@capgo/capacitor-social-login","total_count":1,"children":[]},{"name":"@eslint/js","total_count":1,"children":[]},{"name":"@eslint/js","total_count":1,"children":[]},{"name":"@playwright/test","total_count":1,"children":[]},{"name":"@playwright/test","total_count":1,"children":[]},{"name":"@supabase/supabase-js","total_count":1,"children":[]},{"name":"@supabase/supabase-js","total_count":1,"children":[]},{"name":"@tailwindcss/postcss","total_count":1,"children":[]},{"name":"@tailwindcss/postcss","total_count":1,"children":[]},{"name":"@testing-library/jest-dom","total_count":1,"children":[]},{"name":"@testing-library/jest-dom","total_count":1,"children":[]},{"name":"@testing-library/react","total_count":1,"children":[]},{"name":"@testing-library/react","total_count":1,"children":[]},{"name":"@testing-library/user-event","total_count":1,"children":[]},{"name":"@testing-library/user-event","total_count":1,"children":[]},{"name":"@types/node","total_count":1,"children":[]},{"name":"@types/node","total_count":1,"children":[]},{"name":"@types/react","total_count":1,"children":[]},{"name":"@types/react","total_count":1,"children":[]},{"name":"@types/react-dom","total_count":1,"children":[]},{"name":"@types/react-dom","total_count":1,"children":[]},{"name":"@vitejs/plugin-react","total_count":1,"children":[]},{"name":"@vitejs/plugin-react","total_count":1,"children":[]},{"name":"autoprefixer","total_count":1,"children":[]},{"name":"autoprefixer","total_count":1,"children":[]},{"name":"build","total_count":1,"children":[]},{"name":"cap:build","total_count":1,"children":[]},{"name":"cap:open","total_count":1,"children":[]},{"name":"cap:sync","total_count":1,"children":[]},{"name":"dependencies","total_count":1,"children":[]},{"name":"dev","total_count":1,"children":[]},{"name":"devDependencies","total_count":1,"children":[]},{"name":"eslint","total_count":1,"children":[]},{"name":"eslint","total_count":1,"children":[]},{"name":"eslint-plugin-react-hooks","total_count":1,"children":[]},{"name":"eslint-plugin-react-hooks","total_count":1,"children":[]},{"name":"eslint-plugin-react-refresh","total_count":1,"children":[]},{"name":"eslint-plugin-react-refresh","total_count":1,"children":[]},{"name":"framer-motion","total_count":1,"children":[]},{"name":"framer-motion","total_count":1,"children":[]},{"name":"globals","total_count":1,"children":[]},{"name":"globals","total_count":1,"children":[]},{"name":"jsdom","total_count":1,"children":[]},{"name":"jsdom","total_count":1,"children":[]},{"name":"lint","total_count":1,"children":[]},{"name":"lucide-react","total_count":1,"children":[]},{"name":"lucide-react","total_count":1,"children":[]},{"name":"name","total_count":1,"children":[]},{"name":"postcss","total_count":1,"children":[]},{"name":"postcss","total_count":1,"children":[]},{"name":"preview","total_count":1,"children":[]},{"name":"private","total_count":1,"children":[]},{"name":"react","total_count":1,"children":[]},{"name":"react","total_count":1,"children":[]},{"name":"react-dom","total_count":1,"children":[]},{"name":"react-dom","total_count":1,"children":[]},{"name":"scripts","total_count":1,"children":[]},{"name":"sharp","total_count":1,"children":[]},{"name":"sharp","total_count":1,"children":[]},{"name":"supabase","total_count":1,"children":[]},{"name":"supabase","total_count":1,"children":[]},{"name":"tailwindcss","total_count":1,"children":[]},{"name":"tailwindcss","total_count":1,"children":[]},{"name":"test","total_count":1,"children":[]},{"name":"test:watch","total_count":1,"children":[]},{"name":"type","total_count":1,"children":[]},{"name":"typescript","total_count":1,"children":[]},{"name":"typescript","total_count":1,"children":[]},{"name":"typescript-eslint","total_count":1,"children":[]},{"name":"typescript-eslint","total_count":1,"children":[]},{"name":"version","total_count":1,"children":[]},{"name":"vite","total_count":1,"children":[]},{"name":"vite","total_count":1,"children":[]},{"name":"vite-plugin-pwa","total_count":1,"children":[]},{"name":"vite-plugin-pwa","total_count":1,"children":[]},{"name":"vitest","total_count":1,"children":[]},{"name":"vitest","total_count":1,"children":[]}]},{"name":"public","total_count":86,"children":[{"name":"design","total_count":86,"children":[{"name":"app.jsx","total_count":9,"children":[{"name":"AppInner()","total_count":1,"children":[]},{"name":"DIRECTIONS","total_count":1,"children":[]},{"name":"NavBar()","total_count":1,"children":[]},{"name":"NewMemorySheet()","total_count":1,"children":[]},{"name":"Phone()","total_count":1,"children":[]},{"name":"Root()","total_count":1,"children":[]},{"name":"Stage()","total_count":1,"children":[]},{"name":"TWEAK_DEFAULTS","total_count":1,"children":[]},{"name":"TweaksUI()","total_count":1,"children":[]}]},{"name":"dashboard.jsx","total_count":6,"children":[{"name":"countdown()","total_count":1,"children":[]},{"name":"Dashboard()","total_count":1,"children":[]},{"name":"LiveEditBadge()","total_count":1,"children":[]},{"name":"NextHero()","total_count":1,"children":[]},{"name":"romano()","total_count":1,"children":[]},{"name":"TimelineRow()","total_count":1,"children":[]}]},{"name":"data.jsx","total_count":13,"children":[{"name":"CATS","total_count":1,"children":[]},{"name":"COUPLE","total_count":1,"children":[]},{"name":"DIAS","total_count":1,"children":[]},{"name":"eur()","total_count":1,"children":[]},{"name":"fmtDate()","total_count":1,"children":[]},{"name":"fmtDateShort()","total_count":1,"children":[]},{"name":"MEMORIES","total_count":1,"children":[]},{"name":"MESES","total_count":1,"children":[]},{"name":"MESES_L","total_count":1,"children":[]},{"name":"PLANS","total_count":1,"children":[]},{"name":"TX","total_count":1,"children":[]},{"name":"TX_CATS_IN","total_count":1,"children":[]},{"name":"TX_CATS_OUT","total_count":1,"children":[]}]},{"name":"icons.jsx","total_count":2,"children":[{"name":"Icon()","total_count":1,"children":[]},{"name":"ICON_PATHS","total_count":1,"children":[]}]},{"name":"ios-frame.jsx","total_count":7,"children":[{"name":"IOSDevice()","total_count":1,"children":[]},{"name":"IOSGlassPill()","total_count":1,"children":[]},{"name":"IOSKeyboard()","total_count":1,"children":[]},{"name":"IOSList()","total_count":1,"children":[]},{"name":"IOSListRow()","total_count":1,"children":[]},{"name":"IOSNavBar()","total_count":1,"children":[]},{"name":"IOSStatusBar()","total_count":1,"children":[]}]},{"name":"onboarding.jsx","total_count":9,"children":[{"name":"JoinStep()","total_count":1,"children":[]},{"name":"LinkStep()","total_count":1,"children":[]},{"name":"NameStep()","total_count":1,"children":[]},{"name":"Onboarding()","total_count":1,"children":[]},{"name":"PickCard()","total_count":1,"children":[]},{"name":"ReadyStep()","total_count":1,"children":[]},{"name":"StepShell()","total_count":1,"children":[]},{"name":"WaitStep()","total_count":1,"children":[]},{"name":"Welcome()","total_count":1,"children":[]}]},{"name":"overlays.jsx","total_count":6,"children":[{"name":"ActionSheet()","total_count":1,"children":[]},{"name":"NewPlanSheet()","total_count":1,"children":[]},{"name":"NotificationsPanel()","total_count":1,"children":[]},{"name":"PlanDetail()","total_count":1,"children":[]},{"name":"RoundBtn()","total_count":1,"children":[]},{"name":"Sheet()","total_count":1,"children":[]}]},{"name":"screens.jsx","total_count":8,"children":[{"name":"CalendarScreen()","total_count":1,"children":[]},{"name":"CircBtn()","total_count":1,"children":[]},{"name":"FinanceScreen()","total_count":1,"children":[]},{"name":"GalleryScreen()","total_count":1,"children":[]},{"name":"Lightbox()","total_count":1,"children":[]},{"name":"MemoryCard()","total_count":1,"children":[]},{"name":"MoneySheet()","total_count":1,"children":[]},{"name":"TxRow()","total_count":1,"children":[]}]},{"name":"tweaks-panel.jsx","total_count":14,"children":[{"name":"__TwkCheck()","total_count":1,"children":[]},{"name":"__twkIsLight()","total_count":1,"children":[]},{"name":"TweakButton()","total_count":1,"children":[]},{"name":"TweakColor()","total_count":1,"children":[]},{"name":"TweakNumber()","total_count":1,"children":[]},{"name":"TweakRadio()","total_count":1,"children":[]},{"name":"TweakRow()","total_count":1,"children":[]},{"name":"TweakSection()","total_count":1,"children":[]},{"name":"TweakSelect()","total_count":1,"children":[]},{"name":"TweakSlider()","total_count":1,"children":[]},{"name":"TweaksPanel()","total_count":1,"children":[]},{"name":"TweakText()","total_count":1,"children":[]},{"name":"TweakToggle()","total_count":1,"children":[]},{"name":"useTweaks()","total_count":1,"children":[]}]},{"name":"ui.jsx","total_count":12,"children":[{"name":"Avatar()","total_count":1,"children":[]},{"name":"CatMedallion()","total_count":1,"children":[]},{"name":"CatTag()","total_count":1,"children":[]},{"name":"Confetti()","total_count":1,"children":[]},{"name":"CoupleAvatars()","total_count":1,"children":[]},{"name":"EmptyState()","total_count":1,"children":[]},{"name":"PresenceDot()","total_count":1,"children":[]},{"name":"Segmented()","total_count":1,"children":[]},{"name":"Toast()","total_count":1,"children":[]},{"name":"ToastCtx","total_count":1,"children":[]},{"name":"ToastProvider()","total_count":1,"children":[]},{"name":"useToast()","total_count":1,"children":[]}]}]}]},{"name":"scripts","total_count":6,"children":[{"name":"generate-icons.mjs","total_count":6,"children":[{"name":"__dirname","total_count":1,"children":[]},{"name":"icons","total_count":1,"children":[]},{"name":"iconSize","total_count":1,"children":[]},{"name":"maskablePath","total_count":1,"children":[]},{"name":"publicDir","total_count":1,"children":[]},{"name":"srcIcon","total_count":1,"children":[]}]}]},{"name":"src","total_count":279,"children":[{"name":"App.tsx","total_count":7,"children":[{"name":"App()","total_count":1,"children":[]},{"name":"AppInner()","total_count":1,"children":[]},{"name":"AppShell","total_count":1,"children":[]},{"name":"Auth","total_count":1,"children":[]},{"name":"DuplicateAccountScreen()","total_count":1,"children":[]},{"name":"Onboarding","total_count":1,"children":[]},{"name":"Spinner()","total_count":1,"children":[]}]},{"name":"components","total_count":93,"children":[{"name":"AppShell.tsx","total_count":23,"children":[{"name":"AppShell()","total_count":1,"children":[]},{"name":"Calendar","total_count":1,"children":[]},{"name":"CAT_COLOR","total_count":1,"children":[]},{"name":"CAT_COLOR_STABLE","total_count":1,"children":[]},{"name":"Dashboard","total_count":1,"children":[]},{"name":"EditStorySheet","total_count":1,"children":[]},{"name":"Finances","total_count":1,"children":[]},{"name":"Gallery","total_count":1,"children":[]},{"name":"getInitialTab()","total_count":1,"children":[]},{"name":"GlobalActionSheet","total_count":1,"children":[]},{"name":"MoneySheet","total_count":1,"children":[]},{"name":"NavBar()","total_count":1,"children":[]},{"name":"NavBtn()","total_count":1,"children":[]},{"name":"NewMemorySheet","total_count":1,"children":[]},{"name":"NewPlanSheet","total_count":1,"children":[]},{"name":"NewStorySheet","total_count":1,"children":[]},{"name":"NotificationsPanel","total_count":1,"children":[]},{"name":"Overlay","total_count":1,"children":[]},{"name":"PlanDetail","total_count":1,"children":[]},{"name":"ProfileScreen","total_count":1,"children":[]},{"name":"StorySwitcherSheet()","total_count":1,"children":[]},{"name":"Tab","total_count":1,"children":[]},{"name":"useUnreadCount()","total_count":1,"children":[]}]},{"name":"NotificationsPanel.tsx","total_count":3,"children":[{"name":"NotificationsPanel()","total_count":1,"children":[]},{"name":"NotifItem","total_count":1,"children":[]},{"name":"NotifRow()","total_count":1,"children":[]}]},{"name":"sheets","total_count":19,"children":[{"name":"EditStorySheet.tsx","total_count":3,"children":[{"name":"CAT_OPTIONS","total_count":1,"children":[]},{"name":"EditStorySheet()","total_count":1,"children":[]},{"name":"Props","total_count":1,"children":[]}]},{"name":"GlobalActionSheet.tsx","total_count":2,"children":[{"name":"GlobalActionSheet()","total_count":1,"children":[]},{"name":"ITEMS","total_count":1,"children":[]}]},{"name":"MoneySheet.tsx","total_count":4,"children":[{"name":"CATS_IN","total_count":1,"children":[]},{"name":"CATS_OUT","total_count":1,"children":[]},{"name":"MoneySheet()","total_count":1,"children":[]},{"name":"Props","total_count":1,"children":[]}]},{"name":"NewMemorySheet.tsx","total_count":2,"children":[{"name":"NewMemorySheet()","total_count":1,"children":[]},{"name":"Props","total_count":1,"children":[]}]},{"name":"NewPlanSheet.tsx","total_count":3,"children":[{"name":"CAT_ICON","total_count":1,"children":[]},{"name":"NewPlanSheet()","total_count":1,"children":[]},{"name":"Props","total_count":1,"children":[]}]},{"name":"NewStorySheet.tsx","total_count":5,"children":[{"name":"CATEGORIES","total_count":1,"children":[]},{"name":"FAMILY_ROLES","total_count":1,"children":[]},{"name":"NewStorySheet()","total_count":1,"children":[]},{"name":"Props","total_count":1,"children":[]},{"name":"randomCode()","total_count":1,"children":[]}]}]},{"name":"ui","total_count":48,"children":[{"name":"__tests__","total_count":1,"children":[{"name":"ErrorBoundary.test.tsx","total_count":1,"children":[{"name":"Bomb()","total_count":1,"children":[]}]}]},{"name":"Avatar.tsx","total_count":3,"children":[{"name":"Avatar()","total_count":1,"children":[]},{"name":"CoupleAvatars()","total_count":1,"children":[]},{"name":"Person","total_count":1,"children":[]}]},{"name":"BottomSheet.tsx","total_count":2,"children":[{"name":"BottomSheet()","total_count":1,"children":[]},{"name":"Props","total_count":1,"children":[]}]},{"name":"CatMedallion.tsx","total_count":2,"children":[{"name":"CAT_ICON","total_count":1,"children":[]},{"name":"CatMedallion()","total_count":1,"children":[]}]},{"name":"CatTag.tsx","total_count":2,"children":[{"name":"CAT_ICON","total_count":1,"children":[]},{"name":"CatTag()","total_count":1,"children":[]}]},{"name":"Confetti.tsx","total_count":2,"children":[{"name":"COLORS","total_count":1,"children":[]},{"name":"Confetti()","total_count":1,"children":[]}]},{"name":"ConfirmDialog.tsx","total_count":5,"children":[{"name":"ConfirmFn","total_count":1,"children":[]},{"name":"ConfirmOpts","total_count":1,"children":[]},{"name":"ConfirmProvider()","total_count":1,"children":[]},{"name":"Ctx","total_count":1,"children":[]},{"name":"useConfirm()","total_count":1,"children":[]}]},{"name":"DatePicker.tsx","total_count":5,"children":[{"name":"DatePicker()","total_count":1,"children":[]},{"name":"DIAS","total_count":1,"children":[]},{"name":"MESES","total_count":1,"children":[]},{"name":"Mode","total_count":1,"children":[]},{"name":"parseSafe()","total_count":1,"children":[]}]},{"name":"EditAction.tsx","total_count":2,"children":[{"name":"EditAction()","total_count":1,"children":[]},{"name":"Props","total_count":1,"children":[]}]},{"name":"EmptyState.tsx","total_count":1,"children":[{"name":"EmptyState()","total_count":1,"children":[]}]},{"name":"ErrorBoundary.tsx","total_count":7,"children":[{"name":".componentDidCatch()","total_count":1,"children":[]},{"name":".constructor()","total_count":1,"children":[]},{"name":".getDerivedStateFromError()","total_count":1,"children":[]},{"name":".render()","total_count":1,"children":[]},{"name":"ErrorBoundary","total_count":1,"children":[]},{"name":"Props","total_count":1,"children":[]},{"name":"State","total_count":1,"children":[]}]},{"name":"Icon.tsx","total_count":4,"children":[{"name":"GoogleCalIcon()","total_count":1,"children":[]},{"name":"Icon()","total_count":1,"children":[]},{"name":"IconComponent","total_count":1,"children":[]},{"name":"ICONS","total_count":1,"children":[]}]},{"name":"Lightbox.tsx","total_count":2,"children":[{"name":"Lightbox()","total_count":1,"children":[]},{"name":"LightboxProps","total_count":1,"children":[]}]},{"name":"LiveEditBadge.tsx","total_count":1,"children":[{"name":"LiveEditBadge()","total_count":1,"children":[]}]},{"name":"PresenceDot.tsx","total_count":1,"children":[{"name":"PresenceDot()","total_count":1,"children":[]}]},{"name":"Segmented.tsx","total_count":2,"children":[{"name":"Segmented()","total_count":1,"children":[]},{"name":"SegOpt","total_count":1,"children":[]}]},{"name":"Sheet.tsx","total_count":1,"children":[{"name":"Sheet()","total_count":1,"children":[]}]},{"name":"Skeletons.tsx","total_count":5,"children":[{"name":"CalendarSkeleton()","total_count":1,"children":[]},{"name":"ChatSkeleton()","total_count":1,"children":[]},{"name":"DashboardSkeleton()","total_count":1,"children":[]},{"name":"FinancesSkeleton()","total_count":1,"children":[]},{"name":"GallerySkeleton()","total_count":1,"children":[]}]}]}]},{"name":"context","total_count":17,"children":[{"name":"AuthContext.tsx","total_count":5,"children":[{"name":"AuthContext","total_count":1,"children":[]},{"name":"AuthContextType","total_count":1,"children":[]},{"name":"AuthProvider()","total_count":1,"children":[]},{"name":"ProfileType","total_count":1,"children":[]},{"name":"useAuth()","total_count":1,"children":[]}]},{"name":"CurrencyContext.tsx","total_count":7,"children":[{"name":"Ctx","total_count":1,"children":[]},{"name":"CURRENCIES","total_count":1,"children":[]},{"name":"CurrencyCtx","total_count":1,"children":[]},{"name":"CurrencyKey","total_count":1,"children":[]},{"name":"CurrencyProvider()","total_count":1,"children":[]},{"name":"storyKey()","total_count":1,"children":[]},{"name":"useCurrency()","total_count":1,"children":[]}]},{"name":"ToastContext.tsx","total_count":5,"children":[{"name":"Ctx","total_count":1,"children":[]},{"name":"Toast","total_count":1,"children":[]},{"name":"ToastCtx","total_count":1,"children":[]},{"name":"ToastProvider()","total_count":1,"children":[]},{"name":"useToast()","total_count":1,"children":[]}]}]},{"name":"lib","total_count":80,"children":[{"name":"__tests__","total_count":4,"children":[{"name":"chapterUtils.test.ts","total_count":1,"children":[]},{"name":"dateUtils.test.ts","total_count":1,"children":[]},{"name":"recoverClickAfterDrag.test.ts","total_count":1,"children":[]},{"name":"themeUtils.test.ts","total_count":1,"children":[]}]},{"name":"backStack.ts","total_count":7,"children":[{"name":"BackFn","total_count":1,"children":[]},{"name":"consumeIgnorePop()","total_count":1,"children":[]},{"name":"invokeTopBack()","total_count":1,"children":[]},{"name":"pushBack()","total_count":1,"children":[]},{"name":"removeBack()","total_count":1,"children":[]},{"name":"scheduleIgnorePop()","total_count":1,"children":[]},{"name":"stack","total_count":1,"children":[]}]},{"name":"capacitorStorageAdapter.ts","total_count":1,"children":[{"name":"capacitorStorageAdapter","total_count":1,"children":[]}]},{"name":"chapterUtils.ts","total_count":7,"children":[{"name":"CAT_META","total_count":1,"children":[]},{"name":"countdown()","total_count":1,"children":[]},{"name":"eur()","total_count":1,"children":[]},{"name":"fmtDate()","total_count":1,"children":[]},{"name":"fmtDateShort()","total_count":1,"children":[]},{"name":"MESES","total_count":1,"children":[]},{"name":"toRoman()","total_count":1,"children":[]}]},{"name":"dateUtils.ts","total_count":5,"children":[{"name":"calculateCountdown()","total_count":1,"children":[]},{"name":"calculateTimeTogether()","total_count":1,"children":[]},{"name":"generateCalendarMatrix()","total_count":1,"children":[]},{"name":"MONTH_NAMES","total_count":1,"children":[]},{"name":"WEEK_DAYS","total_count":1,"children":[]}]},{"name":"googleWeb.ts","total_count":10,"children":[{"name":"CodeClient","total_count":1,"children":[]},{"name":"getGoogleClientId()","total_count":1,"children":[]},{"name":"GOOGLE_CLIENT_ID","total_count":1,"children":[]},{"name":"GoogleCodeResponse","total_count":1,"children":[]},{"name":"GoogleCredentialResponse","total_count":1,"children":[]},{"name":"hasGoogleClientId()","total_count":1,"children":[]},{"name":"loadGoogleIdentityServices()","total_count":1,"children":[]},{"name":"renderGoogleSignInButton()","total_count":1,"children":[]},{"name":"requestGoogleCalendarCode()","total_count":1,"children":[]},{"name":"Window","total_count":1,"children":[]}]},{"name":"imageUtils.ts","total_count":1,"children":[{"name":"compressToWebP()","total_count":1,"children":[]}]},{"name":"native.ts","total_count":11,"children":[{"name":"consumeNativeNavigationUrl()","total_count":1,"children":[]},{"name":"dispatchNavigation()","total_count":1,"children":[]},{"name":"enableNativePushNotifications()","total_count":1,"children":[]},{"name":"getNativePushTarget()","total_count":1,"children":[]},{"name":"isNative","total_count":1,"children":[]},{"name":"savePushToken()","total_count":1,"children":[]},{"name":"setBackHandler()","total_count":1,"children":[]},{"name":"setupNativeApp()","total_count":1,"children":[]},{"name":"setupPushListeners()","total_count":1,"children":[]},{"name":"showNativeNotificationTest()","total_count":1,"children":[]},{"name":"syncNativePushToken()","total_count":1,"children":[]}]},{"name":"pushSubscriptions.ts","total_count":5,"children":[{"name":"isPushSubscription()","total_count":1,"children":[]},{"name":"normalizePushSubscriptions()","total_count":1,"children":[]},{"name":"PushSubscriptionRecord","total_count":1,"children":[]},{"name":"savePushSubscription()","total_count":1,"children":[]},{"name":"subscriptionKey()","total_count":1,"children":[]}]},{"name":"recoverClickAfterDrag.ts","total_count":1,"children":[{"name":"recoverNextClickAfterDrag()","total_count":1,"children":[]}]},{"name":"supabase.ts","total_count":13,"children":[{"name":"AlbumType","total_count":1,"children":[]},{"name":"buildPerson()","total_count":1,"children":[]},{"name":"imageUrl()","total_count":1,"children":[]},{"name":"isNative","total_count":1,"children":[]},{"name":"MemoryType","total_count":1,"children":[]},{"name":"MessageType","total_count":1,"children":[]},{"name":"NotificationType","total_count":1,"children":[]},{"name":"PersonDisplay","total_count":1,"children":[]},{"name":"PlanType","total_count":1,"children":[]},{"name":"StoryMemberType","total_count":1,"children":[]},{"name":"StoryType","total_count":1,"children":[]},{"name":"supabase","total_count":1,"children":[]},{"name":"TransactionType","total_count":1,"children":[]}]},{"name":"themeUtils.ts","total_count":2,"children":[{"name":"getPlanThemeImage()","total_count":1,"children":[]},{"name":"THEME_IMAGES","total_count":1,"children":[]}]},{"name":"usePushNotifications.ts","total_count":13,"children":[{"name":"connectGoogleCalendarWithCode()","total_count":1,"children":[]},{"name":"deletePlanFromGoogleCalendar()","total_count":1,"children":[]},{"name":"invokeCalendarFunction()","total_count":1,"children":[]},{"name":"sameApplicationServerKey()","total_count":1,"children":[]},{"name":"sendPushToStoryMembers()","total_count":1,"children":[]},{"name":"sendTestPushNotification()","total_count":1,"children":[]},{"name":"SUPABASE_ANON_KEY","total_count":1,"children":[]},{"name":"SUPABASE_URL","total_count":1,"children":[]},{"name":"syncPlanToGoogleCalendar()","total_count":1,"children":[]},{"name":"testGoogleCalendarConnection()","total_count":1,"children":[]},{"name":"urlBase64ToUint8Array()","total_count":1,"children":[]},{"name":"usePushNotifications()","total_count":1,"children":[]},{"name":"VAPID_PUBLIC_KEY","total_count":1,"children":[]}]}]},{"name":"pages","total_count":79,"children":[{"name":"Auth.tsx","total_count":4,"children":[{"name":"Auth()","total_count":1,"children":[]},{"name":"Flow","total_count":1,"children":[]},{"name":"GoogleBtn()","total_count":1,"children":[]},{"name":"GoogleWebBtn()","total_count":1,"children":[]}]},{"name":"Calendar.tsx","total_count":11,"children":[{"name":"Calendar()","total_count":1,"children":[]},{"name":"CalendarPlan","total_count":1,"children":[]},{"name":"CAT_DOT","total_count":1,"children":[]},{"name":"CAT_ICON","total_count":1,"children":[]},{"name":"ChapterList()","total_count":1,"children":[]},{"name":"ChapterRow()","total_count":1,"children":[]},{"name":"CircBtn()","total_count":1,"children":[]},{"name":"DIAS","total_count":1,"children":[]},{"name":"MESES_L","total_count":1,"children":[]},{"name":"now","total_count":1,"children":[]},{"name":"StoryBadge()","total_count":1,"children":[]}]},{"name":"Chat.tsx","total_count":5,"children":[{"name":"Chat()","total_count":1,"children":[]},{"name":"fmtDateLabel()","total_count":1,"children":[]},{"name":"fmtTime()","total_count":1,"children":[]},{"name":"Props","total_count":1,"children":[]},{"name":"shouldShowDate()","total_count":1,"children":[]}]},{"name":"Dashboard.tsx","total_count":5,"children":[{"name":"Dashboard()","total_count":1,"children":[]},{"name":"daysTogether()","total_count":1,"children":[]},{"name":"EmptyDashboard()","total_count":1,"children":[]},{"name":"NextHero()","total_count":1,"children":[]},{"name":"TimelineRow()","total_count":1,"children":[]}]},{"name":"Finances.tsx","total_count":5,"children":[{"name":"Finances()","total_count":1,"children":[]},{"name":"getPeriodBounds()","total_count":1,"children":[]},{"name":"inPeriod()","total_count":1,"children":[]},{"name":"PlanRow()","total_count":1,"children":[]},{"name":"TYPE_ICONS","total_count":1,"children":[]}]},{"name":"Gallery.tsx","total_count":6,"children":[{"name":"AlbumCard()","total_count":1,"children":[]},{"name":"CircBtn()","total_count":1,"children":[]},{"name":"Gallery()","total_count":1,"children":[]},{"name":"Memory","total_count":1,"children":[]},{"name":"MemoryCard()","total_count":1,"children":[]},{"name":"useColCount()","total_count":1,"children":[]}]},{"name":"Landing.tsx","total_count":16,"children":[{"name":"COUPLES","total_count":1,"children":[]},{"name":"CouplesScrollSection()","total_count":1,"children":[]},{"name":"CTASection()","total_count":1,"children":[]},{"name":"easeOut","total_count":1,"children":[]},{"name":"FloatingWord()","total_count":1,"children":[]},{"name":"Footer()","total_count":1,"children":[]},{"name":"HeroSection()","total_count":1,"children":[]},{"name":"HorizontalFeatures()","total_count":1,"children":[]},{"name":"Landing()","total_count":1,"children":[]},{"name":"MagneticButton()","total_count":1,"children":[]},{"name":"NavBar()","total_count":1,"children":[]},{"name":"ParticleField()","total_count":1,"children":[]},{"name":"PLANS","total_count":1,"children":[]},{"name":"PlayStoreSection()","total_count":1,"children":[]},{"name":"PricingSection()","total_count":1,"children":[]},{"name":"SocialProofSection()","total_count":1,"children":[]}]},{"name":"Onboarding.tsx","total_count":14,"children":[{"name":"Category","total_count":1,"children":[]},{"name":"CategoryStep()","total_count":1,"children":[]},{"name":"CATS","total_count":1,"children":[]},{"name":"CreateStep()","total_count":1,"children":[]},{"name":"genCode()","total_count":1,"children":[]},{"name":"JoinStep()","total_count":1,"children":[]},{"name":"LinkStep()","total_count":1,"children":[]},{"name":"NameStep()","total_count":1,"children":[]},{"name":"Onboarding()","total_count":1,"children":[]},{"name":"PickCard()","total_count":1,"children":[]},{"name":"ReadyStep()","total_count":1,"children":[]},{"name":"StepShell()","total_count":1,"children":[]},{"name":"WaitStep()","total_count":1,"children":[]},{"name":"Welcome()","total_count":1,"children":[]}]},{"name":"PlanDetail.tsx","total_count":6,"children":[{"name":"CATEGORIES","total_count":1,"children":[]},{"name":"INPUT_STYLE","total_count":1,"children":[]},{"name":"Memory","total_count":1,"children":[]},{"name":"PlanCategory","total_count":1,"children":[]},{"name":"PlanDetail()","total_count":1,"children":[]},{"name":"RoundBtn()","total_count":1,"children":[]}]},{"name":"Profile.tsx","total_count":7,"children":[{"name":"CAT_COLOR","total_count":1,"children":[]},{"name":"CAT_ICON","total_count":1,"children":[]},{"name":"CAT_LABEL","total_count":1,"children":[]},{"name":"GoogleCalendarSection()","total_count":1,"children":[]},{"name":"ProfileScreen()","total_count":1,"children":[]},{"name":"PushNotificationsSection()","total_count":1,"children":[]},{"name":"StoryMember","total_count":1,"children":[]}]}]},{"name":"main.tsx","total_count":1,"children":[]},{"name":"sw.ts","total_count":1,"children":[]},{"name":"test-setup.ts","total_count":1,"children":[]}]},{"name":"supabase","total_count":16,"children":[{"name":"functions","total_count":16,"children":[{"name":"connect-google-calendar","total_count":6,"children":[{"name":"index.ts","total_count":6,"children":[{"name":"assertValidRedirectUri()","total_count":1,"children":[]},{"name":"CORS","total_count":1,"children":[]},{"name":"GOOGLE_CLIENT_ID","total_count":1,"children":[]},{"name":"GOOGLE_CLIENT_SECRET","total_count":1,"children":[]},{"name":"GoogleTokenResponse","total_count":1,"children":[]},{"name":"requireGoogleConfig()","total_count":1,"children":[]}]}]},{"name":"send-push","total_count":6,"children":[{"name":"index.ts","total_count":6,"children":[{"name":"corsHeaders","total_count":1,"children":[]},{"name":"FCM_SERVICE_ACCOUNT_B64","total_count":1,"children":[]},{"name":"FCM_SERVICE_ACCOUNT_JSON","total_count":1,"children":[]},{"name":"getFCMAccessToken()","total_count":1,"children":[]},{"name":"getFCMServiceAccount()","total_count":1,"children":[]},{"name":"sendFCM()","total_count":1,"children":[]}]}]},{"name":"sync-google-calendar","total_count":4,"children":[{"name":"index.ts","total_count":4,"children":[{"name":"CORS","total_count":1,"children":[]},{"name":"GOOGLE_CLIENT_ID","total_count":1,"children":[]},{"name":"GOOGLE_CLIENT_SECRET","total_count":1,"children":[]},{"name":"refreshGoogleToken()","total_count":1,"children":[]}]}]}]}]},{"name":"tsconfig.app.json","total_count":30,"children":[{"name":"allowImportingTsExtensions","total_count":1,"children":[]},{"name":"compilerOptions","total_count":1,"children":[]},{"name":"DOM","total_count":1,"children":[]},{"name":"DOM.Iterable","total_count":1,"children":[]},{"name":"erasableSyntaxOnly","total_count":1,"children":[]},{"name":"ES2023","total_count":1,"children":[]},{"name":"exclude","total_count":1,"children":[]},{"name":"include","total_count":1,"children":[]},{"name":"jsx","total_count":1,"children":[]},{"name":"lib","total_count":1,"children":[]},{"name":"module","total_count":1,"children":[]},{"name":"moduleDetection","total_count":1,"children":[]},{"name":"moduleResolution","total_count":1,"children":[]},{"name":"noEmit","total_count":1,"children":[]},{"name":"noFallthroughCasesInSwitch","total_count":1,"children":[]},{"name":"noImplicitOverride","total_count":1,"children":[]},{"name":"noUncheckedIndexedAccess","total_count":1,"children":[]},{"name":"noUnusedLocals","total_count":1,"children":[]},{"name":"noUnusedParameters","total_count":1,"children":[]},{"name":"skipLibCheck","total_count":1,"children":[]},{"name":"src","total_count":1,"children":[]},{"name":"src/**/*.spec.*","total_count":1,"children":[]},{"name":"src/**/*.test.*","total_count":1,"children":[]},{"name":"src/**/__tests__","total_count":1,"children":[]},{"name":"strict","total_count":1,"children":[]},{"name":"target","total_count":1,"children":[]},{"name":"tsBuildInfoFile","total_count":1,"children":[]},{"name":"types","total_count":1,"children":[]},{"name":"verbatimModuleSyntax","total_count":1,"children":[]},{"name":"vite/client","total_count":1,"children":[]}]},{"name":"tsconfig.json","total_count":2,"children":[{"name":"files","total_count":1,"children":[]},{"name":"references","total_count":1,"children":[]}]},{"name":"tsconfig.node.json","total_count":20,"children":[{"name":"allowImportingTsExtensions","total_count":1,"children":[]},{"name":"compilerOptions","total_count":1,"children":[]},{"name":"erasableSyntaxOnly","total_count":1,"children":[]},{"name":"ES2023","total_count":1,"children":[]},{"name":"include","total_count":1,"children":[]},{"name":"lib","total_count":1,"children":[]},{"name":"module","total_count":1,"children":[]},{"name":"moduleDetection","total_count":1,"children":[]},{"name":"moduleResolution","total_count":1,"children":[]},{"name":"node","total_count":1,"children":[]},{"name":"noEmit","total_count":1,"children":[]},{"name":"noFallthroughCasesInSwitch","total_count":1,"children":[]},{"name":"noUnusedLocals","total_count":1,"children":[]},{"name":"noUnusedParameters","total_count":1,"children":[]},{"name":"skipLibCheck","total_count":1,"children":[]},{"name":"target","total_count":1,"children":[]},{"name":"tsBuildInfoFile","total_count":1,"children":[]},{"name":"types","total_count":1,"children":[]},{"name":"verbatimModuleSyntax","total_count":1,"children":[]},{"name":"vite.config.ts","total_count":1,"children":[]}]},{"name":"eslint.config.js","total_count":1,"children":[]},{"name":"playwright.config.ts","total_count":1,"children":[]},{"name":"postcss.config.js","total_count":1,"children":[]},{"name":"tailwind.config.js","total_count":1,"children":[]},{"name":"vite.config.ts","total_count":1,"children":[]},{"name":"vitest.config.ts","total_count":1,"children":[]}]};
+
+    function transformData(jsonData) {
+        // Helper function to recursively build the children structure
+        function processNode(node, parentL1StageName) {
+            let displayName = node.name;
+            // Append total_count if it exists and is not already in the name
+            if (node.total_count !== undefined) {
+                if (!/\(Total Count: \d+\)$/.test(displayName)) {
+                    displayName += ` (Total Count: ${node.total_count})`;
+                }
+            }
+
+            const newNode = { name: displayName };
+
+            if (parentL1StageName === "Root") {
+                 newNode.originalStageName = node.name;
+            } else {
+                newNode.originalStageName = parentL1StageName;
+            }
+
+            if (node.children && node.children.length > 0) {
+                const stageNameToPass = (parentL1StageName === "Root") ? node.name : parentL1StageName;
+                newNode.children = node.children.map(child => processNode(child, stageNameToPass));
+            }
+
+            return newNode;
+        }
+
+        let rootDisplayName = jsonData.name;
+        if (jsonData.total_count !== undefined && !/\(Total Count: \d+\)$/.test(rootDisplayName)) {
+            rootDisplayName += ` (Total Count: ${jsonData.total_count})`;
+        }
+
+        return {
+            name: rootDisplayName,
+            originalStageName: "Root",
+            children: (jsonData.children || []).map(child => processNode(child, "Root"))
+        };
+    }
+
+    const treeData = transformData(initialJsonData);
+
+    // Auto-populated phaseColors: every depth-1 child of the root gets
+    // a stable colour from a bigger palette so all top-level dirs are
+    // distinguishable.
+    const PALETTE = [
+      ["#3498DB","#2980B9","#AED6F1"], ["#2ECC71","#27AE60","#A9DFBF"],
+      ["#E74C3C","#C0392B","#F5B7B1"], ["#9B59B6","#8E44AD","#D7BDE2"],
+      ["#F39C12","#D68910","#FAD7A0"], ["#1ABC9C","#117864","#A2D9CE"],
+      ["#34495E","#1B2631","#ABB2B9"], ["#E67E22","#BA4A00","#F5CBA7"],
+      ["#16A085","#0E6655","#A2D9CE"], ["#D35400","#A04000","#EDBB99"],
+      ["#7F8C8D","#566573","#D5DBDB"], ["#C0392B","#7B241C","#F5B7B1"],
+      ["#2E86C1","#1B4F72","#A9CCE3"], ["#28B463","#196F3D","#A9DFBF"],
+      ["#AF7AC5","#6C3483","#D2B4DE"],
+    ];
+    const phaseColors = { "Root": { fill: "#4A4A4A", stroke: "#333333", collapsedFill: "#6C757D" },
+                          "Default": { fill: "#BDC3C7", stroke: "#95A5A6", collapsedFill: "#ECF0F1" } };
+    (initialJsonData.children || []).forEach((c, i) => {
+      const pal = PALETTE[i % PALETTE.length];
+      phaseColors[c.name] = { fill: pal[0], stroke: pal[1], collapsedFill: pal[2] };
+    });
+
+    const levelSpecificPalettes = {
+      0: { fill: "#4A4A4A", stroke: "#333333", collapsedFill: "#6C757D" },
+      2: { fill: "#6ab04c", stroke: "#508a38", collapsedFill: "#a3d391" },
+      3: { fill: "#f0932b", stroke: "#d0730f", collapsedFill: "#f6c07e" },
+      4: { fill: "#be2edd", stroke: "#a01cb3", collapsedFill: "#e08bf2" },
+      5: { fill: "#00a8ff", stroke: "#007ac1", collapsedFill: "#74d2ff" },
+      6: { fill: "#e55039", stroke: "#c23620", collapsedFill: "#f09a8d" },
+      default: { fill: "#747d8c", stroke: "#57606f", collapsedFill: "#a4b0be" }
+    };
+
+    const svgElement = d3.select("#tree-svg");
+    const initialSvgWidth = +svgElement.attr("width");
+    const initialSvgHeight = +svgElement.attr("height");
+    const margin = { top: 40, right: 120, bottom: 80, left: 450 };
+    let width = initialSvgWidth - margin.left - margin.right;
+    let height = initialSvgHeight - margin.top - margin.bottom;
+    const duration = 500;
+    let nodeCounter = 0;
+    const g = svgElement.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+    const treemap = d3.tree().nodeSize([40, 0]);
+    let rootNode = d3.hierarchy(treeData, d => d.children);
+    rootNode.x0 = 0;
+    rootNode.y0 = 0;
+
+    if (rootNode.children) {
+      rootNode.children.forEach(d_child => {
+        if (d_child.children) { collapseBranch(d_child); }
+      });
+    }
+    updateTree(rootNode);
+
+    function collapseBranch(d) { if (d.children) { d._children = d.children; d._children.forEach(collapseBranch); d.children = null; } }
+    function expandBranch(d) { if (d._children) { d.children = d._children; d._children = null; } if (d.children) { d.children.forEach(expandBranch); } }
+    window.expandAll = () => { expandBranch(rootNode); updateTree(rootNode); };
+    window.collapseAll = () => { if (rootNode.children) { rootNode.children.forEach(collapseBranch); } updateTree(rootNode); };
+    window.resetView = () => { if (rootNode.children) { rootNode.children.forEach(d_child => { if (d_child.children || d_child._children) { collapseBranch(d_child); } }); } if (rootNode._children && !rootNode.children) { rootNode.children = rootNode._children; rootNode._children = null; } updateTree(rootNode); };
+
+    function updateTree(source) {
+      const treeLayoutData = treemap(rootNode);
+      let nodes = treeLayoutData.descendants();
+      let links = treeLayoutData.descendants().slice(1);
+
+      let minX = 0;
+      let maxX = 0;
+      if (nodes.length > 0) {
+        minX = d3.min(nodes, d => d.x);
+        maxX = d3.max(nodes, d => d.x);
+      }
+
+      let neededHeight = Math.max(initialSvgHeight, maxX - minX + margin.top + margin.bottom + 100);
+      svgElement.transition().duration(duration / 2).attr("height", neededHeight);
+      g.transition().duration(duration / 2).attr("transform", `translate(${margin.left},${margin.top - minX + 40})`);
+
+      nodes.forEach(d => { d.y = d.depth * 400; }); // Adjust horizontal separation if needed
+
+      const node = g.selectAll('g.node').data(nodes, d => d.id || (d.id = ++nodeCounter));
+      const nodeEnter = node.enter().append('g')
+        .attr('class', d => "node" + (d.children || d._children ? " node--internal" : " node--leaf") + (d._children ? " _children" : ""))
+        .attr('transform', d => `translate(${source.y0},${source.x0})`)
+        .on('click', (event, d) => { if (d.children) { d._children = d.children; d.children = null; } else if (d._children) { d.children = d._children; d._children = null; } updateTree(d); })
+        .style('cursor', d => (d.children || d._children) ? 'pointer' : 'default');
+
+      nodeEnter.append('circle').attr('r', 1e-6);
+
+      nodeEnter.append('text')
+        .attr('dy', '.35em')
+        .attr('x', d => d.children || d._children ? -14 : 14)
+        .attr('text-anchor', d => d.children || d._children ? 'end' : 'start')
+        .style("fill-opacity", 1e-6)
+        .call(wrapText, 380);
+
+      const nodeUpdate = nodeEnter.merge(node);
+      nodeUpdate.transition().duration(duration)
+        .attr('transform', d => `translate(${d.y},${d.x})`)
+        .attr('class', d => "node" + (d.children ? " node--internal" : " node--leaf") + (d._children ? " node--internal _children" : ""));
+
+      nodeUpdate.select('circle').attr('r', 8.5)
+        .style('fill', d => {
+            let palette;
+            if (d.depth === 0) {
+                palette = levelSpecificPalettes[0];
+            } else if (d.depth === 1) {
+                palette = phaseColors[d.data.originalStageName] || phaseColors.Default;
+            } else {
+                palette = levelSpecificPalettes[d.depth] || levelSpecificPalettes.default;
+            }
+            if (d._children) return palette.collapsedFill;
+            if (d.children) return palette.fill;
+            return "#fff";
+        })
+        .style('stroke', d => {
+            let palette;
+            if (d.depth === 0) {
+                palette = levelSpecificPalettes[0];
+            } else if (d.depth === 1) {
+                palette = phaseColors[d.data.originalStageName] || phaseColors.Default;
+            } else {
+                palette = levelSpecificPalettes[d.depth] || levelSpecificPalettes.default;
+            }
+            return palette.stroke;
+        });
+      nodeUpdate.select('text').style("fill-opacity", 1).call(wrapText, 380);
+
+      const nodeExit = node.exit().transition().duration(duration).attr('transform', d => `translate(${source.y},${source.x})`).remove();
+      nodeExit.select('circle').attr('r', 1e-6);
+      nodeExit.select('text').style('fill-opacity', 1e-6);
+
+      const link = g.selectAll('path.link').data(links, d => d.id);
+      const linkEnter = link.enter().insert('path', "g").attr('class', 'link').attr('d', d => { const o = { x: source.x0, y: source.y0 }; return diagonal(o, o); });
+
+      linkEnter.merge(link).transition().duration(duration).attr('d', d => diagonal(d, d.parent))
+        .style('stroke', d => {
+            const sourceNode = d.parent;
+            if (!sourceNode) return phaseColors.Default.stroke;
+            const l1AncestorName = sourceNode.data.originalStageName;
+            const colorPalette = phaseColors[l1AncestorName] || phaseColors.Default;
+            return colorPalette.stroke;
+        });
+      link.exit().transition().duration(duration).attr('d', d => { const o = { x: source.x, y: source.y }; return diagonal(o, o); }).remove();
+      nodes.forEach(d => { d.x0 = d.x; d.y0 = d.y; });
+    }
+
+    function diagonal(s, d) { return `M ${s.y} ${s.x} C ${(s.y + d.y) / 2} ${s.x}, ${(s.y + d.y) / 2} ${d.x}, ${d.y} ${d.x}`; }
+
+    function wrapText(textElements, maxWidth) {
+        const textPartColors = {
+            name: '#343a40',
+            count: '#0056b3'
+        };
+        const countRegex = /(\s\(Total Count: \d+\))$/;
+
+        textElements.each(function () {
+            const textD3 = d3.select(this);
+            const originalNodeText = textD3.datum().data.name;
+            const x = parseFloat(textD3.attr("x") || 0);
+            const initialDy = textD3.attr("dy");
+            const textAnchor = textD3.attr("text-anchor");
+            const lineHeight = 1.1;
+
+            textD3.text(null);
+
+            let namePart = originalNodeText;
+            let countPartText = "";
+
+            const countMatch = originalNodeText.match(countRegex);
+            if (countMatch && originalNodeText.endsWith(countMatch[0])) {
+                namePart = originalNodeText.substring(0, originalNodeText.length - countMatch[0].length).trim();
+                countPartText = countMatch[0].trim();
+            }
+
+            const tokens = [];
+            namePart.split(/\s+/).filter(Boolean).forEach(word => {
+                tokens.push({ text: word, type: 'name' });
+            });
+            if (countPartText) {
+                tokens.push({ text: countPartText, type: 'count' });
+            }
+
+            if (tokens.length === 0 && originalNodeText) {
+                tokens.push({ text: originalNodeText, type: 'name' });
+            }
+
+            let currentTspan = textD3.append("tspan").attr("x", x).attr("dy", initialDy);
+            if (textAnchor === "end") currentTspan.attr("text-anchor", "end");
+
+            let lineTokens = [];
+
+            for (let i = 0; i < tokens.length; i++) {
+                const tokenObj = tokens[i];
+
+                lineTokens.push(tokenObj);
+                currentTspan.text(lineTokens.map(t => t.text).join(" "));
+
+                if (currentTspan.node().getComputedTextLength() > maxWidth && lineTokens.length > 1) {
+                    lineTokens.pop();
+
+                    currentTspan.text(null);
+                    lineTokens.forEach((prevToken, idx) => {
+                        currentTspan.append("tspan")
+                            .text((idx > 0 ? " " : "") + prevToken.text)
+                            .style("fill", textPartColors[prevToken.type] || textPartColors.name)
+                            .style("font-weight", prevToken.type === 'count' ? "bold" : "normal");
+                    });
+
+                    lineTokens = [tokenObj];
+                    currentTspan = textD3.append("tspan").attr("x", x).attr("dy", lineHeight + "em");
+                    if (textAnchor === "end") currentTspan.attr("text-anchor", "end");
+                }
+            }
+
+            currentTspan.text(null);
+            lineTokens.forEach((token, idx) => {
+                currentTspan.append("tspan")
+                    .text((idx > 0 ? " " : "") + token.text)
+                    .style("fill", textPartColors[token.type] || textPartColors.name)
+                    .style("font-weight", token.type === 'count' ? "bold" : "normal");
+            });
+
+            if (textD3.selectAll("tspan > tspan").empty() && textD3.select("tspan").text().length === 0 && originalNodeText) {
+                let t = textD3.select("tspan");
+                let displayText = originalNodeText;
+                t.text(displayText).style("fill", textPartColors.name);
+                if (t.node() && t.node().getComputedTextLength() > maxWidth && displayText.length > 20) {
+                    let estimatedChars = Math.floor(maxWidth / (t.node().getComputedTextLength()/displayText.length) );
+                    displayText = displayText.substring(0, Math.max(0, estimatedChars - 3)) + "...";
+                    t.text(displayText);
+                }
+            }
+        });
+    }
+  </script>
+</body>
+</html>

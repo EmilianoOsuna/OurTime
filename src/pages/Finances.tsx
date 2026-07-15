@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
 import { supabase } from '../lib/supabase'
 import { Icon } from '../components/ui/Icon'
 import { Segmented } from '../components/ui/Segmented'
@@ -8,12 +9,12 @@ import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import { EditAction } from '../components/ui/EditAction'
 import { FinancesSkeleton } from '../components/ui/Skeletons'
-import type { PlanType } from '../lib/supabase'
+import type { PlanType, TransactionType } from '../lib/supabase'
 
 const TYPE_ICONS: Record<string, string> = {
   cena: 'utensils', viaje: 'plane', cine: 'film', cafe: 'coffee',
   regalo: 'gift', noche: 'moon', musica: 'music', ruta: 'mapRoute',
-  salida: 'coffee', otro: 'tag',
+  salida: 'coffee', otro: 'tag', casa: 'home', aporte: 'wallet',
 }
 
 function getPeriodBounds(period: 'mensual' | 'semanal' | null) {
@@ -41,12 +42,13 @@ function inPeriod(dateStr: string, period: 'mensual' | 'semanal' | null) {
   return d >= start && d <= end
 }
 
-export default function Finances() {
+export default function Finances({ onPlanClick, refreshKey = 0 }: { onPlanClick?: (p: PlanType) => void; refreshKey?: number }) {
   const { fmt } = useCurrency()
   const { activeStoryId, stories, refreshStories } = useAuth()
   const { push: toast } = useToast()
   const [plans, setPlans] = useState<PlanType[]>([])
-  const [loading, setLoading] = useState(true)
+  const [transactions, setTransactions] = useState<TransactionType[]>([])
+  const [loadedStoryId, setLoadedStoryId] = useState<string | null>(null)
   const [seg, setSeg] = useState(0)
   const [editingBudget, setEditingBudget] = useState(false)
   const [budgetInput, setBudgetInput] = useState('')
@@ -57,37 +59,52 @@ export default function Finances() {
   const budget = activeStory?.budget ?? null
   const budgetPeriod = activeStory?.budget_period ?? 'mensual'
 
+  // Skeleton only until the first load of the current story; refreshKey
+  // bumps refetch silently.
+  const loading = activeStoryId !== null && loadedStoryId !== activeStoryId
+
   useEffect(() => {
     if (!activeStoryId) return
-    setLoading(true)
-    supabase.from('plans').select('*').eq('story_id', activeStoryId).neq('status', 'cancelado')
-      .or('budget_amount.not.is.null,actual_amount.not.is.null')
-      .order('plan_date', { ascending: false })
-      .limit(50)
-      .then(({ data }) => {
-        if (data) setPlans(data as PlanType[])
-        setLoading(false)
-      })
-  }, [activeStoryId])
+    Promise.all([
+      supabase.from('plans').select('*').eq('story_id', activeStoryId).neq('status', 'cancelado')
+        .or('budget_amount.not.is.null,actual_amount.not.is.null')
+        .order('plan_date', { ascending: false })
+        .limit(50),
+      supabase.from('transactions').select('*').eq('story_id', activeStoryId)
+        .eq('type', 'gasto')
+        .order('transaction_date', { ascending: false })
+        .limit(100),
+    ]).then(([plansRes, txRes]) => {
+      if (plansRes.data) setPlans(plansRes.data as PlanType[])
+      if (txRes.data) setTransactions(txRes.data as TransactionType[])
+      setLoadedStoryId(activeStoryId)
+    })
+  }, [activeStoryId, refreshKey])
 
-  // Confirmed spending in current period
-  const confirmedPlans = plans.filter(p => p.actual_amount != null && inPeriod(p.plan_date, budgetPeriod))
-  const spent = confirmedPlans.reduce((s, p) => s + (p.actual_amount ?? 0), 0)
+  // Confirmed spending in current period: confirmed plans + loose expenses.
+  // Expenses linked to a plan are already folded into that plan's actual_amount.
+  const confirmedPlans = plans.filter(p => p.actual_amount != null)
+  const looseTx = transactions.filter(t => t.plan_id == null)
+  const spent = confirmedPlans
+    .filter(p => inPeriod(p.plan_date, budgetPeriod))
+    .reduce((s, p) => s + (p.actual_amount ?? 0), 0)
+    + looseTx
+      .filter(t => inPeriod(t.transaction_date, budgetPeriod))
+      .reduce((s, t) => s + t.amount, 0)
 
-  // Estimated (future plans with budget_amount but no actual_amount)
+  // Estimated: pending plans with a budget_amount. Only those inside the
+  // current period count against the projected balance.
   const estimatedPlans = plans.filter(p => p.actual_amount == null && p.budget_amount != null)
-  const estimatedTotal = estimatedPlans.reduce((s, p) => s + (p.budget_amount ?? 0), 0)
+  const estimatedTotal = estimatedPlans
+    .filter(p => inPeriod(p.plan_date, budgetPeriod))
+    .reduce((s, p) => s + (p.budget_amount ?? 0), 0)
 
   const balance = budget !== null ? budget - spent : null
-  const pct = budget && budget > 0 ? Math.min(spent / budget, 1) : 0
-
-  // How many more moments can we afford?
-  const pendingAvg = estimatedPlans.length > 0
-    ? estimatedTotal / estimatedPlans.length
-    : null
-  const canAfford = balance != null && pendingAvg && pendingAvg > 0
-    ? Math.floor(balance / pendingAvg)
-    : null
+  const projected = balance !== null ? balance - estimatedTotal : null
+  const pctSpent = budget && budget > 0 ? Math.min(spent / budget, 1) : 0
+  const pctEstimated = budget && budget > 0
+    ? Math.min(estimatedTotal / budget, 1 - pctSpent)
+    : 0
 
   const saveBudget = async () => {
     if (!activeStoryId) return
@@ -108,11 +125,15 @@ export default function Finances() {
     setEditingBudget(false)
   }
 
-  // Plans shown in list depending on segment
-  const allWithAmount = [...confirmedPlans, ...estimatedPlans].sort(
-    (a, b) => new Date(b.plan_date).getTime() - new Date(a.plan_date).getTime()
-  )
-  const listPlans = seg === 0 ? allWithAmount : seg === 1 ? confirmedPlans : estimatedPlans
+  // Rows shown in list depending on segment (plans + loose expenses)
+  type Row = { key: string; date: string; plan?: PlanType; tx?: TransactionType }
+  const confirmedRows: Row[] = [
+    ...confirmedPlans.map(p => ({ key: 'p' + p.id, date: p.plan_date, plan: p })),
+    ...looseTx.map(t => ({ key: 't' + t.id, date: t.transaction_date, tx: t })),
+  ]
+  const estimatedRows: Row[] = estimatedPlans.map(p => ({ key: 'p' + p.id, date: p.plan_date, plan: p }))
+  const listRows = (seg === 0 ? [...confirmedRows, ...estimatedRows] : seg === 1 ? confirmedRows : estimatedRows)
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
   const periodLabel = budgetPeriod === 'semanal' ? 'Esta semana' : 'Este mes'
   const periodFullLabel = budgetPeriod === 'semanal' ? 'Presupuesto semanal' : 'Presupuesto mensual'
@@ -122,9 +143,9 @@ export default function Finances() {
   }
 
   return (
-    <div className="ot-scroll page-enter" style={{ paddingBottom: 130 }}>
+    <div className="ot-scroll page-enter" style={{ paddingBottom: 130, paddingTop: 'max(env(safe-area-inset-top), 32px)' }}>
       {/* Header */}
-      <div style={{ padding: '8px 22px 0' }}>
+      <div style={{ padding: '0 22px 0' }}>
         <div className="eyebrow" style={{ marginBottom: 7 }}>Fondo común</div>
         <h1 className="display" style={{ fontSize: 32, margin: 0 }}>Presupuesto</h1>
       </div>
@@ -132,15 +153,10 @@ export default function Finances() {
       {/* Hero card */}
       <div style={{ padding: '18px 22px 0' }}>
         <div className="card hero-card" style={{ padding: '22px 20px', boxShadow: 'var(--sh-md)', position: 'relative', overflow: 'hidden' }}>
-          <div style={{
-            position: 'absolute', right: -30, top: -30, width: 130, height: 130, borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(241,119,32,0.35), transparent 70%)',
-            pointerEvents: 'none',
-          }} />
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div className="eyebrow" style={{ color: 'var(--hero-soft)' }}>
-              {budget !== null ? `Saldo · ${periodLabel}` : periodFullLabel}
+              {budget !== null ? `Disponible · ${periodLabel}` : periodFullLabel}
             </div>
             <div style={{ position: 'relative', zIndex: 1 }}>
               <EditAction
@@ -188,9 +204,17 @@ export default function Finances() {
             </div>
           ) : (
             <>
-              <div className="display" style={{ fontSize: 42, margin: '6px 0 0', color: 'var(--hero-text)' }}>
-                {budget !== null ? fmt(balance!) : fmt(spent)}
+              <div className="display" style={{ fontSize: 42, margin: '6px 0 0',
+                color: projected !== null && projected < 0 ? '#F9A86A' : 'var(--hero-text)' }}>
+                {budget !== null ? (projected! < 0 ? '−' : '') + fmt(projected!) : fmt(spent)}
               </div>
+              {budget !== null && estimatedTotal > 0 && (
+                <div style={{ fontSize: 12.5, color: 'var(--hero-soft)', marginTop: 4 }}>
+                  {projected! < 0
+                    ? `Los planes estimados rebasan tu presupuesto por ${fmt(-projected!)}`
+                    : `Sin contar estimados te queda ${fmt(balance!)}`}
+                </div>
+              )}
 
               <div style={{ display: 'flex', gap: 20, marginTop: 18, flexWrap: 'wrap' }}>
                 {budget !== null && (
@@ -211,7 +235,7 @@ export default function Finances() {
                     <Icon name="trendDown" size={16} />
                   </span>
                   <div>
-                    <div style={{ fontSize: 11, color: 'var(--hero-soft)' }}>Confirmado</div>
+                    <div style={{ fontSize: 11, color: 'var(--hero-soft)' }}>Gastado</div>
                     <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--hero-text)' }}>{fmt(spent)}</div>
                   </div>
                 </div>
@@ -231,19 +255,26 @@ export default function Finances() {
 
               {budget !== null && budget > 0 && (
                 <div style={{ marginTop: 16 }}>
-                  <div style={{ height: 4, borderRadius: 99, background: 'rgba(255,255,255,0.12)', overflow: 'hidden' }}>
+                  <div style={{ height: 4, borderRadius: 99, background: 'rgba(255,255,255,0.12)',
+                    overflow: 'hidden', display: 'flex' }}>
                     <div style={{
-                      height: '100%', borderRadius: 99,
-                      width: (pct * 100) + '%',
+                      height: '100%',
+                      width: (pctSpent * 100) + '%',
                       background: spent > budget ? '#F9A86A' : '#7BD9A8',
+                      transition: 'width .5s cubic-bezier(.2,.8,.2,1)',
+                    }} />
+                    <div style={{
+                      height: '100%',
+                      width: (pctEstimated * 100) + '%',
+                      background: '#E8C97A', opacity: 0.75,
                       transition: 'width .5s cubic-bezier(.2,.8,.2,1)',
                     }} />
                   </div>
                   <div style={{ fontSize: 11, color: 'var(--hero-soft)', marginTop: 6,
                     display: 'flex', justifyContent: 'space-between' }}>
-                    <span>{Math.round(pct * 100)}% utilizado</span>
-                    {canAfford != null && canAfford > 0 && (
-                      <span>~{canAfford} momento{canAfford !== 1 ? 's' : ''} más</span>
+                    <span>{Math.round(pctSpent * 100)}% gastado</span>
+                    {estimatedTotal > 0 && (
+                      <span>{Math.round(pctEstimated * 100)}% apartado en planes</span>
                     )}
                   </div>
                 </div>
@@ -258,16 +289,18 @@ export default function Finances() {
         <Segmented labels={['Todo', 'Confirmados', 'Estimados']} selected={seg} onChange={setSeg} />
 
         <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {listPlans.length === 0 ? (
+          {listRows.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--ink-faint)' }}>
               <Icon name="wallet" size={40} style={{ opacity: 0.3, marginBottom: 12 }} />
-              <div style={{ fontSize: 16, fontWeight: 600 }}>Sin momentos con presupuesto</div>
+              <div style={{ fontSize: 16, fontWeight: 600 }}>Sin movimientos ni estimados</div>
               <div style={{ fontSize: 13, marginTop: 6, lineHeight: 1.5 }}>
-                Añade un monto estimado a tus momentos para que aparezcan aquí
+                Añade un monto estimado a tus momentos o registra un gasto para que aparezcan aquí
               </div>
             </div>
           ) : (
-            listPlans.map(plan => <PlanRow key={plan.id} plan={plan} fmt={fmt} />)
+            listRows.map(row => row.plan
+              ? <PlanRow key={row.key} plan={row.plan} fmt={fmt} onClick={() => onPlanClick?.(row.plan!)} />
+              : <TxRow key={row.key} tx={row.tx!} fmt={fmt} />)
           )}
         </div>
       </div>
@@ -275,13 +308,16 @@ export default function Finances() {
   )
 }
 
-function PlanRow({ plan, fmt }: { plan: PlanType; fmt: (n: number) => string }) {
+function PlanRow({ plan, fmt, onClick }: { plan: PlanType; fmt: (n: number) => string; onClick: () => void }) {
   const confirmed = plan.actual_amount != null
   const amount = confirmed ? plan.actual_amount! : plan.budget_amount!
   const past = new Date(plan.plan_date) < new Date()
 
   return (
-    <div className="card" style={{ display: 'flex', alignItems: 'center', gap: 13, padding: '13px 15px' }}>
+    <motion.button whileTap={{ scale: 0.98 }} onClick={onClick} className="ot-card" style={{ 
+      display: 'flex', alignItems: 'center', gap: 13, padding: '13px 15px',
+      border: 'none', textAlign: 'left', cursor: 'pointer', minWidth: 0
+    }}>
       <div style={{
         width: 42, height: 42, borderRadius: 12, flexShrink: 0,
         background: confirmed ? 'var(--done-tint)' : past ? 'var(--orange-tint)' : 'var(--card-2)',
@@ -306,6 +342,40 @@ function PlanRow({ plan, fmt }: { plan: PlanType; fmt: (n: number) => string }) 
       </div>
       <div style={{ fontWeight: 700, fontSize: 15.5, color: confirmed ? 'var(--ink)' : 'var(--ink-soft)' }}>
         {confirmed ? '' : '~'}{fmt(amount)}
+      </div>
+    </motion.button>
+  )
+}
+
+function TxRow({ tx, fmt }: { tx: TransactionType; fmt: (n: number) => string }) {
+  return (
+    <div className="ot-card" style={{
+      display: 'flex', alignItems: 'center', gap: 13, padding: '13px 15px', minWidth: 0
+    }}>
+      <div style={{
+        width: 42, height: 42, borderRadius: 12, flexShrink: 0,
+        background: 'var(--done-tint)', color: 'var(--done)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <Icon name={TYPE_ICONS[tx.category ?? 'otro'] || 'tag'} size={20} />
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 14.5, fontWeight: 600, lineHeight: 1.2,
+          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {tx.description || 'Gasto'}
+        </div>
+        <div style={{ fontSize: 12, color: 'var(--ink-faint)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span>{fmtDateShort(tx.transaction_date)}</span>
+          <span style={{
+            fontSize: 10.5, fontWeight: 700, padding: '1px 7px', borderRadius: 99, fontFamily: 'var(--font-ui)',
+            background: 'var(--done-tint)', color: 'var(--done)',
+          }}>
+            Gasto
+          </span>
+        </div>
+      </div>
+      <div style={{ fontWeight: 700, fontSize: 15.5, color: 'var(--ink)' }}>
+        {fmt(tx.amount)}
       </div>
     </div>
   )

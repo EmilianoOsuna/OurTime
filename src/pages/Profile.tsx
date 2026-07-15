@@ -17,10 +17,10 @@ import { connectGoogleCalendarWithCode, sendTestPushNotification, testGoogleCale
 import { requestGoogleCalendarCode } from '../lib/googleWeb'
 
 const CAT_COLOR: Record<string, string> = {
-  pareja:  'var(--orange)',
-  amigos:  'var(--blue)',
-  familia: 'var(--done)',
-  otro:    'var(--ink-faint)',
+  pareja:  'var(--cat-pareja)',
+  amigos:  'var(--cat-amigos)',
+  familia: 'var(--cat-familia)',
+  otro:    'var(--cat-otro)',
 }
 const CAT_ICON: Record<string, string> = {
   pareja: 'heartFill', amigos: 'users', familia: 'home', otro: 'tag',
@@ -326,7 +326,7 @@ export function ProfileScreen({ plans, onClose, onGoToFinance, storyCode, isAdmi
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
                 <div style={{ width: 46, height: 46, borderRadius: 14, background: storyColor,
                   display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <Icon name={CAT_ICON[activeStory.category] || 'tag'} size={22} style={{ color: '#fff' }} />
+                  <Icon name={CAT_ICON[activeStory.category] || 'tag'} size={22} style={{ color: 'var(--paper)' }} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 700, fontSize: 17, lineHeight: 1.2, overflow: 'hidden',
@@ -392,7 +392,7 @@ export function ProfileScreen({ plans, onClose, onGoToFinance, storyCode, isAdmi
                               background: 'var(--orange)', border: '2px solid var(--card)',
                               display: 'flex', alignItems: 'center', justifyContent: 'center',
                             }}>
-                              <Icon name="shield" size={7} style={{ color: '#fff' }} />
+                              <Icon name="shield" size={7} style={{ color: 'var(--paper)' }} />
                             </span>
                           )}
                           {!m.isMe && m.permissionLevel !== 'admin' && (
@@ -471,8 +471,8 @@ export function ProfileScreen({ plans, onClose, onGoToFinance, storyCode, isAdmi
                     background: uploadingAvatar ? 'rgba(0,0,0,0.45)' : 'rgba(0,0,0,0.18)',
                   }}>
                     {uploadingAvatar
-                      ? <div style={{ width: 16, height: 16, borderRadius: '50%', border: '2px solid #fff', borderTopColor: 'transparent', animation: 'spin 0.7s linear infinite' }} />
-                      : <Icon name="camera" size={13} style={{ color: '#fff' }} />
+                      ? <div style={{ width: 16, height: 16, borderRadius: '50%', border: '2px solid var(--paper)', borderTopColor: 'transparent', animation: 'spin 0.7s linear infinite' }} />
+                      : <Icon name="camera" size={13} style={{ color: 'var(--paper)' }} />
                     }
                   </div>
                 </button>
@@ -480,10 +480,10 @@ export function ProfileScreen({ plans, onClose, onGoToFinance, storyCode, isAdmi
                   <button onClick={useGoogleAvatar} disabled={uploadingAvatar} style={{
                     marginTop: 6, border: 'none', background: 'var(--card-2)', borderRadius: 8,
                     padding: '4px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center',
-                    gap: 4, fontSize: 10.5, fontWeight: 700, color: '#1976D2',
+                    gap: 4, fontSize: 10.5, fontWeight: 700, color: 'var(--blue)',
                     fontFamily: 'var(--font-ui)', whiteSpace: 'nowrap',
                   }}>
-                    <Icon name="googleCal" size={11} style={{ color: '#1976D2' }} /> Google
+                    <Icon name="googleCal" size={11} style={{ color: 'var(--blue)' }} /> Google
                   </button>
                 )}
               </div>
@@ -543,7 +543,7 @@ export function ProfileScreen({ plans, onClose, onGoToFinance, storyCode, isAdmi
               </button>
             </div>
             {joinError && (
-              <div style={{ fontSize: 12.5, color: '#c0392b', marginTop: 8, display: 'flex', alignItems: 'center', gap: 5 }}>
+              <div style={{ fontSize: 12.5, color: 'var(--orange-deep)', marginTop: 8, display: 'flex', alignItems: 'center', gap: 5 }}>
                 <Icon name="x" size={13} /> {joinError}
               </div>
             )}
@@ -672,7 +672,7 @@ export function ProfileScreen({ plans, onClose, onGoToFinance, storyCode, isAdmi
           }} />
           <div style={{
             position: 'relative', background: 'var(--card)',
-            borderRadius: '24px 24px 0 0', padding: '24px 22px 40px',
+            borderRadius: 'var(--r-md) var(--r-md) 0 0', padding: '24px 22px 40px',
             animation: 'sheetUp .32s cubic-bezier(.2,.9,.2,1) both',
           }}>
             <div style={{ width: 36, height: 4, borderRadius: 2, background: 'var(--line)', margin: '0 auto 20px' }} />
@@ -717,8 +717,8 @@ export function ProfileScreen({ plans, onClose, onGoToFinance, storyCode, isAdmi
             </div>
             {isAdmin && (
               <button onClick={() => expelMember(selectedMember)} style={{
-                marginTop: 12, width: '100%', border: 'none', background: 'rgba(220, 38, 38, 0.1)',
-                color: '#dc2626', borderRadius: 14, padding: '13px', fontFamily: 'var(--font-ui)',
+                marginTop: 12, width: '100%', border: 'none', background: 'var(--card-2)',
+                color: 'var(--orange-deep)', borderRadius: 14, padding: '13px', fontFamily: 'var(--font-ui)',
                 fontWeight: 700, fontSize: 14.5, cursor: 'pointer', display: 'flex',
                 alignItems: 'center', justifyContent: 'center', gap: 8,
               }}>
@@ -785,7 +785,7 @@ function PushNotificationsSection() {
       {!enabled ? (
         <button onClick={activate} disabled={loading || permission === 'unsupported'} style={{
           border: 'none', background: 'var(--orange)', borderRadius: 10, padding: '8px 12px',
-          fontSize: 12.5, fontWeight: 700, color: '#fff', cursor: 'pointer', fontFamily: 'var(--font-ui)',
+          fontSize: 12.5, fontWeight: 700, color: 'var(--paper)', cursor: 'pointer', fontFamily: 'var(--font-ui)',
           opacity: loading || permission === 'unsupported' ? 0.6 : 1,
         }}>
           {loading ? '…' : 'Activar'}
@@ -890,9 +890,9 @@ function GoogleCalendarSection() {
 
   return (
     <div className="card" style={{ padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 14 }}>
-      <div style={{ width: 40, height: 40, borderRadius: 12, background: connected ? '#EBF5FB' : 'var(--card-2)',
+      <div style={{ width: 40, height: 40, borderRadius: 12, background: connected ? 'var(--blue-tint)' : 'var(--card-2)',
         display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-        <Icon name="googleCal" size={22} style={{ color: connected ? '#1976D2' : 'var(--ink-faint)' }} />
+        <Icon name="googleCal" size={22} style={{ color: connected ? 'var(--blue)' : 'var(--ink-faint)' }} />
       </div>
       <div style={{ flex: 1 }}>
         <div style={{ fontWeight: 700, fontSize: 14.5, color: 'var(--ink)' }}>Google Calendar</div>
@@ -903,8 +903,8 @@ function GoogleCalendarSection() {
       {connected ? (
         <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
           <button onClick={testConnection} disabled={syncing} style={{
-            border: '1.5px solid #1976D2', background: 'transparent', borderRadius: 10,
-            padding: '8px 10px', fontSize: 12.5, fontWeight: 700, color: '#1976D2',
+            border: '1.5px solid var(--blue)', background: 'transparent', borderRadius: 10,
+            padding: '8px 10px', fontSize: 12.5, fontWeight: 700, color: 'var(--blue)',
             cursor: 'pointer', fontFamily: 'var(--font-ui)', opacity: syncing ? 0.6 : 1,
           }}>
             {syncing ? '…' : 'Probar'}
@@ -919,8 +919,8 @@ function GoogleCalendarSection() {
         </div>
       ) : (
         <button onClick={connect} disabled={syncing} style={{
-          border: 'none', background: '#1976D2', borderRadius: 10,
-          padding: '8px 12px', fontSize: 12.5, fontWeight: 700, color: '#fff',
+          border: 'none', background: 'var(--blue)', borderRadius: 10,
+          padding: '8px 12px', fontSize: 12.5, fontWeight: 700, color: 'var(--paper)',
           cursor: 'pointer', fontFamily: 'var(--font-ui)', flexShrink: 0,
           opacity: syncing ? 0.7 : 1,
         }}>

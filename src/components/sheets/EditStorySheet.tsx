@@ -8,10 +8,10 @@ import type { StoryType } from '../../lib/supabase'
 import { useToast } from '../../context/ToastContext'
 
 const CAT_OPTIONS: { id: StoryType['category']; label: string; icon: string; color: string }[] = [
-  { id: 'pareja',  label: 'Pareja',   icon: 'heartFill', color: 'var(--orange)' },
-  { id: 'amigos',  label: 'Amigos',   icon: 'users',     color: 'var(--blue)'   },
-  { id: 'familia', label: 'Familia',  icon: 'home',      color: 'var(--done)'   },
-  { id: 'otro',    label: 'Otro',     icon: 'tag',       color: 'var(--ink-soft)' },
+  { id: 'pareja',  label: 'Pareja',   icon: 'heartFill', color: 'var(--cat-pareja)' },
+  { id: 'amigos',  label: 'Amigos',   icon: 'users',     color: 'var(--cat-amigos)' },
+  { id: 'familia', label: 'Familia',  icon: 'home',      color: 'var(--cat-familia)' },
+  { id: 'otro',    label: 'Otro',     icon: 'tag',       color: 'var(--cat-otro)' },
 ]
 
 interface Props {

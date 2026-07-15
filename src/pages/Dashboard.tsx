@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { motion } from 'framer-motion'
 import { useAuth } from '../context/AuthContext'
 import { CatMedallion } from '../components/ui/CatMedallion'
@@ -5,7 +6,7 @@ import { CatTag } from '../components/ui/CatTag'
 import { CoupleAvatars } from '../components/ui/Avatar'
 import { PresenceDot } from '../components/ui/PresenceDot'
 import { Icon } from '../components/ui/Icon'
-import { toRoman, fmtDate, fmtDateShort, countdown, CAT_META } from '../lib/chapterUtils'
+import { fmtDate, fmtDateShort, countdown, CAT_META } from '../lib/chapterUtils'
 import type { PlanType, PersonDisplay } from '../lib/supabase'
 import type { Tab } from '../components/AppShell'
 
@@ -41,18 +42,16 @@ export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpe
   const upcoming = plans.filter(p => p.status === 'pendiente').sort((a, b) => a.plan_date.localeCompare(b.plan_date))
   const past = plans.filter(p => p.status === 'completado').sort((a, b) => b.plan_date.localeCompare(a.plan_date))
   const next = upcoming[0]
-  const numbered = [...plans].filter(p => p.status !== 'cancelado').sort((a, b) => a.plan_date.localeCompare(b.plan_date))
-  const chapterNo = (id: string) => numbered.findIndex(p => p.id === id) + 1
   const isPareja = activeStory?.category === 'pareja'
   const days = (isPareja && since) ? daysTogether(since) : null
   const partnerName = partner?.name || 'Tu pareja'
 
   return (
     <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
-      style={{ padding: '8px 22px 150px' }}>
+      style={{ padding: 'max(env(safe-area-inset-top), 32px) 22px 150px' }}>
 
       {/* Header */}
-      <div style={{ padding: '8px 0 6px' }}>
+      <div style={{ padding: '0 0 16px' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
           <div>
             <div className="eyebrow" style={{ marginBottom: 7 }}>Nuestra Historia</div>
@@ -62,7 +61,7 @@ export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpe
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {stories.length > 1 && onStorySwitcher && (
-              <button onClick={onStorySwitcher} style={{
+              <motion.button whileTap={{ scale: 0.96 }} onClick={onStorySwitcher} style={{
                 border: 'none', background: 'var(--card)', cursor: 'pointer',
                 display: 'flex', alignItems: 'center', gap: 6,
                 borderRadius: 999, padding: '8px 12px 8px 9px',
@@ -74,9 +73,9 @@ export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpe
                   {activeStory?.name || 'Historia'}
                 </span>
                 <Icon name="chevD" size={12} style={{ color: 'var(--ink-faint)', flexShrink: 0 }} />
-              </button>
+              </motion.button>
             )}
-            <button onClick={onBell} style={{ border: 'none', background: 'var(--card)', cursor: 'pointer',
+            <motion.button whileTap={{ scale: 0.92 }} onClick={onBell} style={{ border: 'none', background: 'var(--card)', cursor: 'pointer',
               width: 44, height: 44, borderRadius: '50%', boxShadow: 'var(--sh-sm)', position: 'relative',
               display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--ink)', flexShrink: 0 }}>
               <Icon name="bell" size={21} />
@@ -88,13 +87,13 @@ export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpe
                   border: '2px solid var(--card)',
                 }} />
               )}
-            </button>
+            </motion.button>
           </div>
         </div>
 
         {/* Presence card — only for pareja stories */}
         {isPareja && since && (
-          <button onClick={onProfileOpen} className="ot-card" style={{
+          <motion.button whileTap={{ scale: 0.98 }} onClick={onProfileOpen} className="ot-card" style={{
             marginTop: 16, padding: '12px 15px', display: 'flex', alignItems: 'center', gap: 13,
             border: 'none', cursor: 'pointer', textAlign: 'left', width: '100%',
           }}>
@@ -112,7 +111,7 @@ export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpe
                 <div className="eyebrow" style={{ fontSize: 9 }}>días</div>
               </div>
             )}
-          </button>
+          </motion.button>
         )}
       </div>
 
@@ -121,9 +120,9 @@ export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpe
       {next ? (
         <div style={{ marginTop: 20 }}>
           <div className="eyebrow" style={{ marginBottom: 12, color: 'var(--orange-deep)' }}>· Su próximo momento ·</div>
-          <NextHero plan={next} no={chapterNo(next.id)} onClick={() => onPlanClick(next)} />
+          <NextHero plan={next} onPlanClick={onPlanClick} />
         </div>
-      ) : plans.length === 0 && <EmptyDashboard onNewPlan={onNewPlan} />}
+      ) : plans.length === 0 && <EmptyDashboard onNewPlan={onNewPlan} category={activeStory?.category} />}
 
       {/* Upcoming plans beyond the hero */}
       {upcoming.length > 1 && (
@@ -134,24 +133,7 @@ export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpe
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {upcoming.slice(1).map(p => (
-              <button key={p.id} data-testid="plan-card" onClick={() => onPlanClick(p)} className="ot-card" style={{
-                border: 'none', cursor: 'pointer', padding: '13px 15px', textAlign: 'left',
-                display: 'flex', alignItems: 'center', gap: 12,
-              }}>
-                <div style={{ width: 38, height: 38, borderRadius: 11, background: 'var(--orange-tint)',
-                  color: 'var(--orange-deep)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <Icon name="clock" size={17} />
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 700, fontSize: 14.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {p.title}
-                  </div>
-                  <div style={{ fontSize: 12, color: 'var(--ink-faint)', marginTop: 2 }}>
-                    {fmtDateShort(p.plan_date)}
-                  </div>
-                </div>
-                <Icon name="chevR" size={16} style={{ color: 'var(--ink-faint)', flexShrink: 0 }} />
-              </button>
+              <UpcomingRow key={p.id} plan={p} onClick={onPlanClick} />
             ))}
           </div>
         </div>
@@ -170,11 +152,11 @@ export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpe
 
       {past.length > 0 && (
         <div style={{ position: 'relative', marginTop: 14 }}>
-          <div style={{ position: 'absolute', left: 44, top: 24, bottom: 30, width: 2,
+          <div style={{ position: 'absolute', left: 22, top: 24, bottom: 30, width: 2,
             background: 'linear-gradient(var(--orange), var(--blue))', opacity: 0.5,
             transformOrigin: 'top', animation: 'drawLine .9s cubic-bezier(.4,0,.2,1) both' }} />
           {past.map((p, i) => (
-            <TimelineRow key={p.id} plan={p} no={chapterNo(p.id)} onClick={() => onPlanClick(p)} index={i} />
+            <TimelineRow key={p.id} plan={p} onPlanClick={onPlanClick} index={i} />
           ))}
 
           {since && (
@@ -186,7 +168,7 @@ export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpe
                 </div>
               </div>
               <div>
-                <div className="serif-i" style={{ fontSize: 17 }}>Nuestro inicio</div>
+                <div className="serif-i" style={{ fontSize: 17 }}>{isPareja ? 'Nuestro inicio' : 'El comienzo'}</div>
                 <div style={{ fontSize: 12.5, color: 'var(--ink-faint)' }}>{fmtDate(since)}</div>
               </div>
             </div>
@@ -197,7 +179,7 @@ export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpe
       {/* Quick links */}
       {past.length === 0 && plans.length > 0 && (
         <div style={{ marginTop: 28, display: 'flex', gap: 12 }}>
-          <button onClick={() => go('gallery')} className="ot-card" style={{
+          <motion.button whileTap={{ scale: 0.96 }} onClick={() => go('gallery')} className="ot-card" style={{
             flex: 1, border: 'none', cursor: 'pointer', padding: '18px 16px',
             display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8,
           }}>
@@ -209,8 +191,8 @@ export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpe
               <div style={{ fontWeight: 700, fontSize: 15 }}>Recuerdos</div>
               <div style={{ fontSize: 12, color: 'var(--ink-soft)' }}>Su galería</div>
             </div>
-          </button>
-          <button onClick={() => go('calendar')} className="ot-card" style={{
+          </motion.button>
+          <motion.button whileTap={{ scale: 0.96 }} onClick={() => go('calendar')} className="ot-card" style={{
             flex: 1, border: 'none', cursor: 'pointer', padding: '18px 16px',
             display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8,
           }}>
@@ -222,18 +204,18 @@ export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpe
               <div style={{ fontWeight: 700, fontSize: 15 }}>Momentos</div>
               <div style={{ fontSize: 12, color: 'var(--ink-soft)' }}>{upcoming.length} por escribir</div>
             </div>
-          </button>
+          </motion.button>
         </div>
       )}
     </motion.div>
   )
 }
 
-function NextHero({ plan, no, onClick }: { plan: PlanType; no: number; onClick: () => void }) {
+const NextHero = memo(function NextHero({ plan, onPlanClick }: { plan: PlanType; onPlanClick: (p: PlanType) => void }) {
   const meta = CAT_META[plan.type] || { tone: 'orange' as const }
   const blue = meta.tone === 'blue'
   return (
-    <button data-testid="plan-card" onClick={onClick} className="ot-card anim-up" style={{
+    <motion.button whileTap={{ scale: 0.98 }} data-testid="plan-card" onClick={() => onPlanClick(plan)} className="ot-card anim-up" style={{
       width: '100%', textAlign: 'left', border: 'none', cursor: 'pointer', overflow: 'hidden',
       padding: 0, boxShadow: 'var(--sh-md)',
     }}>
@@ -255,8 +237,7 @@ function NextHero({ plan, no, onClick }: { plan: PlanType; no: number; onClick: 
       </div>
       <div style={{ padding: '16px 18px 18px' }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-          <span className="chapter-no" style={{ fontSize: 34, color: blue ? 'var(--blue)' : 'var(--orange)' }}>{toRoman(no)}</span>
-          <h2 className="display" style={{ fontSize: 22, margin: 0, flex: 1, lineHeight: 1.05 }}>{plan.title}</h2>
+          <h2 className="display" style={{ fontSize: 24, margin: 0, flex: 1, lineHeight: 1.1 }}>{plan.title}</h2>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 12, fontSize: 13.5, color: 'var(--ink-soft)' }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><Icon name="clock" size={15} />{fmtDateShort(plan.plan_date)}</span>
@@ -265,14 +246,19 @@ function NextHero({ plan, no, onClick }: { plan: PlanType; no: number; onClick: 
           )}
         </div>
       </div>
-    </button>
+    </motion.button>
   )
-}
+})
 
-function TimelineRow({ plan, no, onClick, index }: { plan: PlanType; no: number; onClick: () => void; index: number }) {
+const TimelineRow = memo(function TimelineRow({ plan, onPlanClick, index }: { plan: PlanType; onPlanClick: (p: PlanType) => void; index: number }) {
   const done = plan.status === 'completado'
   return (
-    <div className="anim-up" style={{ display: 'flex', gap: 16, marginBottom: 18, animationDelay: (index * 0.05) + 's' }}>
+    <div className="anim-up" style={{ 
+      display: 'flex', gap: 16, marginBottom: 18, 
+      animationDelay: Math.min(index * 0.05, 0.4) + 's',
+      contentVisibility: 'auto',
+      containIntrinsicSize: 'auto 76px'
+    }}>
       <div style={{ width: 46, display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
         <div style={{ position: 'relative' }}>
           <CatMedallion cat={plan.type} size={42} />
@@ -282,24 +268,53 @@ function TimelineRow({ plan, no, onClick, index }: { plan: PlanType; no: number;
             <Icon name="check" size={12} stroke={3} /></span>}
         </div>
       </div>
-      <button data-testid="plan-card" onClick={onClick} className="ot-card" style={{
+      <motion.button whileTap={{ scale: 0.97 }} data-testid="plan-card" onClick={() => onPlanClick(plan)} className="ot-card" style={{
         flex: 1, textAlign: 'left', border: 'none', cursor: 'pointer', padding: '13px 15px',
         minWidth: 0, position: 'relative', overflow: 'hidden'
       }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
-          <span className="chapter-no" style={{ fontSize: 19, color: 'var(--ink-faint)', fontStyle: 'italic' }}>
-            Mom. {toRoman(no)}</span>
-        </div>
-        <h3 className="display" style={{ fontSize: 17.5, margin: '6px 0 0', lineHeight: 1.12 }}>{plan.title}</h3>
+        <h3 className="display" style={{ fontSize: 17.5, margin: 0, lineHeight: 1.12 }}>{plan.title}</h3>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 9, fontSize: 12.5, color: 'var(--ink-soft)' }}>
           <span>{fmtDateShort(plan.plan_date)} · {new Date(plan.plan_date.slice(0,10) + 'T00:00:00Z').getUTCFullYear()}</span>
         </div>
-      </button>
+      </motion.button>
     </div>
   )
-}
+})
 
-function EmptyDashboard({ onNewPlan }: { onNewPlan?: () => void }) {
+const UpcomingRow = memo(function UpcomingRow({ plan, onClick }: { plan: PlanType, onClick: (p: PlanType) => void }) {
+  return (
+    <motion.button whileTap={{ scale: 0.97 }} data-testid="plan-card" onClick={() => onClick(plan)} className="ot-card" style={{
+      border: 'none', cursor: 'pointer', padding: '13px 15px', textAlign: 'left',
+      display: 'flex', alignItems: 'center', gap: 12,
+    }}>
+      <div style={{ width: 38, height: 38, borderRadius: 11, background: 'var(--orange-tint)',
+        color: 'var(--orange-deep)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <Icon name="clock" size={17} />
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontWeight: 700, fontSize: 14.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {plan.title}
+        </div>
+        <div style={{ fontSize: 12, color: 'var(--ink-faint)', marginTop: 2 }}>
+          {fmtDateShort(plan.plan_date)}
+        </div>
+      </div>
+      <Icon name="chevR" size={16} style={{ color: 'var(--ink-faint)', flexShrink: 0 }} />
+    </motion.button>
+  )
+})
+
+function EmptyDashboard({ onNewPlan, category }: { onNewPlan?: () => void, category?: string }) {
+  const isPareja = category === 'pareja' || !category;
+  const isFamilia = category === 'familia';
+  const isAmigos = category === 'amigos';
+
+  const iconName = isPareja ? 'heartFill' : (isAmigos ? 'sparkle' : 'star');
+  const title = isPareja ? 'El primer momento' : (isFamilia ? 'Tiempo en familia' : 'Un nuevo comienzo');
+  const desc = isPareja
+    ? 'Toda gran historia empieza con un plan compartido. ¿Cuál será el primero?'
+    : 'Empiecen a construir nuevos recuerdos juntos. ¿Qué tienen en mente?';
+
   return (
     <div className="anim-up" style={{
       display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '40px 30px',
@@ -312,16 +327,16 @@ function EmptyDashboard({ onNewPlan }: { onNewPlan?: () => void }) {
         <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
           background: 'var(--orange-tint)', borderRadius: 18, boxShadow: 'var(--sh-md)',
           animation: 'floatY 4s ease-in-out infinite', color: 'var(--orange)' }}>
-          <Icon name="heartFill" size={44} />
+          <Icon name={iconName as any} size={44} />
         </div>
       </div>
-      <div className="display" style={{ fontSize: 25, marginBottom: 8, maxWidth: 250 }}>El primer momento os espera</div>
+      <div className="display" style={{ fontSize: 25, marginBottom: 8, maxWidth: 250 }}>{title}</div>
       <div style={{ fontSize: 15, color: 'var(--ink-soft)', lineHeight: 1.5, maxWidth: 270 }}>
-        Su historia empieza con un plan. ¿Cuál será el primero?
+        {desc}
       </div>
-      <button className="btn btn-orange" style={{ marginTop: 22 }} onClick={onNewPlan}>
+      <motion.button whileTap={{ scale: 0.96 }} className="btn btn-orange" style={{ marginTop: 22 }} onClick={onNewPlan}>
         Crear primer momento
-      </button>
+      </motion.button>
     </div>
   )
 }

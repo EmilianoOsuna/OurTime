@@ -3,7 +3,7 @@ import { BottomSheet } from '../ui/BottomSheet'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
 import { supabase } from '../../lib/supabase'
-import { toRoman } from '../../lib/chapterUtils'
+
 import { compressToWebP } from '../../lib/imageUtils'
 import { sendPushToStoryMembers } from '../../lib/usePushNotifications'
 import { Icon } from '../ui/Icon'
@@ -164,10 +164,10 @@ export const NewMemorySheet: React.FC<Props> = ({ onClose, onCreated, initialAlb
         <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }} className="ot-scroll">
           <button onClick={() => setPlanId('')} className={'chip' + (!planId ? ' active' : '')}
             style={{ flexShrink: 0 }}>Sin momento</button>
-          {plans.map((p, i) => (
+          {plans.map((p) => (
             <button key={p.id} onClick={() => setPlanId(p.id)}
               className={'chip' + (planId === p.id ? ' active' : '')} style={{ flexShrink: 0 }}>
-              Mom. {toRoman(i + 1)}
+              {p.title.length > 20 ? p.title.slice(0, 18) + '…' : p.title}
             </button>
           ))}
         </div>

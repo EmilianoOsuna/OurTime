@@ -4,23 +4,18 @@ import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
 import { useCurrency, CURRENCIES } from '../../context/CurrencyContext'
 import { supabase } from '../../lib/supabase'
-import { toRoman } from '../../lib/chapterUtils'
+
 import { Icon } from '../ui/Icon'
 import type { PlanType } from '../../lib/supabase'
 import { sendPushToStoryMembers } from '../../lib/usePushNotifications'
 
-const CATS_OUT = [
+const CATS = [
   { id: 'cena',   label: 'Gastronomía', icon: 'utensils' },
   { id: 'viaje',  label: 'Viajes',      icon: 'plane' },
   { id: 'cine',   label: 'Ocio',        icon: 'film' },
   { id: 'regalo', label: 'Regalos',     icon: 'gift' },
   { id: 'casa',   label: 'Hogar',       icon: 'home' },
   { id: 'otro',   label: 'Otros',       icon: 'tag' },
-]
-const CATS_IN = [
-  { id: 'aporte', label: 'Aporte',  icon: 'wallet' },
-  { id: 'regalo', label: 'Regalo',  icon: 'gift' },
-  { id: 'otro',   label: 'Otros',   icon: 'trendUp' },
 ]
 
 interface Props { onClose: () => void; onCreated: () => void }
@@ -30,7 +25,6 @@ export const MoneySheet: React.FC<Props> = ({ onClose, onCreated }) => {
   const { push } = useToast()
   const { currency } = useCurrency()
   const sym = CURRENCIES[currency].symbol
-  const [kind, setKind]   = useState<'gasto' | 'ingreso'>('gasto')
   const [amt, setAmt]     = useState('')
   const [label, setLabel] = useState('')
   const [cat, setCat]     = useState('cena')
@@ -38,10 +32,7 @@ export const MoneySheet: React.FC<Props> = ({ onClose, onCreated }) => {
   const [plans, setPlans]   = useState<PlanType[]>([])
   const [saving, setSaving] = useState(false)
 
-  const cats = kind === 'ingreso' ? CATS_IN : CATS_OUT
   const ok = amt && +amt > 0 && label.trim()
-
-  useEffect(() => { setCat(cats[0]?.id ?? 'cena') }, [kind])
 
   useEffect(() => {
     if (!activeStoryId) return
@@ -57,19 +48,30 @@ export const MoneySheet: React.FC<Props> = ({ onClose, onCreated }) => {
     const { error } = await supabase.from('transactions').insert({
       story_id: activeStoryId,
       user_id: user?.id ?? null,
-      type: kind,
+      type: 'gasto',
       amount: +amt,
       description: label.trim(),
       category: cat,
       plan_id: planId || null,
       transaction_date: new Date().toISOString().slice(0, 10),
     })
+    if (error) { setSaving(false); push({ icon: 'x', title: 'Error', body: error.message }); return }
+
+    // Linking to a plan confirms the expense on it: the amount accumulates
+    // into the plan's actual_amount so the budget counts it there.
+    const linkedPlan = planId ? plans.find(p => p.id === planId) : null
+    if (linkedPlan) {
+      const { error: planError } = await supabase.from('plans')
+        .update({ actual_amount: (linkedPlan.actual_amount ?? 0) + +amt })
+        .eq('id', linkedPlan.id)
+      if (planError) console.error('No se pudo actualizar el gasto del momento:', planError)
+    }
+
     setSaving(false)
-    if (error) { push({ icon: 'x', title: 'Error', body: error.message }); return }
-    push({ icon: 'check', eyebrow: 'Movimiento guardado',
-      title: (kind === 'ingreso' ? '+' : '–') + sym + (+amt).toLocaleString('es-ES'),
-      body: label.trim() })
-    if (user?.id && kind === 'gasto') {
+    push({ icon: 'check', eyebrow: 'Gasto guardado',
+      title: '–' + sym + (+amt).toLocaleString('es-ES'),
+      body: linkedPlan ? `${label.trim()} · sumado a “${linkedPlan.title}”` : label.trim() })
+    if (user?.id) {
       const storyName = stories.find(story => story.id === activeStoryId)?.name ?? 'tu historia'
       sendPushToStoryMembers(
         activeStoryId,
@@ -87,17 +89,8 @@ export const MoneySheet: React.FC<Props> = ({ onClose, onCreated }) => {
   return (
     <BottomSheet onClose={onClose}>
       <div style={{ padding: '4px 0 16px' }}>
-        <div className="eyebrow" style={{ color: 'var(--done)', marginBottom: 6 }}>· Nuevo movimiento ·</div>
+        <div className="eyebrow" style={{ color: 'var(--done)', marginBottom: 6 }}>· Nuevo gasto ·</div>
         <h2 className="display" style={{ fontSize: 26, margin: '0 0 18px' }}>Una inversión juntos</h2>
-
-        {/* Tipo */}
-        <div className="segmented">
-          {(['gasto','ingreso'] as const).map(k => (
-            <button key={k} className={kind === k ? 'active' : ''} onClick={() => setKind(k)}>
-              {k === 'gasto' ? 'Gasto' : 'Ingreso'}
-            </button>
-          ))}
-        </div>
 
         {/* Importe */}
         <div style={{ textAlign: 'center', padding: '24px 0 10px' }}>
@@ -113,12 +106,12 @@ export const MoneySheet: React.FC<Props> = ({ onClose, onCreated }) => {
         </div>
 
         <label className="field-label">Concepto</label>
-        <input className="field" placeholder={kind === 'ingreso' ? 'Aporte de junio…' : 'Cena en…'}
+        <input className="field" placeholder="Cena en…"
           value={label} onChange={e => setLabel(e.target.value)} />
 
         <label className="field-label" style={{ marginTop: 18 }}>Categoría</label>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
-          {cats.map(c => {
+          {CATS.map(c => {
             const on = cat === c.id
             return (
               <button key={c.id} onClick={() => setCat(c.id)} style={{ border: 'none', cursor: 'pointer',
@@ -134,23 +127,23 @@ export const MoneySheet: React.FC<Props> = ({ onClose, onCreated }) => {
         </div>
 
         <label className="field-label" style={{ marginTop: 18 }}>
-          ¿A qué momento? <span style={{ textTransform: 'none', fontWeight: 400, color: 'var(--ink-faint)' }}>(opcional)</span>
+          ¿A qué momento? <span style={{ textTransform: 'none', fontWeight: 400, color: 'var(--ink-faint)' }}>(opcional · se suma al gasto real del momento)</span>
         </label>
         <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }} className="ot-scroll">
           <button onClick={() => setPlanId('')} className={'chip' + (!planId ? ' active' : '')}
             style={{ flexShrink: 0 }}>Ninguno</button>
-          {plans.map((p, i) => (
+          {plans.map((p) => (
             <button key={p.id} onClick={() => setPlanId(p.id)}
               className={'chip' + (planId === p.id ? ' active' : '')} style={{ flexShrink: 0 }}>
-              Mom. {toRoman(i + 1)}
+              {p.title.length > 20 ? p.title.slice(0, 18) + '…' : p.title}
             </button>
           ))}
         </div>
 
         <button className="btn btn-block" style={{ marginTop: 24,
-          background: kind === 'ingreso' ? 'var(--done)' : 'var(--orange)', color: '#fff' }}
+          background: 'var(--orange)', color: '#fff' }}
           disabled={!ok || saving} onClick={submit}>
-          <Icon name="check" size={18} /> {saving ? 'Guardando…' : 'Guardar movimiento'}
+          <Icon name="check" size={18} /> {saving ? 'Guardando…' : 'Guardar gasto'}
         </button>
       </div>
     </BottomSheet>

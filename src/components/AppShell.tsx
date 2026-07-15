@@ -31,12 +31,6 @@ import { useToast } from '../context/ToastContext'
 import { Lightbox } from './ui/Lightbox'
 import { DashboardSkeleton, CalendarSkeleton, GallerySkeleton, FinancesSkeleton, ChatSkeleton } from './ui/Skeletons'
 
-const CAT_COLOR: Record<string, string> = {
-  pareja:  'var(--orange)',
-  amigos:  'var(--blue)',
-  familia: 'var(--done)',
-  otro:    'var(--ink-faint)',
-}
 
 // Stable colors that never get overridden by the accent-switching effect
 const CAT_COLOR_STABLE: Record<string, string> = {
@@ -96,7 +90,7 @@ export default function AppShell() {
   const [loadingPlans, setLoadingPlans] = useState(true)
   const [allCalendarPlans, setAllCalendarPlans] = useState<any[]>([])
   const [memories, setMemories] = useState<any[]>([])
-  const [, setTransactions] = useState<any[]>([])
+  const [financeKey, setFinanceKey] = useState(0)
   const [lightbox, setLightbox] = useState<{ url: string; id?: string } | null>(null)
   const [partner, setPartner] = useState<ProfileType | null>(null)
   const [storyCode, setStoryCode] = useState<string | null>(null)
@@ -105,6 +99,12 @@ export default function AppShell() {
   const [isAdmin, setIsAdmin] = useState(false)
   const [adminStoryIds, setAdminStoryIds] = useState<Set<string>>(new Set())
   const prevTabRef = useRef<Tab>(tab)
+  const scrollPositions = useRef<Record<string, number>>({})
+  const [visitedTabs, setVisitedTabs] = useState<Tab[]>([tab])
+
+  useEffect(() => {
+    if (!visitedTabs.includes(tab)) setVisitedTabs(prev => [...prev, tab])
+  }, [tab, visitedTabs])
 
   // Native back button/gesture
   useEffect(() => {
@@ -116,11 +116,13 @@ export default function AppShell() {
       if (overlay) { setOverlay(null); return true }
       if (notifsVisible) { setNotifsVisible(false); return true }
       if (tabRef.current === 'chat') {
+        scrollPositions.current['chat'] = window.scrollY
         setTab('home')
         sessionStorage.setItem('activeTab', 'home')
         return true
       }
       if (tabRef.current !== 'home') {
+        scrollPositions.current[tabRef.current] = window.scrollY
         setTab('home')
         sessionStorage.setItem('activeTab', 'home')
         return true
@@ -134,7 +136,6 @@ export default function AppShell() {
     setPartner(null)
     setPlans([])
     setMemories([])
-    setTransactions([])
     setStoryCode(null)
     setIsAdmin(false)
     setLoadingPlans(true)
@@ -170,11 +171,6 @@ export default function AppShell() {
       .order('created_at', { ascending: false })
       .limit(50)
       .then(({ data }) => { if (data) setMemories(data) })
-
-    supabase.from('transactions').select('*').eq('story_id', activeStoryId)
-      .order('created_at', { ascending: false })
-      .limit(50)
-      .then(({ data }) => { if (data) setTransactions(data) })
 
     // Find co-members of this story
     supabase.from('story_members')
@@ -248,6 +244,7 @@ export default function AppShell() {
   const overlayRef = useRef(overlay)
   const notifsRef  = useRef(notifsVisible)
   const tabRef     = useRef(tab)
+  const returnTabFromChat = useRef<Tab>('home')
   useEffect(() => { overlayRef.current = overlay },      [overlay])
   useEffect(() => { notifsRef.current = notifsVisible }, [notifsVisible])
   useEffect(() => { tabRef.current = tab },              [tab])
@@ -275,13 +272,23 @@ export default function AppShell() {
       if (overlayRef.current !== null) setOverlay(null)
       else if (notifsRef.current)      setNotifsVisible(false)
       else if (tabRef.current === 'chat') {
-        setTab('home')
-        sessionStorage.setItem('activeTab', 'home')
+        scrollPositions.current['chat'] = window.scrollY
+        const ret = returnTabFromChat.current || 'home'
+        setTab(ret)
+        sessionStorage.setItem('activeTab', ret)
       }
     }
     window.addEventListener('popstate', handlePop)
     return () => window.removeEventListener('popstate', handlePop)
   }, [])
+
+  useEffect(() => {
+    const restoreY = scrollPositions.current[tab] || 0
+    // RequestAnimationFrame ensures display:block has applied
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: restoreY, behavior: 'auto' })
+    })
+  }, [tab])
 
   const closeOverlay = useCallback(() => {
     setOverlay(null)
@@ -292,8 +299,10 @@ export default function AppShell() {
   }, [])
 
   const leaveChat = useCallback(() => {
-    setTab('home')
-    sessionStorage.setItem('activeTab', 'home')
+    scrollPositions.current['chat'] = window.scrollY
+    const ret = returnTabFromChat.current || 'home'
+    setTab(ret)
+    sessionStorage.setItem('activeTab', ret)
     // Mark messages as read and then refresh the unread count
     if (activeStoryId && user) {
       supabase.from('messages')
@@ -308,6 +317,14 @@ export default function AppShell() {
   }, [activeStoryId, user])
 
   const go = useCallback((t: Tab) => {
+    if (t === tabRef.current) {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
+    scrollPositions.current[tabRef.current] = window.scrollY
+    if (t === 'chat' && tabRef.current !== 'chat') {
+      returnTabFromChat.current = tabRef.current
+    }
     // Push history when entering chat so device back gesture exits it
     if (t === 'chat' && tabRef.current !== 'chat' && !historyPushed.current) {
       window.history.pushState({ ot: 'chat' }, '')
@@ -315,7 +332,6 @@ export default function AppShell() {
     }
     setTab(t)
     sessionStorage.setItem('activeTab', t)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [])
 
   const handleNavigationUrl = useCallback(async (rawUrl: string) => {
@@ -375,16 +391,16 @@ export default function AppShell() {
     const OVERRIDES: Record<string, { light: Triad; dark: Triad } | null> = {
       pareja: null,
       amigos: {
-        light: { o: '#0474BA', od: '#045E96', ot: '#D7E9F4' },
-        dark:  { o: '#3B9EDF', od: '#2D8AC9', ot: '#0E2A3A' },
+        light: { o: '#0284C7', od: '#0369A1', ot: '#E0F2FE' },
+        dark:  { o: '#38BDF8', od: '#0284C7', ot: '#0C4A6E' },
       },
       familia: {
-        light: { o: '#2E7D5B', od: '#1E5C42', ot: '#DCEDE3' },
-        dark:  { o: '#4DB880', od: '#3DA068', ot: '#122B1E' },
+        light: { o: '#059669', od: '#047857', ot: '#D1FAE5' },
+        dark:  { o: '#34D399', od: '#059669', ot: '#064E3B' },
       },
       otro: {
-        light: { o: '#6B7280', od: '#4B5563', ot: '#F3F4F6' },
-        dark:  { o: '#9CA3AF', od: '#6B7280', ot: '#1F2937' },
+        light: { o: '#475569', od: '#334155', ot: '#F1F5F9' },
+        dark:  { o: '#64748B', od: '#475569', ot: '#1E293B' },
       },
     }
     const override = OVERRIDES[cat]
@@ -401,9 +417,6 @@ export default function AppShell() {
     }
   }, [activeStoryId, stories])
 
-  const sortedPlans = [...plans].sort((a, b) => a.plan_date.localeCompare(b.plan_date))
-  const chapterNo = (id: string) => sortedPlans.findIndex(p => p.id === id) + 1
-
   const openPlan = (p: any) => setOverlay({ type: 'plan', data: p })
 
   const me: PersonDisplay = buildPerson(profile, true)
@@ -411,6 +424,7 @@ export default function AppShell() {
 
   const refreshPlans = () => {
     if (!activeStoryId) return
+    setFinanceKey(k => k + 1)
     supabase.from('plans').select('*').eq('story_id', activeStoryId).neq('status', 'cancelado')
       .order('plan_date', { ascending: true })
       .limit(50)
@@ -423,13 +437,8 @@ export default function AppShell() {
       .limit(50)
       .then(({ data }) => data && setMemories(data))
   }
-  const refreshTransactions = () => {
-    if (!activeStoryId) return
-    supabase.from('transactions').select('*').eq('story_id', activeStoryId)
-      .order('created_at', { ascending: false })
-      .limit(50)
-      .then(({ data }) => data && setTransactions(data))
-  }
+  // Finances fetches its own data; bumping the key makes it refetch.
+  const refreshTransactions = () => setFinanceKey(k => k + 1)
 
   const deleteMemory = useCallback(async (id: string, url: string) => {
     try {
@@ -516,8 +525,6 @@ export default function AppShell() {
     setNotifications(ns => ns.map(n => ({ ...n, read: true })))
   }
 
-  const ease = [0.16, 1, 0.3, 1] as const
-
   const screen = {
     home: <Dashboard plans={plans} go={go}
             onBell={() => { setNotifsVisible(true); markNotifsRead() }} onPlanClick={openPlan}
@@ -529,7 +536,7 @@ export default function AppShell() {
     calendar: <Calendar plans={allCalendarPlans} onOpenPlan={openPlan} />,
     gallery: <Gallery memories={memories} setMemories={setMemories}
                onImageClick={(m: any) => setLightbox({ url: m.image_url, id: m.id })} me={me} />,
-    finance: <Finances />,
+    finance: <Finances onPlanClick={openPlan} refreshKey={financeKey} />,
     chat: <Chat key={activeStoryId} me={me} partner={partnerDisplay}
              storyName={stories.find(s => s.id === activeStoryId)?.name}
              storyCoverUrl={stories.find(s => s.id === activeStoryId)?.cover_url ?? null}
@@ -541,7 +548,7 @@ export default function AppShell() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--paper)', position: 'relative' }}>
+    <div style={{ minHeight: '100dvh', background: 'var(--paper)', position: 'relative' }}>
       <Suspense fallback={
         tab === 'home' ? <DashboardSkeleton /> :
         tab === 'calendar' ? <CalendarSkeleton /> :
@@ -553,22 +560,23 @@ export default function AppShell() {
             borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite' }} />
         </div>
       }>
-      <motion.div
-        key={tab}
-        initial={{ opacity: 0, y: tab === 'chat' ? 0 : 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, ease }}
-        style={tab === 'chat' ? { position: 'fixed', inset: 0, zIndex: 10, minHeight: '100dvh' } : undefined}
-      >
-        {screen[tab]}
-      </motion.div>
+        {visitedTabs.map(t => (
+          <div key={t} style={{ 
+            display: tab === t ? 'block' : 'none',
+            animation: tab === t ? (t === 'chat' ? 'fadeIn 0.35s ease both' : 'fadeUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) both') : 'none'
+          }}>
+            <div style={t === 'chat' ? { position: 'fixed', inset: 0, zIndex: 10, minHeight: '100dvh' } : undefined}>
+              {screen[t]}
+            </div>
+          </div>
+        ))}
       </Suspense>
 
       <Suspense fallback={null}>
       {overlay?.type === 'plan' && (
         <motion.div key="plan-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}
           style={{ position: 'relative', zIndex: 100 }}>
-          <PlanDetail plan={overlay.data} onClose={closeOverlay} chapterNo={chapterNo(overlay.data.id)} onUpdated={refreshPlans} />
+          <PlanDetail plan={overlay.data} onClose={closeOverlay} onUpdated={refreshPlans} />
         </motion.div>
       )}
       {overlay?.type === 'profile' && (
@@ -651,7 +659,6 @@ export default function AppShell() {
       {tab !== 'chat' && (
         <NavBar tab={tab} setTab={go} onFab={() => setOverlay({ type: 'action' })}
           me={me} onProfileOpen={() => setOverlay({ type: 'profile' })}
-          stories={stories} activeStoryId={activeStoryId}
           unreadCount={unreadCount} />
       )}
     </div>
@@ -660,24 +667,21 @@ export default function AppShell() {
 
 
 
-function NavBar({ tab, setTab, onFab, me, onProfileOpen, stories, activeStoryId, unreadCount }: {
+function NavBar({ tab, setTab, onFab, me, onProfileOpen, unreadCount }: {
   tab: Tab
   setTab: (t: Tab) => void
   onFab: () => void
   me: PersonDisplay
   onProfileOpen: () => void
-  stories: StoryType[]
-  activeStoryId: string | null
   unreadCount: number
 }) {
-  const activeStory = stories.find(s => s.id === activeStoryId)
-  const catColor = activeStory ? (CAT_COLOR[activeStory.category] || 'var(--orange)') : 'var(--orange)'
+  const catColor = 'var(--orange)'
 
   const items = [
     { tab: 'home' as const,     icon: 'home' as const,     label: 'Inicio'      },
     { tab: 'calendar' as const, icon: 'calendar' as const, label: 'Agenda'      },
-    { tab: 'gallery' as const,  icon: 'image' as const,    label: 'Fotos'       },
-    { tab: 'finance' as const,  icon: 'wallet' as const,   label: 'Gasto'       },
+    { tab: 'gallery' as const,  icon: 'image' as const,    label: 'Recuerdos'   },
+    { tab: 'finance' as const,  icon: 'wallet' as const,   label: 'Fondo'       },
     { tab: 'chat' as const,     icon: 'chat' as const,     label: 'Chat', badge: unreadCount },
   ]
 
@@ -713,11 +717,11 @@ function NavBar({ tab, setTab, onFab, me, onProfileOpen, stories, activeStoryId,
         <NavBtn icon={items[0]!.icon} label={items[0]!.label} active={tab === items[0]!.tab} onClick={() => setTab(items[0]!.tab)} />
         <NavBtn icon={items[1]!.icon} label={items[1]!.label} active={tab === items[1]!.tab} onClick={() => setTab(items[1]!.tab)} />
 
-        <button data-testid="fab-btn" onClick={onFab} style={{
+        <button data-testid="fab-btn" aria-label="Nuevo momento" onClick={onFab} style={{
           width: 48, height: 48, borderRadius: '50%', border: 'none',
-          background: catColor, color: '#fff', cursor: 'pointer', margin: '0 4px',
+          background: 'var(--orange)', color: 'var(--paper)', cursor: 'pointer', margin: '0 4px',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: `0 4px 16px color-mix(in srgb, ${catColor} 55%, transparent)`,
+          boxShadow: `0 4px 16px color-mix(in srgb, var(--orange) 55%, transparent)`,
           transition: 'background .3s, transform .15s', flexShrink: 0,
         }}
           onMouseDown={e => (e.currentTarget.style.transform = 'scale(0.88)')}
@@ -820,7 +824,7 @@ function StorySwitcherSheet({ stories, activeStoryId, adminStoryIds, onSelect, o
                     backgroundImage: s.cover_url ? `url(${s.cover_url})` : undefined,
                     backgroundSize: 'cover',
                     backgroundPosition: `${s.cover_position_x ?? 50}% ${s.cover_position_y ?? 50}%` }}>
-                    {!s.cover_url && <Icon name={s.category === 'pareja' ? 'heartFill' : s.category === 'amigos' ? 'users' : s.category === 'familia' ? 'home' : 'tag'} size={18} style={{ color: '#fff' }} />}
+                    {!s.cover_url && <Icon name={s.category === 'pareja' ? 'heartFill' : s.category === 'amigos' ? 'users' : s.category === 'familia' ? 'home' : 'tag'} size={18} style={{ color: 'var(--paper)' }} />}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontWeight: 700, fontSize: 15.5, color: 'var(--ink)',
@@ -865,14 +869,21 @@ function NavBtn({ icon, label, active, onClick, badge }: { icon: string; label: 
       border: 'none', background: 'transparent', cursor: 'pointer',
       flex: 1, minWidth: 44, height: 50, borderRadius: 16, position: 'relative',
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3,
-      color: active ? 'var(--orange-deep)' : 'var(--ink-faint)', transition: 'color .2s',
+      color: active ? 'var(--orange-deep)' : 'var(--ink-soft)', transition: 'color .2s',
+      WebkitTapHighlightColor: 'transparent',
     }}>
-      <div style={{ position: 'relative' }}>
+      {active && (
+        <motion.div layoutId="nav-pill" style={{
+          position: 'absolute', bottom: 0, width: 20, height: 3, background: `var(--orange)`, 
+          borderRadius: '3px 3px 0 0', zIndex: 0
+        }} transition={{ type: 'spring', bounce: 0.2, duration: 0.5 }} />
+      )}
+      <div style={{ position: 'relative', zIndex: 1 }}>
         <Icon name={icon} size={21} stroke={active ? 2.3 : 1.8} />
         {badge != null && badge > 0 && (
           <span style={{
             position: 'absolute', top: -4, right: -7,
-            background: 'var(--orange)', color: '#fff',
+            background: 'var(--orange)', color: 'var(--paper)',
             borderRadius: 99, fontSize: 9, fontWeight: 800,
             minWidth: 15, height: 15, display: 'flex', alignItems: 'center', justifyContent: 'center',
             padding: '0 3px', fontFamily: 'var(--font-ui)', lineHeight: 1,
@@ -881,7 +892,7 @@ function NavBtn({ icon, label, active, onClick, badge }: { icon: string; label: 
           </span>
         )}
       </div>
-      <span style={{ fontSize: 9.5, fontWeight: active ? 700 : 600,
+      <span style={{ position: 'relative', zIndex: 1, fontSize: 9.5, fontWeight: active ? 700 : 600,
         fontFamily: 'var(--font-ui)', letterSpacing: '0.01em' }}>{label}</span>
     </button>
   )

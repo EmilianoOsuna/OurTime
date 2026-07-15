@@ -11,7 +11,7 @@ test.describe('Navegación — NavBar', () => {
     await expect(nav.getByText('Inicio')).toBeVisible()
     await expect(nav.getByText('Agenda')).toBeVisible()
     await expect(nav.getByText('Fotos')).toBeVisible()
-    await expect(nav.getByText('Gasto')).toBeVisible()
+    await expect(nav.getByText('Fondo', { exact: true })).toBeVisible()
     await expect(nav.getByText('Chat')).toBeVisible()
     await expect(nav.getByText('Yo')).toBeVisible()
   })
@@ -60,7 +60,7 @@ test.describe('Navegación — NavBar', () => {
   })
 
   test('navega al tab Gasto', async ({ page }) => {
-    await page.getByText('Gasto').click()
+    await page.getByText('Fondo', { exact: true }).click()
     await page.waitForTimeout(500)
     await page.screenshot({ path: 'playwright-review/qa-tab-gasto.png', fullPage: false })
   })

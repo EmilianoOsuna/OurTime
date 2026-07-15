@@ -4,19 +4,20 @@ import { Confetti } from '../components/ui/Confetti'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 
-const WORDS = ['LUNA', 'ROSA', 'CIELO', 'MAR', 'SOL', 'AMOR', 'NOVA', 'EDEN']
-function genCode() {
-  const w = WORDS[Math.floor(Math.random() * WORDS.length)]
-  const n = Math.floor(1000 + Math.random() * 9000)
-  return `${w}-${n}`
+function genCode(len = 8) {
+  // Cryptographically strong, unbiased over a 32-char alphabet (~40 bits).
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+  const arr = new Uint8Array(len)
+  crypto.getRandomValues(arr)
+  return Array.from(arr, (b) => chars[b % chars.length]).join('')
 }
 
 type Category = 'pareja' | 'amigos' | 'familia' | 'otro'
 const CATS: { id: Category; label: string; icon: string; color: string }[] = [
-  { id: 'pareja',  label: 'Pareja',   icon: 'heart',   color: 'var(--orange)' },
-  { id: 'amigos',  label: 'Amigos',   icon: 'users',   color: 'var(--blue)'   },
-  { id: 'familia', label: 'Familia',  icon: 'home',    color: '#7E5CEF'       },
-  { id: 'otro',    label: 'Otro',     icon: 'sparkle', color: 'var(--ink)'    },
+  { id: 'pareja',  label: 'Pareja',   icon: 'heart',   color: 'var(--cat-pareja)' },
+  { id: 'amigos',  label: 'Amigos',   icon: 'users',   color: 'var(--cat-amigos)' },
+  { id: 'familia', label: 'Familia',  icon: 'home',    color: 'var(--cat-familia)' },
+  { id: 'otro',    label: 'Otro',     icon: 'sparkle', color: 'var(--cat-otro)'   },
 ]
 
 function Onboarding({ onComplete }: { onComplete: () => void }) {

@@ -7,10 +7,10 @@ import { Icon } from '../ui/Icon'
 import { DatePicker } from '../ui/DatePicker'
 
 const CATEGORIES = [
-  { key: 'pareja',  label: 'Pareja',  icon: 'heartFill', color: 'var(--orange)',   bg: 'var(--orange-tint)' },
-  { key: 'amigos',  label: 'Amigos',  icon: 'users',     color: 'var(--blue)',      bg: 'var(--blue-tint)' },
-  { key: 'familia', label: 'Familia', icon: 'home',      color: 'var(--done)',      bg: 'var(--done-tint)' },
-  { key: 'otro',    label: 'Otro',    icon: 'tag',       color: 'var(--ink-faint)', bg: 'var(--card-2)' },
+  { key: 'pareja',  label: 'Pareja',  icon: 'heartFill', color: 'var(--cat-pareja)', bg: 'color-mix(in srgb, var(--cat-pareja) 12%, transparent)' },
+  { key: 'amigos',  label: 'Amigos',  icon: 'users',     color: 'var(--cat-amigos)', bg: 'color-mix(in srgb, var(--cat-amigos) 12%, transparent)' },
+  { key: 'familia', label: 'Familia', icon: 'home',      color: 'var(--cat-familia)', bg: 'color-mix(in srgb, var(--cat-familia) 12%, transparent)' },
+  { key: 'otro',    label: 'Otro',    icon: 'tag',       color: 'var(--cat-otro)', bg: 'color-mix(in srgb, var(--cat-otro) 12%, transparent)' },
 ]
 
 const FAMILY_ROLES = ['Papá', 'Mamá', 'Hijo/a', 'Hermano/a', 'Abuelo/a', 'Tío/a', 'Primo/a', 'Otro']

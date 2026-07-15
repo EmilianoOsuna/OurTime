@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { CatMedallion } from '../components/ui/CatMedallion'
 import { CatTag } from '../components/ui/CatTag'
 import { Icon } from '../components/ui/Icon'
-import { fmtDate, fmtDateShort, toRoman, countdown } from '../lib/chapterUtils'
+import { fmtDate, fmtDateShort, countdown } from '../lib/chapterUtils'
 import type { PlanType } from '../lib/supabase'
 
 type CalendarPlan = PlanType & { storyName?: string; storyCategory?: string }
@@ -70,9 +70,9 @@ export default function Calendar({ plans, onOpenPlan }: { plans: CalendarPlan[];
   const selPlans = byDate[sel] || []
 
   return (
-    <div className="page-enter" style={{ paddingBottom: 130 }}>
+    <div className="page-enter" style={{ paddingBottom: 130, paddingTop: 'max(env(safe-area-inset-top), 32px)' }}>
       {/* Header */}
-      <div style={{ padding: '8px 22px 0' }}>
+      <div style={{ padding: '0 22px 0' }}>
         <div className="eyebrow" style={{ marginBottom: 7 }}>Su agenda</div>
         <h1 className="display" style={{ fontSize: 32, margin: 0 }}>Calendario</h1>
       </div>
@@ -213,7 +213,7 @@ function ChapterList({ plans, onOpen }: { plans: CalendarPlan[]; onOpen: (p: Pla
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {upcoming.map(p => (
-              <ChapterRow key={p.id} plan={p} no={plans.indexOf(p) + 1} onOpen={onOpen} />
+              <ChapterRow key={p.id} plan={p} onOpen={onOpen} />
             ))}
           </div>
         </>
@@ -232,7 +232,7 @@ function ChapterList({ plans, onOpen }: { plans: CalendarPlan[]; onOpen: (p: Pla
               background: 'linear-gradient(var(--orange), var(--blue))', opacity: 0.4 }} />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {past.map(p => (
-                <ChapterRow key={p.id} plan={p} no={plans.indexOf(p) + 1} onOpen={onOpen} />
+                <ChapterRow key={p.id} plan={p} onOpen={onOpen} />
               ))}
             </div>
           </div>
@@ -242,7 +242,7 @@ function ChapterList({ plans, onOpen }: { plans: CalendarPlan[]; onOpen: (p: Pla
   )
 }
 
-function ChapterRow({ plan, no, onOpen }: { plan: CalendarPlan; no: number; onOpen: (p: PlanType) => void }) {
+function ChapterRow({ plan, onOpen }: { plan: CalendarPlan; onOpen: (p: PlanType) => void }) {
   const done = plan.status === 'completado'
   return (
     <button onClick={() => onOpen(plan)} className="ot-card" style={{
@@ -261,10 +261,11 @@ function ChapterRow({ plan, no, onOpen }: { plan: CalendarPlan; no: number; onOp
         )}
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-          <span style={{ fontSize: 11, color: 'var(--ink-faint)', fontWeight: 600 }}>Mom. {toRoman(no)}</span>
-          {plan.storyName && <StoryBadge name={plan.storyName} category={plan.storyCategory} />}
-        </div>
+        {plan.storyName && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+            <StoryBadge name={plan.storyName} category={plan.storyCategory} />
+          </div>
+        )}
         <div className="display" style={{ fontSize: 15.5, lineHeight: 1.15 }}>{plan.title}</div>
         <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
           <Icon name="calendar" size={12} />

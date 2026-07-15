@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Icon } from './Icon'
 
 interface LightboxProps {
@@ -40,35 +41,42 @@ export function Lightbox({ url, memoryId, onDelete, onClose }: LightboxProps) {
       }}>
         {/* Delete button (only if memoryId is provided) */}
         {memoryId && onDelete ? (
-          <div onClick={e => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {!confirmDelete ? (
-              <button onClick={() => setConfirmDelete(true)} style={{
-                width: 40, height: 40, borderRadius: '50%', border: 'none', background: 'rgba(255,255,255,0.15)',
-                cursor: 'pointer', color: '#ff4d4d', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 2px 10px rgba(0,0,0,0.2)'
-              }}>
-                <Icon name="trash" size={20} />
-              </button>
-            ) : (
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(0,0,0,0.6)',
-                padding: '4px 8px 4px 12px', borderRadius: 20, border: '1px solid rgba(255,255,255,0.1)'
-              }}>
-                <span style={{ color: '#fff', fontSize: 12, fontWeight: 600 }}>¿Eliminar?</span>
-                <button onClick={handleDelete} disabled={deleting} style={{
-                  border: 'none', background: '#ff4d4d', color: '#fff', padding: '4px 10px', borderRadius: 12,
-                  fontSize: 12, fontWeight: 700, cursor: 'pointer'
-                }}>
-                  {deleting ? '...' : 'Sí'}
-                </button>
-                <button onClick={() => setConfirmDelete(false)} style={{
-                  border: 'none', background: 'transparent', color: '#fff', padding: '4px 8px',
-                  fontSize: 12, fontWeight: 600, cursor: 'pointer'
-                }}>
-                  No
-                </button>
-              </div>
-            )}
+          <div onClick={e => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', height: 44 }}>
+            <AnimatePresence mode="wait">
+              {!confirmDelete ? (
+                <motion.button key="trash"
+                  initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} transition={{ duration: 0.15 }}
+                  onClick={() => setConfirmDelete(true)} 
+                  style={{
+                    width: 44, height: 44, borderRadius: '50%', border: 'none', 
+                    background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+                    cursor: 'pointer', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                  <Icon name="trash" size={20} />
+                </motion.button>
+              ) : (
+                <motion.div key="confirm"
+                  initial={{ opacity: 0, scale: 0.9, x: -10 }} animate={{ opacity: 1, scale: 1, x: 0 }} exit={{ opacity: 0, scale: 0.9, x: -10 }} transition={{ duration: 0.2 }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(255,255,255,0.12)',
+                    padding: '4px', borderRadius: 24, backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)'
+                  }}>
+                  <button onClick={handleDelete} disabled={deleting} style={{
+                    border: 'none', background: '#FF453A', color: '#fff', padding: '0 16px', height: 36, borderRadius: 20,
+                    fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+                  }}>
+                    <Icon name="trash" size={15} />
+                    {deleting ? '...' : 'Eliminar'}
+                  </button>
+                  <button onClick={() => setConfirmDelete(false)} style={{
+                    border: 'none', background: 'transparent', color: '#fff', width: 36, height: 36, borderRadius: '50%',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                  }}>
+                    <Icon name="x" size={18} />
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         ) : (
           <div />
@@ -76,9 +84,9 @@ export function Lightbox({ url, memoryId, onDelete, onClose }: LightboxProps) {
 
         {/* Close button */}
         <button onClick={onClose} style={{
-          width: 40, height: 40, borderRadius: '50%', border: 'none', background: 'rgba(255,255,255,0.15)',
+          width: 44, height: 44, borderRadius: '50%', border: 'none', 
+          background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
           cursor: 'pointer', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 2px 10px rgba(0,0,0,0.2)'
         }}>
           <Icon name="x" size={20} />
         </button>

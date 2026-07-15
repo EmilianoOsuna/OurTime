@@ -1,3 +1,5 @@
+import { motion } from 'framer-motion'
+
 interface SegOpt { value: string; label: string }
 
 export function Segmented({ labels, selected, onChange, options, value, style = {} }: {
@@ -24,12 +26,20 @@ export function Segmented({ labels, selected, onChange, options, value, style = 
         return (
           <button key={i} onClick={() => onChange(item.idx >= 0 ? item.idx : i)} style={{
             flex: 1, border: 'none', cursor: 'pointer', position: 'relative', zIndex: 1,
-            background: on ? 'var(--card)' : 'transparent',
+            background: 'transparent',
             color: on ? 'var(--ink)' : 'var(--ink-soft)',
-            boxShadow: on ? 'var(--sh-sm)' : 'none',
             borderRadius: 999, padding: '9px 8px', fontFamily: 'var(--font-ui)',
-            fontWeight: on ? 700 : 600, fontSize: 14, transition: 'all .2s',
-          }}>{item.label}</button>
+            fontWeight: on ? 700 : 600, fontSize: 14, transition: 'color .2s',
+            WebkitTapHighlightColor: 'transparent',
+          }}>
+            {on && (
+              <motion.div layoutId="seg-pill" style={{
+                position: 'absolute', inset: 0, background: 'var(--card)',
+                borderRadius: 999, boxShadow: 'var(--sh-sm)', zIndex: -1
+              }} transition={{ type: 'spring', bounce: 0.2, duration: 0.5 }} />
+            )}
+            <span style={{ position: 'relative', zIndex: 1 }}>{item.label}</span>
+          </button>
         )
       })}
     </div>

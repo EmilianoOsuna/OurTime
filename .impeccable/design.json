@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-15T01:18:00Z",
+  "title": "Design System: OurTime",
+  "extensions": {
+    "colorMeta": {
+      "primary": { "role": "primary", "displayName": "Naranja Atardecer", "canonical": "#F17720", "tonalRamp": ["#3A2112", "#5E3015", "#8C4215", "#D75E12", "#F17720", "#F98130", "#FBE6D2", "#FFF5EC"] },
+      "secondary": { "role": "secondary", "displayName": "Azul Océano", "canonical": "#0474BA", "tonalRamp": ["#0E2A3A", "#0C3C58", "#085785", "#045E96", "#0474BA", "#2D8AC9", "#3B9EDF", "#D7E9F4"] },
+      "neutral-bg": { "role": "neutral", "displayName": "Papel", "canonical": "#F4EEE4", "tonalRamp": ["#201B14", "#2E2720", "#6E655A", "#A99F90", "#D0C9C0", "#ECE3D5", "#F4EEE4", "#FFFCF7"] },
+      "neutral-ink": { "role": "neutral", "displayName": "Tinta", "canonical": "#211D18", "tonalRamp": ["#000000", "#100D0B", "#211D18", "#332D26", "#453E35", "#584F44", "#6E655A", "#B8AFA3"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Encabezados principales y títulos de historias." },
+      "body": { "displayName": "Body", "purpose": "Texto general y descripciones." }
+    },
+    "shadows": [
+      { "name": "sh-sm", "value": "0 1px 2px rgba(60,40,20,0.05), 0 2px 8px rgba(60,40,20,0.04)", "purpose": "Tarjetas y elevación base." },
+      { "name": "sh-md", "value": "0 2px 6px rgba(60,40,20,0.06), 0 12px 28px rgba(60,40,20,0.08)", "purpose": "Botones primarios y elementos enfocados." }
+    ],
+    "motion": [
+      { "name": "ease-standard", "value": "cubic-bezier(.2,.8,.2,1)", "purpose": "Animaciones táctiles fluidas." }
+    ],
+    "breakpoints": []
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Botón oscuro y táctil para acciones principales.",
+      "html": "<button class=\"ds-btn-primary\">CONTINUAR</button>",
+      "css": ".ds-btn-primary { font-family: 'Hanken Grotesk', sans-serif; font-weight: 600; font-size: 16px; border: none; border-radius: 999px; padding: 15px 24px; background: #211D18; color: #F4EEE4; box-shadow: 0 2px 6px rgba(60,40,20,0.06), 0 12px 28px rgba(60,40,20,0.08); transition: transform .15s cubic-bezier(.2,.8,.2,1), box-shadow .2s; cursor: pointer; } .ds-btn-primary:active { transform: scale(0.965); }"
+    },
+    {
+      "name": "Orange Button",
+      "kind": "button",
+      "refersTo": "button-orange",
+      "description": "Botón naranja emotivo.",
+      "html": "<button class=\"ds-btn-orange\">AGREGAR RECUERDO</button>",
+      "css": ".ds-btn-orange { font-family: 'Hanken Grotesk', sans-serif; font-weight: 600; font-size: 16px; border: none; border-radius: 999px; padding: 15px 24px; background: #F17720; color: #fff; box-shadow: 0 4px 14px rgba(241,119,32,0.4); transition: transform .15s cubic-bezier(.2,.8,.2,1); cursor: pointer; } .ds-btn-orange:active { transform: scale(0.965); }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Contenedor suave estilo papel.",
+      "html": "<div class=\"ds-card\"><h3>Nuestra historia</h3><p>Recuerdos guardados.</p></div>",
+      "css": ".ds-card { background: #FFFCF7; border-radius: 22px; padding: 20px; box-shadow: 0 1px 2px rgba(60,40,20,0.05), 0 2px 8px rgba(60,40,20,0.04); font-family: 'Hanken Grotesk', sans-serif; color: #211D18; margin: 0; } .ds-card h3 { font-family: 'Newsreader', serif; font-weight: 500; font-size: 24px; margin-top: 0; margin-bottom: 8px; } .ds-card p { margin: 0; }"
+    },
+    {
+      "name": "Input Field",
+      "kind": "input",
+      "refersTo": "input-field",
+      "description": "Campo de texto incrustado suavemente.",
+      "html": "<input type=\"text\" class=\"ds-field\" placeholder=\"Escribe algo...\" />",
+      "css": ".ds-field { font-family: 'Hanken Grotesk', sans-serif; font-size: 16px; color: #211D18; background: #FBF6EE; border: none; border-radius: 14px; padding: 14px 16px; outline: none; box-shadow: inset 0 0 0 1.5px rgba(33,29,24,0.10); transition: box-shadow .18s; width: 100%; box-sizing: border-box; } .ds-field:focus { box-shadow: inset 0 0 0 2px #F17720; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "El Álbum de Conexiones",
+    "overview": "El diseño visual de OurTime evoca un entorno íntimo, vivo y táctil, priorizando la conexión humana. Aprovechando una base de colores \"papel y tinta\" cálidos, se contrasta con acentos vibrantes que dan vida a la interfaz. A diferencia de un sistema de bases de datos o de una red social pública, esta aplicación se siente cálida, minimalista y viva, con capas flotantes modernas. Se rechaza explícitamente cualquier estética estéril, corporativa o excesivamente utilitaria.",
+    "keyCharacteristics": [
+      "Estilo editorial con un toque moderno y acogedor.",
+      "Calidez en el contraste (fondos tipo papel contra tintas oscuras).",
+      "Superficies flotantes y efectos cristalinos suaves para diferenciar capas.",
+      "Interacciones táctiles, amigables y fluidas."
+    ],
+    "rules": [
+      {
+        "name": "The Warm Base Rule",
+        "body": "Los fondos nunca deben ser blanco o gris puro. Siempre deben tener un tinte cálido (crema o papel) para mantener la sensación íntima y acogoda.",
+        "section": "colors"
+      },
+      {
+        "name": "The Floating Layers Rule",
+        "body": "La interfaz debe sentirse flotante y en capas, usando transparencias y \"cristales\" suaves para diferenciar el contenido del contexto en lugar de líneas rígidas.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do usar siempre fondos cálidos tintados para mantener la intimidad del \"Refugio Cálido\".",
+      "Do dar amplio espacio y padding a los elementos para mantener el minimalismo.",
+      "Do usar la tipografía serif (Newsreader) en los títulos para mantener el tono \"Álbum de Conexiones\"."
+    ],
+    "donts": [
+      "Don't usar colores estériles, rígidos o \"grises tecnológicos\" que lo hagan sentir como una app de banco corporativa o de gestión de bases de datos.",
+      "Don't crear interfaces ruidosas que parezcan redes sociales públicas; el foco está en la privacidad.",
+      "Don't abusar de los bordes duros de 1px (borders laterales o outlines fuertes) que interrumpan la sensación suave y táctil de las tarjetas."
+    ]
+  }
+}

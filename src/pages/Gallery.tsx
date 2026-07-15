@@ -211,8 +211,8 @@ export default function Gallery({ memories, setMemories, onImageClick, me }: {
     const availableForPicker = memories.filter(m => m.album_id !== activeAlbumId)
     const pickerCols = makeCols(availableForPicker)
     return (
-      <div className="page-enter" style={{ paddingBottom: 130 }}>
-        <div style={{ padding: '8px 22px 0' }}>
+      <div className="page-enter" style={{ paddingBottom: 130, paddingTop: 'max(env(safe-area-inset-top), 32px)' }}>
+        <div style={{ padding: '0 22px 0' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
             <button onClick={() => setActiveAlbumId(null)} style={{
               border: 'none', background: 'var(--card)', cursor: 'pointer',
@@ -332,8 +332,9 @@ export default function Gallery({ memories, setMemories, onImageClick, me }: {
 
   // ── Main view ──
   return (
-    <div className="page-enter" style={{ paddingBottom: 130 }}>
-      <div style={{ padding: '8px 22px 0' }}>
+    <div className="page-enter" style={{ paddingBottom: 130, paddingTop: 'max(env(safe-area-inset-top), 32px)' }}>
+      {/* Header */}
+      <div style={{ padding: '0 22px 0' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
           <div>
             <div className="eyebrow" style={{ marginBottom: 7 }}>Sus momentos</div>
