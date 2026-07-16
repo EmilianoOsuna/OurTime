@@ -145,6 +145,16 @@ export async function setupNativeApp() {
         }
       }
     }
+
+    // Regreso de Stripe Checkout / Billing Portal: cerrar el navegador in-app
+    // y pedir un refresh de entitlements (además del flip por realtime).
+    if (rawUrl.includes('checkout=') || rawUrl.includes('portal=')) {
+      await Browser.close().catch(() => {})
+      const status = rawUrl.includes('checkout=cancel') ? 'cancel' : 'success'
+      window.dispatchEvent(new CustomEvent('ot:checkout-return', { detail: { status } }))
+      return
+    }
+
     dispatchNavigation(rawUrl)
   })
   App.getLaunchUrl().then(result => {

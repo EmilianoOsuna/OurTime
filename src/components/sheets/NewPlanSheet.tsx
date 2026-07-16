@@ -7,6 +7,8 @@ import { CAT_META } from '../../lib/chapterUtils'
 import { Icon } from '../ui/Icon'
 import { DatePicker } from '../ui/DatePicker'
 import { sendPushToStoryMembers, syncPlanToGoogleCalendar } from '../../lib/usePushNotifications'
+import { useEntitlement } from '../../lib/useEntitlement'
+import { enforceCountGate } from '../../lib/paywall'
 
 const CAT_ICON: Record<string, string> = {
   cena: 'utensils', viaje: 'plane', cine: 'film', cafe: 'coffee',
@@ -18,6 +20,7 @@ interface Props { onClose: () => void; onCreated: () => void; parentPlanId?: str
 
 export const NewPlanSheet: React.FC<Props> = ({ onClose, onCreated, parentPlanId }) => {
   const { activeStoryId, stories } = useAuth()
+  const { limits } = useEntitlement(activeStoryId)
   const { push } = useToast()
   const [title, setTitle]         = useState('')
   const [cat, setCat]             = useState<string>('salida')
@@ -30,6 +33,13 @@ export const NewPlanSheet: React.FC<Props> = ({ onClose, onCreated, parentPlanId
 
   const submit = async () => {
     if (!ok || !activeStoryId) return
+    // Gate freemium de Momentos (solo planes de nivel superior, no sub-planes).
+    if (!parentPlanId) {
+      const blocked = await enforceCountGate({
+        storyId: activeStoryId, table: 'plans', limit: limits.plans, reason: 'plans', topLevelOnly: true,
+      })
+      if (blocked) { onClose(); return }
+    }
     setSaving(true)
     const { data: { user } } = await supabase.auth.getUser()
     const { data: newPlan, error } = await supabase.from('plans').insert({

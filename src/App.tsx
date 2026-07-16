@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from 'react'
 import { AuthProvider, useAuth } from './context/AuthContext'
-import { ToastProvider } from './context/ToastContext'
+import { ToastProvider, useToast } from './context/ToastContext'
 import { CurrencyProvider } from './context/CurrencyContext'
 import { ConfirmProvider } from './components/ui/ConfirmDialog'
 import { ErrorBoundary } from './components/ui/ErrorBoundary'
@@ -56,8 +56,26 @@ function Spinner() {
 
 function AppInner() {
   const { session, user, profile, stories, isLoading, refreshProfile, refreshStories, signOut } = useAuth()
+  const { push } = useToast()
   const [needsOnboarding, setNeedsOnboarding] = useState(false)
   const [stateLoading, setStateLoading] = useState(true)
+
+  // Regreso de Stripe en web: leemos el query param, avisamos, disparamos el
+  // refresh de entitlements (AuthContext escucha) y limpiamos la URL.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const checkout = params.get('checkout')
+    if (!checkout && params.get('portal') !== 'return') return
+    if (checkout === 'success') {
+      push({ icon: 'sparkle', eyebrow: 'Suscripción', title: '¡Listo! Tu plan está activo.' })
+    } else if (checkout === 'cancel') {
+      push({ icon: 'x', title: 'Pago cancelado' })
+    }
+    window.dispatchEvent(new CustomEvent('ot:checkout-return', { detail: { status: checkout ?? 'return' } }))
+    const url = new URL(window.location.href)
+    url.search = ''
+    window.history.replaceState({}, '', url.toString())
+  }, [push])
 
   useEffect(() => {
     if (!isLoading) {

@@ -4,8 +4,9 @@ import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { compressToWebP } from '../../lib/imageUtils'
 import { Icon } from '../ui/Icon'
-import type { StoryType } from '../../lib/supabase'
+import { imageUrl, type StoryType } from '../../lib/supabase'
 import { useToast } from '../../context/ToastContext'
+import { HexColorPicker } from 'react-colorful'
 
 const CAT_OPTIONS: { id: StoryType['category']; label: string; icon: string; color: string }[] = [
   { id: 'pareja',  label: 'Pareja',   icon: 'heartFill', color: 'var(--cat-pareja)' },
@@ -26,7 +27,16 @@ export const EditStorySheet: React.FC<Props> = ({ story, onClose, onUpdated, isA
   const { push: toast } = useToast()
   const [name, setName] = useState(story.name)
   const [category, setCategory] = useState<StoryType['category']>(story.category)
-  const [coverPreview, setCoverPreview] = useState<string | null>(story.cover_url)
+
+  const defaultColors: Record<string, string> = {
+    pareja: '#F17720',
+    amigos: '#0474BA',
+    familia: '#2D805B',
+    otro: '#7C4D9A'
+  }
+  const [themeColor, setThemeColor] = useState<string>(story.theme_color || defaultColors[story.category] || '#F17720')
+  const [showHex, setShowHex] = useState(false)
+  const [coverPreview, setCoverPreview] = useState<string | null>(story.cover_url ? imageUrl(story.cover_url, 800) : null)
   const [coverFile, setCoverFile] = useState<File | null>(null)
   const [coverPosition, setCoverPosition] = useState({
     x: story.cover_position_x ?? 50,
@@ -43,7 +53,10 @@ export const EditStorySheet: React.FC<Props> = ({ story, onClose, onUpdated, isA
   const [deleting, setDeleting] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
-  const hasChanges = name.trim() !== story.name || category !== story.category || coverFile !== null
+  const hasChanges = name.trim() !== (story.name || '') 
+    || category !== story.category
+    || themeColor !== (story.theme_color || defaultColors[story.category] || '#F17720')
+    || coverFile !== null
     || coverPosition.x !== (story.cover_position_x ?? 50)
     || coverPosition.y !== (story.cover_position_y ?? 50)
   const ok = name.trim().length > 0 && hasChanges
@@ -109,6 +122,7 @@ export const EditStorySheet: React.FC<Props> = ({ story, onClose, onUpdated, isA
           cover_url: coverUrl,
           cover_position_x: coverPosition.x,
           cover_position_y: coverPosition.y,
+          theme_color: themeColor,
         })
         .eq('id', story.id)
       if (error) throw error
@@ -196,6 +210,69 @@ export const EditStorySheet: React.FC<Props> = ({ story, onClose, onUpdated, isA
             <label className="field-label">Nombre</label>
             <input className="field" value={name} onChange={e => setName(e.target.value)}
               placeholder="Nombre de la historia" autoFocus />
+
+            <style>{`
+              #app-root {
+                --orange: ${themeColor} !important;
+                --orange-deep: color-mix(in srgb, ${themeColor} 85%, black) !important;
+                --orange-tint: color-mix(in srgb, ${themeColor} 15%, transparent) !important;
+              }
+            `}</style>
+            <label className="field-label" style={{ marginTop: 20 }}>Color de acento</label>
+            <div className="ot-scroll" style={{ 
+              display: 'flex', gap: 12, marginTop: -4, marginBottom: showHex ? 2 : 10, 
+              margin: '0 -22px', padding: '10px 22px', overflowX: 'auto', WebkitOverflowScrolling: 'touch' 
+            }}>
+              {['#F17720', '#0474BA', '#E55B7E', '#2D805B', '#7C4D9A', '#E0A800', '#C05C42', '#1A4B6B'].map(hex => {
+                const on = themeColor.toUpperCase() === hex
+                return (
+                  <button key={hex} onClick={() => { setThemeColor(hex); setShowHex(false) }} style={{
+                    width: 42, height: 42, borderRadius: '50%', background: hex, flexShrink: 0,
+                    border: on && !showHex ? `2px solid var(--paper)` : 'none',
+                    boxShadow: on && !showHex ? `0 0 0 2px ${hex}` : '0 2px 8px rgba(0,0,0,0.08)',
+                    cursor: 'pointer', transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+                    transform: on && !showHex ? 'scale(1.1)' : 'scale(1)',
+                  }} />
+                )
+              })}
+              {showHex ? (
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 6, background: 'var(--card-2)', 
+                  border: `2px solid ${themeColor}`, borderRadius: 21, padding: '0 16px', height: 42, flexShrink: 0,
+                  transition: 'border 0.2s'
+                }}>
+                  <span style={{ color: 'var(--ink-soft)', fontWeight: 700, fontFamily: 'var(--font-ui)' }}>#</span>
+                  <input type="text" value={themeColor.replace('#', '')} 
+                    onChange={e => {
+                      const val = e.target.value.replace(/[^0-9A-Fa-f]/g, '').slice(0,6)
+                      setThemeColor('#' + val)
+                    }}
+                    style={{
+                      border: 'none', background: 'transparent', outline: 'none', width: 70,
+                      fontFamily: 'var(--font-ui)', fontSize: 16, fontWeight: 700, color: 'var(--ink)', textTransform: 'uppercase'
+                    }}
+                  />
+                </div>
+              ) : (
+                <button onClick={() => setShowHex(true)} style={{ 
+                  position: 'relative', width: 42, height: 42, borderRadius: '50%', flexShrink: 0,
+                  background: !['#F17720', '#0474BA', '#E55B7E', '#2D805B', '#7C4D9A', '#E0A800', '#C05C42', '#1A4B6B'].includes(themeColor.toUpperCase()) ? themeColor : 'var(--card-2)',
+                  border: !['#F17720', '#0474BA', '#E55B7E', '#2D805B', '#7C4D9A', '#E0A800', '#C05C42', '#1A4B6B'].includes(themeColor.toUpperCase()) ? `2px solid var(--paper)` : '1px dashed var(--line-strong)',
+                  boxShadow: !['#F17720', '#0474BA', '#E55B7E', '#2D805B', '#7C4D9A', '#E0A800', '#C05C42', '#1A4B6B'].includes(themeColor.toUpperCase()) ? `0 0 0 2px ${themeColor}` : 'none',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer'
+                }}>
+                  <Icon name="plus" size={18} style={{ color: !['#F17720', '#0474BA', '#E55B7E', '#2D805B', '#7C4D9A', '#E0A800', '#C05C42', '#1A4B6B'].includes(themeColor.toUpperCase()) ? 'var(--paper)' : 'var(--ink-soft)' }} />
+                </button>
+              )}
+              <div style={{ width: 1, flexShrink: 0 }} />
+            </div>
+
+            {showHex && (
+              <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'center' }}>
+                <HexColorPicker color={themeColor} onChange={setThemeColor} style={{ width: '100%' }} />
+              </div>
+            )}
 
             <label className="field-label" style={{ marginTop: 20 }}>Categoría</label>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8, marginTop: 6 }}>

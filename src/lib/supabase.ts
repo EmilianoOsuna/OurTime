@@ -41,6 +41,7 @@ export type StoryType = {
   budget_period: 'mensual' | 'semanal' | null
   start_date: string | null
   origin_place: string | null
+  theme_color?: string | null
 }
 
 export type StoryMemberType = {
@@ -122,11 +123,26 @@ export type NotificationType = {
   created_at: string
 }
 
+export type PlanTier = 'free' | 'duo' | 'familia'
+
+export type EntitlementType = {
+  story_id: string
+  plan: PlanTier
+  status: 'active' | 'trialing' | 'past_due' | 'canceled' | 'inactive'
+  payer_user_id: string | null
+  stripe_customer_id: string | null
+  stripe_subscription_id: string | null
+  current_period_end: string | null
+  cancel_at_period_end: boolean
+  updated_at: string
+}
+
 export type PersonDisplay = {
   name: string
   initial: string
   color: string
   avatar_url?: string | null
+  accessory?: string | null
 }
 
 export function imageUrl(url: string | null | undefined, _width = 400): string | null {
@@ -134,7 +150,7 @@ export function imageUrl(url: string | null | undefined, _width = 400): string |
 }
 
 export function buildPerson(
-  p: { full_name?: string | null; avatar_url?: string | null } | null | undefined,
+  p: { full_name?: string | null; avatar_url?: string | null; accessory?: string | null } | null | undefined,
   isMe: boolean
 ): PersonDisplay {
   return {
@@ -142,5 +158,6 @@ export function buildPerson(
     initial: (p?.full_name?.[0] || (isMe ? 'T' : 'C')).toUpperCase(),
     color: isMe ? '#0474BA' : '#F17720',
     avatar_url: p?.avatar_url,
+    accessory: p?.accessory,
   }
 }

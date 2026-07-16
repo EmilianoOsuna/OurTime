@@ -5,6 +5,9 @@ import { useToast } from '../../context/ToastContext'
 import { supabase } from '../../lib/supabase'
 import { Icon } from '../ui/Icon'
 import { DatePicker } from '../ui/DatePicker'
+import { paywallEnabled } from '../../lib/stripe'
+import { openPaywall } from '../../lib/paywall'
+import { canCreateStory } from '../../lib/useEntitlement'
 
 const CATEGORIES = [
   { key: 'pareja',  label: 'Pareja',  icon: 'heartFill', color: 'var(--cat-pareja)', bg: 'color-mix(in srgb, var(--cat-pareja) 12%, transparent)' },
@@ -25,7 +28,7 @@ function randomCode(len = 8) {
 interface Props { onClose: () => void; onCreated: () => void }
 
 export const NewStorySheet: React.FC<Props> = ({ onClose, onCreated }) => {
-  const { user, refreshStories, setActiveStoryId, refreshProfile } = useAuth()
+  const { user, stories, userHasPaidStory, refreshStories, setActiveStoryId, refreshProfile } = useAuth()
   const { push } = useToast()
   const [name, setName] = useState('')
   const [category, setCategory] = useState('pareja')
@@ -39,6 +42,12 @@ export const NewStorySheet: React.FC<Props> = ({ onClose, onCreated }) => {
 
   const submit = async () => {
     if (!ok || !user) return
+    // Gate freemium: gratis = 1 Historia; pagadores activos → ilimitadas.
+    if (paywallEnabled && !canCreateStory(stories.length, userHasPaidStory)) {
+      onClose()
+      openPaywall('stories')
+      return
+    }
     setSaving(true)
     try {
       const invite_code = randomCode()

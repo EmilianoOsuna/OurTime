@@ -50,10 +50,10 @@
   --glass-bg-soft:   rgba(255,252,247,0.82);
   --glass-border:    rgba(255,255,255,0.60);
 
-  /* Hero card (always visually dark regardless of mode) */
-  --hero-bg:   #211D18;
-  --hero-text: #F4EEE4;
-  --hero-soft: rgba(244,238,228,0.55);
+  /* Hero card */
+  --hero-bg:   var(--card);
+  --hero-text: var(--ink);
+  --hero-soft: var(--ink-soft);
 
   --r-lg: 30px;
   --r-md: 22px;

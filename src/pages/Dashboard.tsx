@@ -42,9 +42,13 @@ export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpe
   const upcoming = plans.filter(p => p.status === 'pendiente').sort((a, b) => a.plan_date.localeCompare(b.plan_date))
   const past = plans.filter(p => p.status === 'completado').sort((a, b) => b.plan_date.localeCompare(a.plan_date))
   const next = upcoming[0]
+  let defaultPartnerName = 'Tu pareja'
+  if (activeStory?.category === 'amigos') defaultPartnerName = 'Tu amigo'
+  if (activeStory?.category === 'familia') defaultPartnerName = 'Tu familiar'
+  if (activeStory?.category === 'otro') defaultPartnerName = 'Acompañante'
+  const partnerName = partner?.name || defaultPartnerName
+  const days = since ? daysTogether(since) : null
   const isPareja = activeStory?.category === 'pareja'
-  const days = (isPareja && since) ? daysTogether(since) : null
-  const partnerName = partner?.name || 'Tu pareja'
 
   return (
     <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
@@ -91,19 +95,23 @@ export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpe
           </div>
         </div>
 
-        {/* Presence card — only for pareja stories */}
-        {isPareja && since && (
+        {/* Stats card — for all stories */}
+        {since && (
           <motion.button whileTap={{ scale: 0.98 }} onClick={onProfileOpen} className="ot-card" style={{
             marginTop: 16, padding: '12px 15px', display: 'flex', alignItems: 'center', gap: 13,
             border: 'none', cursor: 'pointer', textAlign: 'left', width: '100%',
           }}>
             <div style={{ position: 'relative' }}>
-              <CoupleAvatars me={me} partner={partner || { name: partnerName, initial: 'P', color: '#F17720' }} size={38} />
-              <span style={{ position: 'absolute', bottom: -2, right: -2 }}><PresenceDot size={9} /></span>
+              <CoupleAvatars me={me} partner={partner || { name: partnerName, initial: partnerName.charAt(0).toUpperCase(), color: 'var(--orange)' }} size={38} />
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 14, fontWeight: 600 }}>{partnerName} está aquí</div>
-              <div style={{ fontSize: 12.5, color: 'var(--ink-soft)' }}>Juntos desde {fmtDate(since)}</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink)' }}>Tú y {partner?.name ? partner.name.split(' ')[0] : defaultPartnerName.toLowerCase()}</div>
+              <div style={{ fontSize: 12.5, color: 'var(--ink-soft)' }}>
+                {activeStory?.category === 'pareja' ? `Juntos desde ${fmtDate(since)}` :
+                 activeStory?.category === 'amigos' ? `Amigos desde ${fmtDate(since)}` :
+                 activeStory?.category === 'familia' ? `Familia desde ${fmtDate(since)}` :
+                 `Historia desde ${fmtDate(since)}`}
+              </div>
             </div>
             {days !== null && (
               <div style={{ textAlign: 'right' }}>

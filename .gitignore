@@ -31,3 +31,6 @@ playwright-report/
 
 android/app/google-services.json
 .opencode/pilot-audit.log.*
+
+# Supabase CLI binaries (too large for GitHub)
+bin/

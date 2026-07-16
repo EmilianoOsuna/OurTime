@@ -24,7 +24,9 @@ const MoneySheet = lazy(() => import('./sheets/MoneySheet').then(m => ({ default
 const NewMemorySheet = lazy(() => import('./sheets/NewMemorySheet').then(m => ({ default: m.NewMemorySheet })))
 const NewStorySheet = lazy(() => import('./sheets/NewStorySheet').then(m => ({ default: m.NewStorySheet })))
 const EditStorySheet = lazy(() => import('./sheets/EditStorySheet').then(m => ({ default: m.EditStorySheet })))
+const Paywall = lazy(() => import('./Paywall').then(m => ({ default: m.Paywall })))
 import { Icon } from './ui/Icon'
+import type { PaywallReason } from '../lib/paywall'
 import { Avatar } from './ui/Avatar'
 import { usePushNotifications } from '../lib/usePushNotifications'
 import { useToast } from '../context/ToastContext'
@@ -41,7 +43,7 @@ const CAT_COLOR_STABLE: Record<string, string> = {
 }
 
 export type Tab = 'home' | 'calendar' | 'gallery' | 'finance' | 'chat'
-type Overlay = { type: 'plan'; data: any } | { type: 'action' } | { type: 'newplan' } | { type: 'money' } | { type: 'memory' } | { type: 'profile' } | { type: 'newstory' } | { type: 'editstory'; story: StoryType } | null
+type Overlay = { type: 'plan'; data: any } | { type: 'action' } | { type: 'newplan' } | { type: 'money' } | { type: 'memory' } | { type: 'profile' } | { type: 'newstory' } | { type: 'editstory'; story: StoryType } | { type: 'paywall'; reason?: PaywallReason } | null
 
 function getInitialTab(): Tab {
   const saved = sessionStorage.getItem('activeTab')
@@ -248,6 +250,17 @@ export default function AppShell() {
   useEffect(() => { overlayRef.current = overlay },      [overlay])
   useEffect(() => { notifsRef.current = notifsVisible }, [notifsVisible])
   useEffect(() => { tabRef.current = tab },              [tab])
+
+  // Los gates de límites (en sheets/páginas) disparan este evento para abrir
+  // el paywall suave desde cualquier parte de la app.
+  useEffect(() => {
+    const onOpenPaywall = (e: Event) => {
+      const reason = (e as CustomEvent).detail?.reason as PaywallReason | undefined
+      setOverlay({ type: 'paywall', reason })
+    }
+    window.addEventListener('ot:open-paywall', onOpenPaywall)
+    return () => window.removeEventListener('ot:open-paywall', onOpenPaywall)
+  }, [])
 
   useEffect(() => {
     const open = overlay !== null || notifsVisible
@@ -547,8 +560,15 @@ export default function AppShell() {
              onBack={leaveChat} />,
   }
 
+  const activeStory = stories.find(s => s.id === activeStoryId)
+  const customStyles = activeStory?.theme_color ? {
+    '--orange': activeStory.theme_color,
+    '--orange-deep': `color-mix(in srgb, ${activeStory.theme_color} 85%, black)`,
+    '--orange-tint': `color-mix(in srgb, ${activeStory.theme_color} 15%, transparent)`,
+  } as React.CSSProperties : {}
+
   return (
-    <div style={{ minHeight: '100dvh', background: 'var(--paper)', position: 'relative' }}>
+    <div id="app-root" style={{ minHeight: '100dvh', background: 'var(--paper)', position: 'relative', ...customStyles }}>
       <Suspense fallback={
         tab === 'home' ? <DashboardSkeleton /> :
         tab === 'calendar' ? <CalendarSkeleton /> :
@@ -630,6 +650,12 @@ export default function AppShell() {
         <motion.div key="editstory-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}
           style={{ position: 'relative', zIndex: 100 }}>
           <EditStorySheet story={overlay.story} onClose={closeOverlay} onUpdated={() => {}} isAdmin={adminStoryIds.has(overlay.story.id)} />
+        </motion.div>
+      )}
+      {overlay?.type === 'paywall' && (
+        <motion.div key="paywall-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}
+          style={{ position: 'relative', zIndex: 100 }}>
+          <Paywall onClose={closeOverlay} reason={overlay.reason} />
         </motion.div>
       )}
       </Suspense>

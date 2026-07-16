@@ -1,0 +1,1437 @@
+{
+  "communities": {
+    "0": [
+      "src_components_appshell",
+      "src_components_appshell_appshell",
+      "src_components_appshell_calendar",
+      "src_components_appshell_cat_color",
+      "src_components_appshell_cat_color_stable",
+      "src_components_appshell_dashboard",
+      "src_components_appshell_editstorysheet",
+      "src_components_appshell_finances",
+      "src_components_appshell_gallery",
+      "src_components_appshell_getinitialtab",
+      "src_components_appshell_globalactionsheet",
+      "src_components_appshell_moneysheet",
+      "src_components_appshell_navbar",
+      "src_components_appshell_navbtn",
+      "src_components_appshell_newmemorysheet",
+      "src_components_appshell_newplansheet",
+      "src_components_appshell_newstorysheet",
+      "src_components_appshell_notificationspanel",
+      "src_components_appshell_overlay",
+      "src_components_appshell_plandetail",
+      "src_components_appshell_profilescreen",
+      "src_components_appshell_storyswitchersheet",
+      "src_components_appshell_tab",
+      "src_components_appshell_useunreadcount",
+      "src_components_notificationspanel",
+      "src_components_notificationspanel_notificationspanel",
+      "src_components_notificationspanel_notifitem",
+      "src_components_notificationspanel_notifrow",
+      "src_components_ui_lightbox",
+      "src_components_ui_lightbox_lightbox",
+      "src_components_ui_lightbox_lightboxprops",
+      "src_components_ui_sheet",
+      "src_components_ui_sheet_sheet",
+      "src_components_ui_skeletons",
+      "src_components_ui_skeletons_calendarskeleton",
+      "src_components_ui_skeletons_chatskeleton",
+      "src_components_ui_skeletons_dashboardskeleton",
+      "src_components_ui_skeletons_financesskeleton",
+      "src_components_ui_skeletons_galleryskeleton",
+      "src_context_authcontext_profiletype",
+      "src_lib_backstack",
+      "src_lib_backstack_backfn",
+      "src_lib_backstack_consumeignorepop",
+      "src_lib_backstack_invoketopback",
+      "src_lib_backstack_stack",
+      "src_lib_native_consumenativenavigationurl",
+      "src_lib_native_setbackhandler",
+      "src_lib_recoverclickafterdrag",
+      "src_lib_recoverclickafterdrag_recovernextclickafterdrag",
+      "src_lib_supabase_buildperson",
+      "src_lib_tests_recoverclickafterdrag_test"
+    ],
+    "1": [
+      "dev_dist_workbox_1e60b829_cachefirst_handle",
+      "dev_dist_workbox_1e60b829_networkfirst",
+      "dev_dist_workbox_1e60b829_networkfirst_constructor",
+      "dev_dist_workbox_1e60b829_networkfirst_getnetworkpromise",
+      "dev_dist_workbox_1e60b829_networkfirst_gettimeoutpromise",
+      "dev_dist_workbox_1e60b829_networkfirst_handle",
+      "dev_dist_workbox_1e60b829_precachestrategy",
+      "dev_dist_workbox_1e60b829_precachestrategy_constructor",
+      "dev_dist_workbox_1e60b829_precachestrategy_handle",
+      "dev_dist_workbox_1e60b829_precachestrategy_handlefetch",
+      "dev_dist_workbox_1e60b829_precachestrategy_handleinstall",
+      "dev_dist_workbox_1e60b829_precachestrategy_usedefaultcacheabilitypluginifneeded",
+      "dev_dist_workbox_1e60b829_stalewhilerevalidate",
+      "dev_dist_workbox_1e60b829_stalewhilerevalidate_constructor",
+      "dev_dist_workbox_1e60b829_stalewhilerevalidate_handle",
+      "dev_dist_workbox_1e60b829_strategy",
+      "dev_dist_workbox_1e60b829_strategy_awaitcomplete",
+      "dev_dist_workbox_1e60b829_strategy_constructor",
+      "dev_dist_workbox_1e60b829_strategy_getresponse",
+      "dev_dist_workbox_1e60b829_strategy_handle",
+      "dev_dist_workbox_1e60b829_strategy_handleall",
+      "dev_dist_workbox_1e60b829_strategyhandler",
+      "dev_dist_workbox_1e60b829_strategyhandler_cachematch",
+      "dev_dist_workbox_1e60b829_strategyhandler_cacheput",
+      "dev_dist_workbox_1e60b829_strategyhandler_constructor",
+      "dev_dist_workbox_1e60b829_strategyhandler_destroy",
+      "dev_dist_workbox_1e60b829_strategyhandler_donewaiting",
+      "dev_dist_workbox_1e60b829_strategyhandler_ensureresponsesafetocache",
+      "dev_dist_workbox_1e60b829_strategyhandler_fetch",
+      "dev_dist_workbox_1e60b829_strategyhandler_fetchandcacheput",
+      "dev_dist_workbox_1e60b829_strategyhandler_getcachekey",
+      "dev_dist_workbox_1e60b829_strategyhandler_hascallback",
+      "dev_dist_workbox_1e60b829_strategyhandler_iteratecallbacks",
+      "dev_dist_workbox_1e60b829_strategyhandler_runcallbacks",
+      "dev_dist_workbox_1e60b829_strategyhandler_waituntil",
+      "dev_dist_workbox_1e60b829_torequest",
+      "dev_dist_workbox_1e60b829_workboxerror",
+      "dev_dist_workbox_1e60b829_workboxerror_constructor"
+    ],
+    "2": [
+      "src_lib_googleweb",
+      "src_lib_googleweb_codeclient",
+      "src_lib_googleweb_getgoogleclientid",
+      "src_lib_googleweb_google_client_id",
+      "src_lib_googleweb_googlecoderesponse",
+      "src_lib_googleweb_googlecredentialresponse",
+      "src_lib_googleweb_hasgoogleclientid",
+      "src_lib_googleweb_loadgoogleidentityservices",
+      "src_lib_googleweb_rendergooglesigninbutton",
+      "src_lib_googleweb_requestgooglecalendarcode",
+      "src_lib_googleweb_window",
+      "src_lib_native",
+      "src_lib_native_dispatchnavigation",
+      "src_lib_native_enablenativepushnotifications",
+      "src_lib_native_getnativepushtarget",
+      "src_lib_native_isnative",
+      "src_lib_native_savepushtoken",
+      "src_lib_native_setupnativeapp",
+      "src_lib_native_setuppushlisteners",
+      "src_lib_native_shownativenotificationtest",
+      "src_lib_native_syncnativepushtoken",
+      "src_lib_pushsubscriptions",
+      "src_lib_pushsubscriptions_ispushsubscription",
+      "src_lib_pushsubscriptions_normalizepushsubscriptions",
+      "src_lib_pushsubscriptions_pushsubscriptionrecord",
+      "src_lib_pushsubscriptions_savepushsubscription",
+      "src_lib_pushsubscriptions_subscriptionkey",
+      "src_lib_usepushnotifications_sameapplicationserverkey",
+      "src_lib_usepushnotifications_sendtestpushnotification",
+      "src_lib_usepushnotifications_urlbase64touint8array",
+      "src_lib_usepushnotifications_usepushnotifications",
+      "src_main",
+      "src_pages_auth",
+      "src_pages_auth_auth",
+      "src_pages_auth_flow",
+      "src_pages_auth_googlebtn",
+      "src_pages_auth_googlewebbtn",
+      "src_pages_profile_pushnotificationssection"
+    ],
+    "3": [
+      "src_components_ui_catmedallion",
+      "src_components_ui_catmedallion_cat_icon",
+      "src_components_ui_catmedallion_catmedallion",
+      "src_components_ui_cattag",
+      "src_components_ui_cattag_cat_icon",
+      "src_components_ui_cattag_cattag",
+      "src_lib_chapterutils",
+      "src_lib_chapterutils_cat_meta",
+      "src_lib_chapterutils_countdown",
+      "src_lib_chapterutils_eur",
+      "src_lib_chapterutils_fmtdate",
+      "src_lib_chapterutils_fmtdateshort",
+      "src_lib_chapterutils_meses",
+      "src_lib_chapterutils_toroman",
+      "src_lib_tests_chapterutils_test",
+      "src_pages_calendar",
+      "src_pages_calendar_calendar",
+      "src_pages_calendar_calendarplan",
+      "src_pages_calendar_cat_dot",
+      "src_pages_calendar_cat_icon",
+      "src_pages_calendar_chapterlist",
+      "src_pages_calendar_chapterrow",
+      "src_pages_calendar_circbtn",
+      "src_pages_calendar_dias",
+      "src_pages_calendar_meses_l",
+      "src_pages_calendar_now",
+      "src_pages_calendar_storybadge",
+      "src_pages_dashboard",
+      "src_pages_dashboard_dashboard",
+      "src_pages_dashboard_daystogether",
+      "src_pages_dashboard_emptydashboard",
+      "src_pages_dashboard_nexthero",
+      "src_pages_dashboard_timelinerow"
+    ],
+    "4": [
+      "ref_dom",
+      "ref_dom_iterable",
+      "ref_src",
+      "ref_src_spec",
+      "ref_src_test",
+      "ref_src_tests",
+      "ref_vite_client",
+      "tsconfig_app",
+      "tsconfig_app_compileroptions",
+      "tsconfig_app_compileroptions_allowimportingtsextensions",
+      "tsconfig_app_compileroptions_erasablesyntaxonly",
+      "tsconfig_app_compileroptions_jsx",
+      "tsconfig_app_compileroptions_lib",
+      "tsconfig_app_compileroptions_module",
+      "tsconfig_app_compileroptions_moduledetection",
+      "tsconfig_app_compileroptions_moduleresolution",
+      "tsconfig_app_compileroptions_noemit",
+      "tsconfig_app_compileroptions_nofallthroughcasesinswitch",
+      "tsconfig_app_compileroptions_noimplicitoverride",
+      "tsconfig_app_compileroptions_nouncheckedindexedaccess",
+      "tsconfig_app_compileroptions_nounusedlocals",
+      "tsconfig_app_compileroptions_nounusedparameters",
+      "tsconfig_app_compileroptions_skiplibcheck",
+      "tsconfig_app_compileroptions_strict",
+      "tsconfig_app_compileroptions_target",
+      "tsconfig_app_compileroptions_tsbuildinfofile",
+      "tsconfig_app_compileroptions_types",
+      "tsconfig_app_compileroptions_verbatimmodulesyntax",
+      "tsconfig_app_exclude",
+      "tsconfig_app_include",
+      "tsconfig_app_json_ref_es2023"
+    ],
+    "5": [
+      "android_app_src_androidtest_java_com_getcapacitor_myapp_exampleinstrumentedtest",
+      "android_app_src_androidtest_java_com_getcapacitor_myapp_exampleinstrumentedtest_exampleinstrumentedtest",
+      "android_app_src_androidtest_java_com_getcapacitor_myapp_exampleinstrumentedtest_exampleinstrumentedtest_useappcontext",
+      "android_app_src_androidtest_java_com_getcapacitor_myapp_exampleinstrumentedtest_java_test",
+      "android_app_src_main_java_com_ourtime_app_mainactivity",
+      "android_app_src_main_java_com_ourtime_app_mainactivity_java_override",
+      "android_app_src_main_java_com_ourtime_app_mainactivity_mainactivity",
+      "android_app_src_main_java_com_ourtime_app_mainactivity_mainactivity_clearstalewebviewdata",
+      "android_app_src_main_java_com_ourtime_app_mainactivity_mainactivity_currentversioncode",
+      "android_app_src_main_java_com_ourtime_app_mainactivity_mainactivity_deleterecursively",
+      "android_app_src_main_java_com_ourtime_app_mainactivity_mainactivity_ihavemodifiedthemainactivityfortheusewithsocialloginplugin",
+      "android_app_src_main_java_com_ourtime_app_mainactivity_mainactivity_onactivityresult",
+      "android_app_src_main_java_com_ourtime_app_mainactivity_mainactivity_oncreate",
+      "android_app_src_main_java_com_ourtime_app_ourtimewidget",
+      "android_app_src_main_java_com_ourtime_app_ourtimewidget_java_override",
+      "android_app_src_main_java_com_ourtime_app_ourtimewidget_ourtimewidget",
+      "android_app_src_main_java_com_ourtime_app_ourtimewidget_ourtimewidget_onupdate",
+      "android_app_src_main_java_com_ourtime_app_ourtimewidget_ourtimewidget_open",
+      "appwidgetmanager",
+      "appwidgetprovider",
+      "bridgeactivity",
+      "bundle",
+      "context",
+      "intent",
+      "modifiedmainactivityforsocialloginplugin",
+      "pendingintent",
+      "runwith"
+    ],
+    "6": [
+      "src_app",
+      "src_app_app",
+      "src_app_appinner",
+      "src_app_appshell",
+      "src_app_auth",
+      "src_app_duplicateaccountscreen",
+      "src_app_onboarding",
+      "src_app_spinner",
+      "src_components_ui_confirmdialog",
+      "src_components_ui_confirmdialog_confirmfn",
+      "src_components_ui_confirmdialog_confirmopts",
+      "src_components_ui_confirmdialog_confirmprovider",
+      "src_components_ui_confirmdialog_ctx",
+      "src_components_ui_errorboundary",
+      "src_components_ui_errorboundary_errorboundary",
+      "src_components_ui_errorboundary_errorboundary_componentdidcatch",
+      "src_components_ui_errorboundary_errorboundary_constructor",
+      "src_components_ui_errorboundary_errorboundary_getderivedstatefromerror",
+      "src_components_ui_errorboundary_errorboundary_render",
+      "src_components_ui_errorboundary_props",
+      "src_components_ui_errorboundary_state",
+      "src_components_ui_tests_errorboundary_test",
+      "src_components_ui_tests_errorboundary_test_bomb",
+      "src_context_authcontext_authprovider",
+      "src_context_toastcontext_toastprovider"
+    ],
+    "7": [
+      "src_components_sheets_editstorysheet",
+      "src_components_sheets_editstorysheet_cat_options",
+      "src_components_sheets_editstorysheet_editstorysheet",
+      "src_components_sheets_editstorysheet_props",
+      "src_components_sheets_moneysheet",
+      "src_components_sheets_moneysheet_cats_in",
+      "src_components_sheets_moneysheet_cats_out",
+      "src_components_sheets_moneysheet_moneysheet",
+      "src_components_sheets_moneysheet_props",
+      "src_components_sheets_newmemorysheet",
+      "src_components_sheets_newmemorysheet_newmemorysheet",
+      "src_components_sheets_newmemorysheet_props",
+      "src_components_sheets_newplansheet_newplansheet",
+      "src_context_authcontext",
+      "src_context_authcontext_authcontext",
+      "src_context_authcontext_authcontexttype",
+      "src_context_authcontext_useauth",
+      "src_context_toastcontext_usetoast",
+      "src_lib_imageutils",
+      "src_lib_imageutils_compresstowebp",
+      "src_lib_supabase_plantype",
+      "src_lib_supabase_storytype",
+      "src_lib_supabase_supabase",
+      "src_lib_usepushnotifications_sendpushtostorymembers",
+      "src_pages_profile_profilescreen"
+    ],
+    "8": [
+      "dev_dist_workbox_1e60b829",
+      "dev_dist_workbox_1e60b829_addroute",
+      "dev_dist_workbox_1e60b829_cachefirst",
+      "dev_dist_workbox_1e60b829_cachewillupdate",
+      "dev_dist_workbox_1e60b829_canconstructresponsefrombodystream",
+      "dev_dist_workbox_1e60b829_cleanupoutdatedcaches",
+      "dev_dist_workbox_1e60b829_clientsclaim",
+      "dev_dist_workbox_1e60b829_copyresponse",
+      "dev_dist_workbox_1e60b829_createhandlerboundtourl",
+      "dev_dist_workbox_1e60b829_deferred",
+      "dev_dist_workbox_1e60b829_deferred_constructor",
+      "dev_dist_workbox_1e60b829_executequotaerrorcallbacks",
+      "dev_dist_workbox_1e60b829_extends",
+      "dev_dist_workbox_1e60b829_precache",
+      "dev_dist_workbox_1e60b829_precacheandroute",
+      "dev_dist_workbox_1e60b829_rationale_1145",
+      "dev_dist_workbox_1e60b829_rationale_3724",
+      "dev_dist_workbox_1e60b829_regexproute",
+      "dev_dist_workbox_1e60b829_regexproute_constructor",
+      "dev_dist_workbox_1e60b829_registerroute",
+      "dev_dist_workbox_1e60b829_replacetraps",
+      "dev_dist_workbox_1e60b829_set",
+      "dev_dist_workbox_1e60b829_timeout"
+    ],
+    "9": [
+      "src_components_ui_avatar",
+      "src_components_ui_avatar_avatar",
+      "src_components_ui_avatar_coupleavatars",
+      "src_components_ui_avatar_person",
+      "src_lib_capacitorstorageadapter",
+      "src_lib_capacitorstorageadapter_capacitorstorageadapter",
+      "src_lib_supabase",
+      "src_lib_supabase_albumtype",
+      "src_lib_supabase_imageurl",
+      "src_lib_supabase_isnative",
+      "src_lib_supabase_memorytype",
+      "src_lib_supabase_messagetype",
+      "src_lib_supabase_notificationtype",
+      "src_lib_supabase_persondisplay",
+      "src_lib_supabase_storymembertype",
+      "src_lib_supabase_transactiontype",
+      "src_pages_chat",
+      "src_pages_chat_chat",
+      "src_pages_chat_fmtdatelabel",
+      "src_pages_chat_fmttime",
+      "src_pages_chat_props",
+      "src_pages_chat_shouldshowdate"
+    ],
+    "10": [
+      "ref_node",
+      "ref_vite_config_ts",
+      "tsconfig_node",
+      "tsconfig_node_compileroptions",
+      "tsconfig_node_compileroptions_allowimportingtsextensions",
+      "tsconfig_node_compileroptions_erasablesyntaxonly",
+      "tsconfig_node_compileroptions_lib",
+      "tsconfig_node_compileroptions_module",
+      "tsconfig_node_compileroptions_moduledetection",
+      "tsconfig_node_compileroptions_moduleresolution",
+      "tsconfig_node_compileroptions_noemit",
+      "tsconfig_node_compileroptions_nofallthroughcasesinswitch",
+      "tsconfig_node_compileroptions_nounusedlocals",
+      "tsconfig_node_compileroptions_nounusedparameters",
+      "tsconfig_node_compileroptions_skiplibcheck",
+      "tsconfig_node_compileroptions_target",
+      "tsconfig_node_compileroptions_tsbuildinfofile",
+      "tsconfig_node_compileroptions_types",
+      "tsconfig_node_compileroptions_verbatimmodulesyntax",
+      "tsconfig_node_include",
+      "tsconfig_node_json_ref_es2023"
+    ],
+    "11": [
+      "src_components_sheets_globalactionsheet",
+      "src_components_sheets_globalactionsheet_globalactionsheet",
+      "src_components_sheets_globalactionsheet_items",
+      "src_components_sheets_newplansheet",
+      "src_components_sheets_newplansheet_cat_icon",
+      "src_components_sheets_newplansheet_props",
+      "src_components_sheets_newstorysheet",
+      "src_components_sheets_newstorysheet_categories",
+      "src_components_sheets_newstorysheet_family_roles",
+      "src_components_sheets_newstorysheet_newstorysheet",
+      "src_components_sheets_newstorysheet_props",
+      "src_components_sheets_newstorysheet_randomcode",
+      "src_components_ui_bottomsheet",
+      "src_components_ui_bottomsheet_bottomsheet",
+      "src_components_ui_bottomsheet_props",
+      "src_components_ui_datepicker",
+      "src_components_ui_datepicker_datepicker",
+      "src_components_ui_datepicker_dias",
+      "src_components_ui_datepicker_meses",
+      "src_components_ui_datepicker_mode",
+      "src_components_ui_datepicker_parsesafe"
+    ],
+    "12": [
+      "specify_scripts_bash_common",
+      "specify_scripts_bash_common_check_dir",
+      "specify_scripts_bash_common_check_feature_branch",
+      "specify_scripts_bash_common_check_file",
+      "specify_scripts_bash_common_feature_json_matches_feature_dir",
+      "specify_scripts_bash_common_find_feature_dir_by_prefix",
+      "specify_scripts_bash_common_find_specify_root",
+      "specify_scripts_bash_common_format_speckit_command",
+      "specify_scripts_bash_common_get_current_branch",
+      "specify_scripts_bash_common_get_feature_paths",
+      "specify_scripts_bash_common_get_invoke_separator",
+      "specify_scripts_bash_common_get_repo_root",
+      "specify_scripts_bash_common_has_git",
+      "specify_scripts_bash_common_has_jq",
+      "specify_scripts_bash_common_json_escape",
+      "specify_scripts_bash_common_read_feature_json_feature_directory",
+      "specify_scripts_bash_common_resolve_template",
+      "specify_scripts_bash_common_resolve_template_content",
+      "specify_scripts_bash_common_sh__entry",
+      "specify_scripts_bash_common_spec_kit_effective_branch_name"
+    ],
+    "13": [
+      "src_components_ui_confirmdialog_useconfirm",
+      "src_components_ui_emptystate",
+      "src_components_ui_emptystate_emptystate",
+      "src_components_ui_icon",
+      "src_components_ui_icon_googlecalicon",
+      "src_components_ui_icon_icon",
+      "src_components_ui_icon_iconcomponent",
+      "src_components_ui_icon_icons",
+      "src_context_toastcontext",
+      "src_context_toastcontext_ctx",
+      "src_context_toastcontext_toast",
+      "src_context_toastcontext_toastctx",
+      "src_pages_gallery",
+      "src_pages_gallery_albumcard",
+      "src_pages_gallery_circbtn",
+      "src_pages_gallery_gallery",
+      "src_pages_gallery_memory",
+      "src_pages_gallery_memorycard",
+      "src_pages_gallery_usecolcount"
+    ],
+    "14": [
+      "src_components_ui_confetti",
+      "src_components_ui_confetti_colors",
+      "src_components_ui_confetti_confetti",
+      "src_pages_onboarding",
+      "src_pages_onboarding_category",
+      "src_pages_onboarding_categorystep",
+      "src_pages_onboarding_cats",
+      "src_pages_onboarding_createstep",
+      "src_pages_onboarding_gencode",
+      "src_pages_onboarding_joinstep",
+      "src_pages_onboarding_linkstep",
+      "src_pages_onboarding_namestep",
+      "src_pages_onboarding_onboarding",
+      "src_pages_onboarding_pickcard",
+      "src_pages_onboarding_readystep",
+      "src_pages_onboarding_stepshell",
+      "src_pages_onboarding_waitstep",
+      "src_pages_onboarding_welcome"
+    ],
+    "15": [
+      "dev_dist_workbox_1e60b829_createcachekey",
+      "dev_dist_workbox_1e60b829_nestedgroup",
+      "dev_dist_workbox_1e60b829_precachecontroller",
+      "dev_dist_workbox_1e60b829_precachecontroller_addtocachelist",
+      "dev_dist_workbox_1e60b829_precachecontroller_constructor",
+      "dev_dist_workbox_1e60b829_precachecontroller_createhandlerboundtourl",
+      "dev_dist_workbox_1e60b829_precachecontroller_getcachedurls",
+      "dev_dist_workbox_1e60b829_precachecontroller_getcachekeyforurl",
+      "dev_dist_workbox_1e60b829_precachecontroller_getintegrityforcachekey",
+      "dev_dist_workbox_1e60b829_precachecontroller_geturlstocachekeys",
+      "dev_dist_workbox_1e60b829_precachecontroller_install",
+      "dev_dist_workbox_1e60b829_precachecontroller_matchprecache",
+      "dev_dist_workbox_1e60b829_precachecontroller_precache",
+      "dev_dist_workbox_1e60b829_precachecontroller_strategy",
+      "dev_dist_workbox_1e60b829_precacheroute",
+      "dev_dist_workbox_1e60b829_precacheroute_constructor",
+      "dev_dist_workbox_1e60b829_printinstalldetails"
+    ],
+    "16": [
+      "src_components_ui_presencedot",
+      "src_components_ui_presencedot_presencedot",
+      "src_context_currencycontext",
+      "src_context_currencycontext_ctx",
+      "src_context_currencycontext_currencies",
+      "src_context_currencycontext_currencyctx",
+      "src_context_currencycontext_currencykey",
+      "src_context_currencycontext_currencyprovider",
+      "src_context_currencycontext_storykey",
+      "src_lib_usepushnotifications_connectgooglecalendarwithcode",
+      "src_lib_usepushnotifications_testgooglecalendarconnection",
+      "src_pages_profile",
+      "src_pages_profile_cat_color",
+      "src_pages_profile_cat_icon",
+      "src_pages_profile_cat_label",
+      "src_pages_profile_googlecalendarsection",
+      "src_pages_profile_storymember"
+    ],
+    "17": [
+      "src_lib_backstack_pushback",
+      "src_lib_backstack_removeback",
+      "src_lib_backstack_scheduleignorepop",
+      "src_lib_usepushnotifications",
+      "src_lib_usepushnotifications_deleteplanfromgooglecalendar",
+      "src_lib_usepushnotifications_invokecalendarfunction",
+      "src_lib_usepushnotifications_supabase_anon_key",
+      "src_lib_usepushnotifications_supabase_url",
+      "src_lib_usepushnotifications_syncplantogooglecalendar",
+      "src_lib_usepushnotifications_vapid_public_key",
+      "src_pages_plandetail",
+      "src_pages_plandetail_categories",
+      "src_pages_plandetail_input_style",
+      "src_pages_plandetail_memory",
+      "src_pages_plandetail_plancategory",
+      "src_pages_plandetail_plandetail",
+      "src_pages_plandetail_roundbtn"
+    ],
+    "18": [
+      "src_pages_landing",
+      "src_pages_landing_couples",
+      "src_pages_landing_couplesscrollsection",
+      "src_pages_landing_ctasection",
+      "src_pages_landing_easeout",
+      "src_pages_landing_floatingword",
+      "src_pages_landing_footer",
+      "src_pages_landing_herosection",
+      "src_pages_landing_horizontalfeatures",
+      "src_pages_landing_landing",
+      "src_pages_landing_magneticbutton",
+      "src_pages_landing_navbar",
+      "src_pages_landing_particlefield",
+      "src_pages_landing_plans",
+      "src_pages_landing_playstoresection",
+      "src_pages_landing_pricingsection",
+      "src_pages_landing_socialproofsection"
+    ],
+    "19": [
+      "dev_dist_workbox_1e60b829_cacheexpiration",
+      "dev_dist_workbox_1e60b829_cacheexpiration_constructor",
+      "dev_dist_workbox_1e60b829_cacheexpiration_expireentries",
+      "dev_dist_workbox_1e60b829_cacheexpiration_isurlexpired",
+      "dev_dist_workbox_1e60b829_cacheexpiration_updatetimestamp",
+      "dev_dist_workbox_1e60b829_dontwaitfor",
+      "dev_dist_workbox_1e60b829_expirationplugin",
+      "dev_dist_workbox_1e60b829_expirationplugin_cachedidupdate",
+      "dev_dist_workbox_1e60b829_expirationplugin_cachedresponsewillbeused",
+      "dev_dist_workbox_1e60b829_expirationplugin_constructor",
+      "dev_dist_workbox_1e60b829_expirationplugin_deletecacheandmetadata",
+      "dev_dist_workbox_1e60b829_expirationplugin_getcacheexpiration",
+      "dev_dist_workbox_1e60b829_expirationplugin_getdateheadertimestamp",
+      "dev_dist_workbox_1e60b829_expirationplugin_isresponsedatefresh",
+      "dev_dist_workbox_1e60b829_registerquotaerrorcallback",
+      "dev_dist_workbox_1e60b829_waituntil"
+    ],
+    "20": [
+      "e2e_01_auth_spec",
+      "e2e_02_navigation_spec",
+      "e2e_03_dashboard_spec",
+      "e2e_04_calendar_spec",
+      "e2e_05_gallery_spec",
+      "e2e_06_finances_spec",
+      "e2e_07_profile_spec",
+      "e2e_08_visual_spec",
+      "e2e_09_accessibility_spec",
+      "e2e_10_plan_detail_spec",
+      "e2e_11_sheet_interactions_spec",
+      "e2e_global_setup",
+      "e2e_global_setup_globalsetup",
+      "e2e_helpers_auth",
+      "e2e_helpers_auth_loginuser"
+    ],
+    "21": [
+      "package",
+      "package_name",
+      "package_private",
+      "package_scripts",
+      "package_scripts_build",
+      "package_scripts_cap_build",
+      "package_scripts_cap_open",
+      "package_scripts_cap_sync",
+      "package_scripts_dev",
+      "package_scripts_lint",
+      "package_scripts_preview",
+      "package_scripts_test",
+      "package_scripts_test_watch",
+      "package_type",
+      "package_version"
+    ],
+    "22": [
+      "public_design_tweaks_panel",
+      "public_design_tweaks_panel_tweakbutton",
+      "public_design_tweaks_panel_tweakcolor",
+      "public_design_tweaks_panel_tweaknumber",
+      "public_design_tweaks_panel_tweakradio",
+      "public_design_tweaks_panel_tweakrow",
+      "public_design_tweaks_panel_tweaksection",
+      "public_design_tweaks_panel_tweakselect",
+      "public_design_tweaks_panel_tweakslider",
+      "public_design_tweaks_panel_tweakspanel",
+      "public_design_tweaks_panel_tweaktext",
+      "public_design_tweaks_panel_tweaktoggle",
+      "public_design_tweaks_panel_twkcheck",
+      "public_design_tweaks_panel_twkislight",
+      "public_design_tweaks_panel_usetweaks"
+    ],
+    "23": [
+      "dev_dist_workbox_1e60b829_cacheableresponse",
+      "dev_dist_workbox_1e60b829_cacheableresponse_constructor",
+      "dev_dist_workbox_1e60b829_cacheableresponse_isresponsecacheable",
+      "dev_dist_workbox_1e60b829_cachedonepromisefortransaction",
+      "dev_dist_workbox_1e60b829_get",
+      "dev_dist_workbox_1e60b829_getcursoradvancemethods",
+      "dev_dist_workbox_1e60b829_getidbproxyabletypes",
+      "dev_dist_workbox_1e60b829_getmethod",
+      "dev_dist_workbox_1e60b829_has",
+      "dev_dist_workbox_1e60b829_opendb",
+      "dev_dist_workbox_1e60b829_promisifyrequest",
+      "dev_dist_workbox_1e60b829_transformcachablevalue",
+      "dev_dist_workbox_1e60b829_wrap",
+      "dev_dist_workbox_1e60b829_wrapfunction"
+    ],
+    "24": [
+      "public_design_data",
+      "public_design_data_cats",
+      "public_design_data_couple",
+      "public_design_data_dias",
+      "public_design_data_eur",
+      "public_design_data_fmtdate",
+      "public_design_data_fmtdateshort",
+      "public_design_data_memories",
+      "public_design_data_meses",
+      "public_design_data_meses_l",
+      "public_design_data_plans",
+      "public_design_data_tx",
+      "public_design_data_tx_cats_in",
+      "public_design_data_tx_cats_out"
+    ],
+    "25": [
+      "public_design_ui",
+      "public_design_ui_avatar",
+      "public_design_ui_catmedallion",
+      "public_design_ui_cattag",
+      "public_design_ui_confetti",
+      "public_design_ui_coupleavatars",
+      "public_design_ui_emptystate",
+      "public_design_ui_presencedot",
+      "public_design_ui_segmented",
+      "public_design_ui_toast",
+      "public_design_ui_toastctx",
+      "public_design_ui_toastprovider",
+      "public_design_ui_usetoast"
+    ],
+    "26": [
+      "src_components_ui_editaction",
+      "src_components_ui_editaction_editaction",
+      "src_components_ui_editaction_props",
+      "src_components_ui_segmented",
+      "src_components_ui_segmented_segmented",
+      "src_components_ui_segmented_segopt",
+      "src_context_currencycontext_usecurrency",
+      "src_pages_finances",
+      "src_pages_finances_finances",
+      "src_pages_finances_getperiodbounds",
+      "src_pages_finances_inperiod",
+      "src_pages_finances_planrow",
+      "src_pages_finances_type_icons"
+    ],
+    "27": [
+      "dev_dist_workbox_1e60b829_router",
+      "dev_dist_workbox_1e60b829_router_addcachelistener",
+      "dev_dist_workbox_1e60b829_router_addfetchlistener",
+      "dev_dist_workbox_1e60b829_router_constructor",
+      "dev_dist_workbox_1e60b829_router_findmatchingroute",
+      "dev_dist_workbox_1e60b829_router_handlerequest",
+      "dev_dist_workbox_1e60b829_router_registerroute",
+      "dev_dist_workbox_1e60b829_router_routes",
+      "dev_dist_workbox_1e60b829_router_setcatchhandler",
+      "dev_dist_workbox_1e60b829_router_setdefaulthandler",
+      "dev_dist_workbox_1e60b829_router_unregisterroute"
+    ],
+    "28": [
+      "specify_extensions_git_scripts_bash_create_new_feature",
+      "specify_extensions_git_scripts_bash_create_new_feature_byte_length",
+      "specify_extensions_git_scripts_bash_create_new_feature_check_existing_branches",
+      "specify_extensions_git_scripts_bash_create_new_feature_clean_branch_name",
+      "specify_extensions_git_scripts_bash_create_new_feature_extract_highest_number",
+      "specify_extensions_git_scripts_bash_create_new_feature_find_project_root",
+      "specify_extensions_git_scripts_bash_create_new_feature_generate_branch_name",
+      "specify_extensions_git_scripts_bash_create_new_feature_get_highest_from_branches",
+      "specify_extensions_git_scripts_bash_create_new_feature_get_highest_from_remote_refs",
+      "specify_extensions_git_scripts_bash_create_new_feature_get_highest_from_specs",
+      "specify_extensions_git_scripts_bash_create_new_feature_sh__entry"
+    ],
+    "29": [
+      "dev_dist_workbox_1e60b829_cachetimestampsmodel",
+      "dev_dist_workbox_1e60b829_cachetimestampsmodel_constructor",
+      "dev_dist_workbox_1e60b829_cachetimestampsmodel_expireentries",
+      "dev_dist_workbox_1e60b829_cachetimestampsmodel_getdb",
+      "dev_dist_workbox_1e60b829_cachetimestampsmodel_getid",
+      "dev_dist_workbox_1e60b829_cachetimestampsmodel_gettimestamp",
+      "dev_dist_workbox_1e60b829_cachetimestampsmodel_settimestamp",
+      "dev_dist_workbox_1e60b829_cachetimestampsmodel_upgradedb",
+      "dev_dist_workbox_1e60b829_cachetimestampsmodel_upgradedbanddeleteolddbs",
+      "dev_dist_workbox_1e60b829_deletedb"
+    ],
+    "30": [
+      "public_design_app",
+      "public_design_app_appinner",
+      "public_design_app_directions",
+      "public_design_app_navbar",
+      "public_design_app_newmemorysheet",
+      "public_design_app_phone",
+      "public_design_app_root",
+      "public_design_app_stage",
+      "public_design_app_tweak_defaults",
+      "public_design_app_tweaksui"
+    ],
+    "31": [
+      "public_design_onboarding",
+      "public_design_onboarding_joinstep",
+      "public_design_onboarding_linkstep",
+      "public_design_onboarding_namestep",
+      "public_design_onboarding_onboarding",
+      "public_design_onboarding_pickcard",
+      "public_design_onboarding_readystep",
+      "public_design_onboarding_stepshell",
+      "public_design_onboarding_waitstep",
+      "public_design_onboarding_welcome"
+    ],
+    "32": [
+      "public_design_screens",
+      "public_design_screens_calendarscreen",
+      "public_design_screens_circbtn",
+      "public_design_screens_financescreen",
+      "public_design_screens_galleryscreen",
+      "public_design_screens_lightbox",
+      "public_design_screens_memorycard",
+      "public_design_screens_moneysheet",
+      "public_design_screens_txrow"
+    ],
+    "33": [
+      "specify_extensions_git_scripts_powershell_create_new_feature",
+      "specify_extensions_git_scripts_powershell_create_new_feature_convertto_cleanbranchname",
+      "specify_extensions_git_scripts_powershell_create_new_feature_find_projectroot",
+      "specify_extensions_git_scripts_powershell_create_new_feature_get_branchname",
+      "specify_extensions_git_scripts_powershell_create_new_feature_get_highestnumberfrombranches",
+      "specify_extensions_git_scripts_powershell_create_new_feature_get_highestnumberfromnames",
+      "specify_extensions_git_scripts_powershell_create_new_feature_get_highestnumberfromremoterefs",
+      "specify_extensions_git_scripts_powershell_create_new_feature_get_highestnumberfromspecs",
+      "specify_extensions_git_scripts_powershell_create_new_feature_get_nextbranchnumber"
+    ],
+    "34": [
+      "specify_scripts_bash_create_new_feature",
+      "specify_scripts_bash_create_new_feature_check_existing_branches",
+      "specify_scripts_bash_create_new_feature_clean_branch_name",
+      "specify_scripts_bash_create_new_feature_extract_highest_number",
+      "specify_scripts_bash_create_new_feature_generate_branch_name",
+      "specify_scripts_bash_create_new_feature_get_highest_from_branches",
+      "specify_scripts_bash_create_new_feature_get_highest_from_remote_refs",
+      "specify_scripts_bash_create_new_feature_get_highest_from_specs",
+      "specify_scripts_bash_create_new_feature_sh__entry"
+    ],
+    "35": [
+      "public_design_ios_frame",
+      "public_design_ios_frame_iosdevice",
+      "public_design_ios_frame_iosglasspill",
+      "public_design_ios_frame_ioskeyboard",
+      "public_design_ios_frame_ioslist",
+      "public_design_ios_frame_ioslistrow",
+      "public_design_ios_frame_iosnavbar",
+      "public_design_ios_frame_iosstatusbar"
+    ],
+    "36": [
+      "autoprefixer",
+      "eslint",
+      "package_devdependencies",
+      "package_devdependencies_autoprefixer",
+      "package_devdependencies_eslint",
+      "package_devdependencies_types_react",
+      "types_react"
+    ],
+    "37": [
+      "dev_dist_workbox_1e60b829_cacheexpiration_delete",
+      "dev_dist_workbox_1e60b829_cachematchignoreparams",
+      "dev_dist_workbox_1e60b829_generateurlvariations",
+      "dev_dist_workbox_1e60b829_precachecontroller_activate",
+      "dev_dist_workbox_1e60b829_printcleanupdetails",
+      "dev_dist_workbox_1e60b829_removeignoredsearchparams",
+      "dev_dist_workbox_1e60b829_stripparams"
+    ],
+    "38": [
+      "public_design_dashboard",
+      "public_design_dashboard_countdown",
+      "public_design_dashboard_dashboard",
+      "public_design_dashboard_liveeditbadge",
+      "public_design_dashboard_nexthero",
+      "public_design_dashboard_romano",
+      "public_design_dashboard_timelinerow"
+    ],
+    "39": [
+      "public_design_overlays",
+      "public_design_overlays_actionsheet",
+      "public_design_overlays_newplansheet",
+      "public_design_overlays_notificationspanel",
+      "public_design_overlays_plandetail",
+      "public_design_overlays_roundbtn",
+      "public_design_overlays_sheet"
+    ],
+    "40": [
+      "scripts_generate_icons",
+      "scripts_generate_icons_dirname",
+      "scripts_generate_icons_icons",
+      "scripts_generate_icons_iconsize",
+      "scripts_generate_icons_maskablepath",
+      "scripts_generate_icons_publicdir",
+      "scripts_generate_icons_srcicon"
+    ],
+    "41": [
+      "src_lib_dateutils",
+      "src_lib_dateutils_calculatecountdown",
+      "src_lib_dateutils_calculatetimetogether",
+      "src_lib_dateutils_generatecalendarmatrix",
+      "src_lib_dateutils_month_names",
+      "src_lib_dateutils_week_days",
+      "src_lib_tests_dateutils_test"
+    ],
+    "42": [
+      "supabase_functions_connect_google_calendar_index",
+      "supabase_functions_connect_google_calendar_index_assertvalidredirecturi",
+      "supabase_functions_connect_google_calendar_index_cors",
+      "supabase_functions_connect_google_calendar_index_google_client_id",
+      "supabase_functions_connect_google_calendar_index_google_client_secret",
+      "supabase_functions_connect_google_calendar_index_googletokenresponse",
+      "supabase_functions_connect_google_calendar_index_requiregoogleconfig"
+    ],
+    "43": [
+      "supabase_functions_send_push_index",
+      "supabase_functions_send_push_index_corsheaders",
+      "supabase_functions_send_push_index_fcm_service_account_b64",
+      "supabase_functions_send_push_index_fcm_service_account_json",
+      "supabase_functions_send_push_index_getfcmaccesstoken",
+      "supabase_functions_send_push_index_getfcmserviceaccount",
+      "supabase_functions_send_push_index_sendfcm"
+    ],
+    "44": [
+      "capacitor_android",
+      "capacitor_core",
+      "package_dependencies",
+      "package_dependencies_capacitor_android",
+      "package_dependencies_capacitor_core",
+      "package_dependencies_capacitor_share"
+    ],
+    "45": [
+      "specify_extensions_git_scripts_bash_git_common",
+      "specify_extensions_git_scripts_bash_git_common_check_feature_branch",
+      "specify_extensions_git_scripts_bash_git_common_has_git",
+      "specify_extensions_git_scripts_bash_git_common_sh__entry",
+      "specify_extensions_git_scripts_bash_git_common_spec_kit_effective_branch_name"
+    ],
+    "46": [
+      "supabase_functions_sync_google_calendar_index",
+      "supabase_functions_sync_google_calendar_index_cors",
+      "supabase_functions_sync_google_calendar_index_google_client_id",
+      "supabase_functions_sync_google_calendar_index_google_client_secret",
+      "supabase_functions_sync_google_calendar_index_refreshgoogletoken"
+    ],
+    "47": [
+      "android_app_src_test_java_com_getcapacitor_myapp_exampleunittest",
+      "android_app_src_test_java_com_getcapacitor_myapp_exampleunittest_exampleunittest",
+      "android_app_src_test_java_com_getcapacitor_myapp_exampleunittest_exampleunittest_addition_iscorrect",
+      "android_app_src_test_java_com_getcapacitor_myapp_exampleunittest_java_test"
+    ],
+    "48": [
+      "android_gradlew",
+      "android_gradlew__entry",
+      "android_gradlew_die",
+      "android_gradlew_warn"
+    ],
+    "49": [
+      "dev_dist_workbox_1e60b829_precacheinstallreportplugin",
+      "dev_dist_workbox_1e60b829_precacheinstallreportplugin_cachedresponsewillbeused",
+      "dev_dist_workbox_1e60b829_precacheinstallreportplugin_constructor",
+      "dev_dist_workbox_1e60b829_precacheinstallreportplugin_handlerwillstart"
+    ],
+    "50": [
+      "specify_extensions_git_scripts_powershell_git_common",
+      "specify_extensions_git_scripts_powershell_git_common_get_speckiteffectivebranchname",
+      "specify_extensions_git_scripts_powershell_git_common_test_featurebranch",
+      "specify_extensions_git_scripts_powershell_git_common_test_hasgit"
+    ],
+    "51": [
+      "src_lib_tests_themeutils_test",
+      "src_lib_themeutils",
+      "src_lib_themeutils_getplanthemeimage",
+      "src_lib_themeutils_theme_images"
+    ],
+    "52": [
+      "dev_dist_workbox_1e60b829_cacheableresponseplugin",
+      "dev_dist_workbox_1e60b829_cacheableresponseplugin_cachewillupdate",
+      "dev_dist_workbox_1e60b829_cacheableresponseplugin_constructor"
+    ],
+    "53": [
+      "dev_dist_workbox_1e60b829_navigationroute",
+      "dev_dist_workbox_1e60b829_navigationroute_constructor",
+      "dev_dist_workbox_1e60b829_navigationroute_match"
+    ],
+    "54": [
+      "dev_dist_workbox_1e60b829_precachecachekeyplugin",
+      "dev_dist_workbox_1e60b829_precachecachekeyplugin_cachekeywillbeused",
+      "dev_dist_workbox_1e60b829_precachecachekeyplugin_constructor"
+    ],
+    "55": [
+      "dev_dist_workbox_1e60b829_route",
+      "dev_dist_workbox_1e60b829_route_constructor",
+      "dev_dist_workbox_1e60b829_route_setcatchhandler"
+    ],
+    "56": [
+      "public_design_icons",
+      "public_design_icons_icon",
+      "public_design_icons_icon_paths"
+    ],
+    "57": [
+      "specify_extensions_agent_context_scripts_powershell_update_agent_context",
+      "specify_extensions_agent_context_scripts_powershell_update_agent_context_get_configvalue",
+      "specify_extensions_agent_context_scripts_powershell_update_agent_context_test_configobject"
+    ],
+    "58": [
+      "specify_extensions_git_scripts_bash_auto_commit",
+      "specify_extensions_git_scripts_bash_auto_commit_find_project_root",
+      "specify_extensions_git_scripts_bash_auto_commit_sh__entry"
+    ],
+    "59": [
+      "specify_extensions_git_scripts_bash_initialize_repo",
+      "specify_extensions_git_scripts_bash_initialize_repo_find_project_root",
+      "specify_extensions_git_scripts_bash_initialize_repo_sh__entry"
+    ],
+    "60": [
+      "tsconfig",
+      "tsconfig_files",
+      "tsconfig_references"
+    ],
+    "61": [
+      "capacitor_app",
+      "package_dependencies_capacitor_app"
+    ],
+    "62": [
+      "capacitor_browser",
+      "package_dependencies_capacitor_browser"
+    ],
+    "63": [
+      "capacitor_camera",
+      "package_dependencies_capacitor_camera"
+    ],
+    "64": [
+      "capacitor_cli",
+      "package_dependencies_capacitor_cli"
+    ],
+    "65": [
+      "capacitor_clipboard",
+      "package_dependencies_capacitor_clipboard"
+    ],
+    "66": [
+      "capacitor_config",
+      "capacitor_config_config"
+    ],
+    "67": [
+      "capacitor_device",
+      "package_dependencies_capacitor_device"
+    ],
+    "68": [
+      "capacitor_dialog",
+      "package_dependencies_capacitor_dialog"
+    ],
+    "69": [
+      "capacitor_filesystem",
+      "package_dependencies_capacitor_filesystem"
+    ],
+    "70": [
+      "capacitor_geolocation",
+      "package_dependencies_capacitor_geolocation"
+    ],
+    "71": [
+      "capacitor_haptics",
+      "package_dependencies_capacitor_haptics"
+    ],
+    "72": [
+      "capacitor_local_notifications",
+      "package_dependencies_capacitor_local_notifications"
+    ],
+    "73": [
+      "capacitor_network",
+      "package_dependencies_capacitor_network"
+    ],
+    "74": [
+      "capacitor_preferences",
+      "package_dependencies_capacitor_preferences"
+    ],
+    "75": [
+      "capacitor_push_notifications",
+      "package_dependencies_capacitor_push_notifications"
+    ],
+    "76": [
+      "capacitor_screen_orientation",
+      "package_dependencies_capacitor_screen_orientation"
+    ],
+    "77": [
+      "capacitor_splash_screen",
+      "package_dependencies_capacitor_splash_screen"
+    ],
+    "78": [
+      "capacitor_status_bar",
+      "package_dependencies_capacitor_status_bar"
+    ],
+    "79": [
+      "capacitor_toast",
+      "package_dependencies_capacitor_toast"
+    ],
+    "80": [
+      "capgo_capacitor_social_login",
+      "package_dependencies_capgo_capacitor_social_login"
+    ],
+    "81": [
+      "eslint_js",
+      "package_devdependencies_eslint_js"
+    ],
+    "82": [
+      "eslint_plugin_react_hooks",
+      "package_devdependencies_eslint_plugin_react_hooks"
+    ],
+    "83": [
+      "eslint_plugin_react_refresh",
+      "package_devdependencies_eslint_plugin_react_refresh"
+    ],
+    "84": [
+      "framer_motion",
+      "package_dependencies_framer_motion"
+    ],
+    "85": [
+      "globals",
+      "package_devdependencies_globals"
+    ],
+    "86": [
+      "jsdom",
+      "package_devdependencies_jsdom"
+    ],
+    "87": [
+      "lucide_react",
+      "package_dependencies_lucide_react"
+    ],
+    "88": [
+      "package_dependencies_react",
+      "react"
+    ],
+    "89": [
+      "package_dependencies_react_dom",
+      "react_dom"
+    ],
+    "90": [
+      "package_dependencies_supabase_supabase_js",
+      "supabase_supabase_js"
+    ],
+    "91": [
+      "package_devdependencies_playwright_test",
+      "playwright_test"
+    ],
+    "92": [
+      "package_devdependencies_postcss",
+      "postcss"
+    ],
+    "93": [
+      "package_devdependencies_sharp",
+      "sharp"
+    ],
+    "94": [
+      "package_devdependencies_supabase",
+      "supabase"
+    ],
+    "95": [
+      "package_devdependencies_tailwindcss",
+      "tailwindcss"
+    ],
+    "96": [
+      "package_devdependencies_tailwindcss_postcss",
+      "tailwindcss_postcss"
+    ],
+    "97": [
+      "package_devdependencies_testing_library_jest_dom",
+      "testing_library_jest_dom"
+    ],
+    "98": [
+      "package_devdependencies_testing_library_react",
+      "testing_library_react"
+    ],
+    "99": [
+      "package_devdependencies_testing_library_user_event",
+      "testing_library_user_event"
+    ],
+    "100": [
+      "package_devdependencies_types_node",
+      "types_node"
+    ],
+    "101": [
+      "package_devdependencies_types_react_dom",
+      "types_react_dom"
+    ],
+    "102": [
+      "package_devdependencies_typescript",
+      "typescript"
+    ],
+    "103": [
+      "package_devdependencies_typescript_eslint",
+      "typescript_eslint"
+    ],
+    "104": [
+      "package_devdependencies_vite",
+      "vite"
+    ],
+    "105": [
+      "package_devdependencies_vite_plugin_pwa",
+      "vite_plugin_pwa"
+    ],
+    "106": [
+      "package_devdependencies_vitejs_plugin_react",
+      "vitejs_plugin_react"
+    ],
+    "107": [
+      "package_devdependencies_vitest",
+      "vitest"
+    ],
+    "108": [
+      "specify_extensions_agent_context_scripts_bash_update_agent_context",
+      "specify_extensions_agent_context_scripts_bash_update_agent_context_sh__entry"
+    ],
+    "109": [
+      "specify_extensions_git_scripts_powershell_auto_commit",
+      "specify_extensions_git_scripts_powershell_auto_commit_find_projectroot"
+    ],
+    "110": [
+      "specify_extensions_git_scripts_powershell_initialize_repo",
+      "specify_extensions_git_scripts_powershell_initialize_repo_find_projectroot"
+    ],
+    "111": [
+      "specify_scripts_bash_check_prerequisites",
+      "specify_scripts_bash_check_prerequisites_sh__entry"
+    ],
+    "112": [
+      "specify_scripts_bash_setup_plan",
+      "specify_scripts_bash_setup_plan_sh__entry"
+    ],
+    "113": [
+      "specify_scripts_bash_setup_tasks",
+      "specify_scripts_bash_setup_tasks_sh__entry"
+    ],
+    "114": [
+      "src_components_ui_liveeditbadge",
+      "src_components_ui_liveeditbadge_liveeditbadge"
+    ],
+    "115": [
+      "android_app_build"
+    ],
+    "116": [
+      "android_app_capacitor_build"
+    ],
+    "117": [
+      "android_build"
+    ],
+    "118": [
+      "android_capacitor_settings"
+    ],
+    "119": [
+      "android_settings"
+    ],
+    "120": [
+      "android_variables"
+    ],
+    "121": [
+      "dev_dist_registersw"
+    ],
+    "122": [
+      "dev_dist_sw"
+    ],
+    "123": [
+      "eslint_config"
+    ],
+    "124": [
+      "playwright_config"
+    ],
+    "125": [
+      "postcss_config"
+    ],
+    "126": [
+      "src_sw"
+    ],
+    "127": [
+      "src_test_setup"
+    ],
+    "128": [
+      "tailwind_config"
+    ],
+    "129": [
+      "vite_config"
+    ],
+    "130": [
+      "vitest_config"
+    ]
+  },
+  "cohesion": {
+    "0": 0.05725490196078432,
+    "1": 0.10953058321479374,
+    "2": 0.08961593172119488,
+    "3": 0.13068181818181818,
+    "4": 0.06451612903225806,
+    "5": 0.1225071225071225,
+    "6": 0.09,
+    "7": 0.17666666666666667,
+    "8": 0.1067193675889328,
+    "9": 0.13852813852813853,
+    "10": 0.09523809523809523,
+    "11": 0.13333333333333333,
+    "12": 0.11052631578947368,
+    "13": 0.14035087719298245,
+    "14": 0.12418300653594772,
+    "15": 0.14705882352941177,
+    "16": 0.16176470588235295,
+    "17": 0.18382352941176472,
+    "18": 0.11764705882352941,
+    "19": 0.25,
+    "20": 0.22857142857142856,
+    "21": 0.13333333333333333,
+    "22": 0.14285714285714285,
+    "23": 0.17582417582417584,
+    "24": 0.14285714285714285,
+    "25": 0.15384615384615385,
+    "26": 0.21794871794871795,
+    "27": 0.23636363636363636,
+    "28": 0.2,
+    "29": 0.3333333333333333,
+    "30": 0.2,
+    "31": 0.2,
+    "32": 0.2222222222222222,
+    "33": 0.3888888888888889,
+    "34": 0.25,
+    "35": 0.25,
+    "36": 0.2857142857142857,
+    "37": 0.2857142857142857,
+    "38": 0.42857142857142855,
+    "39": 0.2857142857142857,
+    "40": 0.2857142857142857,
+    "41": 0.5238095238095238,
+    "42": 0.2857142857142857,
+    "43": 0.47619047619047616,
+    "44": 0.4,
+    "45": 0.4,
+    "46": 0.4,
+    "47": 0.6666666666666666,
+    "48": 0.8333333333333334,
+    "49": 0.5,
+    "50": 0.6666666666666666,
+    "51": 0.6666666666666666,
+    "52": 0.6666666666666666,
+    "53": 1.0,
+    "54": 0.6666666666666666,
+    "55": 0.6666666666666666,
+    "56": 0.6666666666666666,
+    "57": 0.6666666666666666,
+    "58": 0.6666666666666666,
+    "59": 0.6666666666666666,
+    "60": 0.6666666666666666,
+    "61": 1.0,
+    "62": 1.0,
+    "63": 1.0,
+    "64": 1.0,
+    "65": 1.0,
+    "66": 1.0,
+    "67": 1.0,
+    "68": 1.0,
+    "69": 1.0,
+    "70": 1.0,
+    "71": 1.0,
+    "72": 1.0,
+    "73": 1.0,
+    "74": 1.0,
+    "75": 1.0,
+    "76": 1.0,
+    "77": 1.0,
+    "78": 1.0,
+    "79": 1.0,
+    "80": 1.0,
+    "81": 1.0,
+    "82": 1.0,
+    "83": 1.0,
+    "84": 1.0,
+    "85": 1.0,
+    "86": 1.0,
+    "87": 1.0,
+    "88": 1.0,
+    "89": 1.0,
+    "90": 1.0,
+    "91": 1.0,
+    "92": 1.0,
+    "93": 1.0,
+    "94": 1.0,
+    "95": 1.0,
+    "96": 1.0,
+    "97": 1.0,
+    "98": 1.0,
+    "99": 1.0,
+    "100": 1.0,
+    "101": 1.0,
+    "102": 1.0,
+    "103": 1.0,
+    "104": 1.0,
+    "105": 1.0,
+    "106": 1.0,
+    "107": 1.0,
+    "108": 1.0,
+    "109": 1.0,
+    "110": 1.0,
+    "111": 1.0,
+    "112": 1.0,
+    "113": 1.0,
+    "114": 1.0,
+    "115": 1.0,
+    "116": 1.0,
+    "117": 1.0,
+    "118": 1.0,
+    "119": 1.0,
+    "120": 1.0,
+    "121": 1.0,
+    "122": 1.0,
+    "123": 1.0,
+    "124": 1.0,
+    "125": 1.0,
+    "126": 1.0,
+    "127": 1.0,
+    "128": 1.0,
+    "129": 1.0,
+    "130": 1.0
+  },
+  "gods": [
+    {
+      "id": "src_context_authcontext_useauth",
+      "label": "useAuth()",
+      "degree": 34
+    },
+    {
+      "id": "src_components_ui_icon_icon",
+      "label": "Icon()",
+      "degree": 27
+    },
+    {
+      "id": "src_context_toastcontext_usetoast",
+      "label": "useToast()",
+      "degree": 23
+    },
+    {
+      "id": "tsconfig_app_compileroptions",
+      "label": "compilerOptions",
+      "degree": 20
+    },
+    {
+      "id": "src_lib_supabase_supabase",
+      "label": "supabase",
+      "degree": 19
+    },
+    {
+      "id": "tsconfig_node_compileroptions",
+      "label": "compilerOptions",
+      "degree": 16
+    },
+    {
+      "id": "dev_dist_workbox_1e60b829_strategyhandler",
+      "label": "StrategyHandler",
+      "degree": 14
+    },
+    {
+      "id": "src_lib_chapterutils_fmtdateshort",
+      "label": "fmtDateShort()",
+      "degree": 14
+    },
+    {
+      "id": "dev_dist_workbox_1e60b829_precachecontroller",
+      "label": "PrecacheController",
+      "degree": 13
+    },
+    {
+      "id": "src_lib_chapterutils_toroman",
+      "label": "toRoman()",
+      "degree": 13
+    }
+  ],
+  "surprises": [
+    {
+      "source": "AppInner()",
+      "target": "useAuth()",
+      "source_files": [
+        "src/App.tsx",
+        "src/context/AuthContext.tsx"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "bridges separate communities; peripheral node `AppInner()` unexpectedly reaches hub `useAuth()`"
+    },
+    {
+      "source": "PlanRow()",
+      "target": "fmtDateShort()",
+      "source_files": [
+        "src/pages/Finances.tsx",
+        "src/lib/chapterUtils.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "bridges separate communities; peripheral node `PlanRow()` unexpectedly reaches hub `fmtDateShort()`"
+    },
+    {
+      "source": "MemoryCard()",
+      "target": "fmtDateShort()",
+      "source_files": [
+        "src/pages/Gallery.tsx",
+        "src/lib/chapterUtils.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "bridges separate communities; peripheral node `MemoryCard()` unexpectedly reaches hub `fmtDateShort()`"
+    },
+    {
+      "source": "AppShell()",
+      "target": "useAuth()",
+      "source_files": [
+        "src/components/AppShell.tsx",
+        "src/context/AuthContext.tsx"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "bridges separate communities"
+    },
+    {
+      "source": "AppShell()",
+      "target": "useToast()",
+      "source_files": [
+        "src/components/AppShell.tsx",
+        "src/context/ToastContext.tsx"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "bridges separate communities"
+    }
+  ],
+  "tokens": {
+    "input": 0,
+    "output": 0
+  }
+}

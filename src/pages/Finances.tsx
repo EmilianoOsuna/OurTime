@@ -161,7 +161,6 @@ export default function Finances({ onPlanClick, refreshKey = 0 }: { onPlanClick?
             <div style={{ position: 'relative', zIndex: 1 }}>
               <EditAction
                 label={budget !== null ? 'Editar' : 'Añadir presupuesto'}
-                tone="onDark"
                 onClick={() => {
                   setBudgetInput(budget === null ? '' : String(budget))
                   setPeriodInput(budgetPeriod)
@@ -175,15 +174,15 @@ export default function Finances({ onPlanClick, refreshKey = 0 }: { onPlanClick?
             <div style={{ marginTop: 14 }}>
               <input value={budgetInput} onChange={e => setBudgetInput(e.target.value.replace(/[^0-9.]/g, ''))}
                 placeholder="Importe…" inputMode="decimal" autoFocus
-                style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1.5px solid rgba(244,238,228,0.3)',
-                  background: 'rgba(255,255,255,0.1)', color: 'var(--hero-text)', fontSize: 18, boxSizing: 'border-box',
+                style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1.5px solid var(--line)',
+                  background: 'var(--card-2)', color: 'var(--hero-text)', fontSize: 18, boxSizing: 'border-box',
                   fontFamily: 'var(--font-ui)', outline: 'none', marginBottom: 10 }} />
               <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
                 {(['mensual', 'semanal'] as const).map(p => (
                   <button key={p} onClick={() => setPeriodInput(p)} style={{
                     flex: 1, border: 'none', borderRadius: 10, padding: '10px',
-                    background: periodInput === p ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.1)',
-                    color: 'var(--hero-text)', fontFamily: 'var(--font-ui)', fontSize: 13, fontWeight: 700,
+                    background: periodInput === p ? 'var(--ink)' : 'var(--card-2)',
+                    color: periodInput === p ? 'var(--paper)' : 'var(--hero-text)', fontFamily: 'var(--font-ui)', fontSize: 13, fontWeight: 700,
                     cursor: 'pointer', transition: 'all .15s',
                   }}>
                     {p === 'mensual' ? 'Mensual' : 'Semanal'}
@@ -192,12 +191,12 @@ export default function Finances({ onPlanClick, refreshKey = 0 }: { onPlanClick?
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
                 <button onClick={saveBudget} disabled={savingBudget} style={{
-                  flex: 1, border: 'none', background: '#fff', color: '#211D18',
+                  flex: 1, border: 'none', background: 'var(--ink)', color: 'var(--paper)',
                   borderRadius: 10, padding: '11px', fontWeight: 700, cursor: 'pointer',
                   fontFamily: 'var(--font-ui)', fontSize: 14,
                 }}>{savingBudget ? '…' : 'Guardar'}</button>
                 <button onClick={() => setEditingBudget(false)} style={{
-                  border: 'none', background: 'transparent', color: '#fff',
+                  border: 'none', background: 'transparent', color: 'var(--hero-text)',
                   borderRadius: 10, padding: '11px 14px', cursor: 'pointer', fontFamily: 'var(--font-ui)', fontSize: 13,
                 }}>Cancelar</button>
               </div>
@@ -205,7 +204,7 @@ export default function Finances({ onPlanClick, refreshKey = 0 }: { onPlanClick?
           ) : (
             <>
               <div className="display" style={{ fontSize: 42, margin: '6px 0 0',
-                color: projected !== null && projected < 0 ? '#F9A86A' : 'var(--hero-text)' }}>
+                color: projected !== null && projected < 0 ? 'var(--orange-deep)' : 'var(--hero-text)' }}>
                 {budget !== null ? (projected! < 0 ? '−' : '') + fmt(projected!) : fmt(spent)}
               </div>
               {budget !== null && estimatedTotal > 0 && (
@@ -219,7 +218,7 @@ export default function Finances({ onPlanClick, refreshKey = 0 }: { onPlanClick?
               <div style={{ display: 'flex', gap: 20, marginTop: 18, flexWrap: 'wrap' }}>
                 {budget !== null && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ width: 30, height: 30, borderRadius: 9, background: 'rgba(100,180,140,0.25)', color: '#7BD9A8',
+                    <span style={{ width: 30, height: 30, borderRadius: 9, background: 'var(--done-tint)', color: 'var(--done)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <Icon name="wallet" size={16} />
                     </span>
@@ -230,7 +229,7 @@ export default function Finances({ onPlanClick, refreshKey = 0 }: { onPlanClick?
                   </div>
                 )}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ width: 30, height: 30, borderRadius: 9, background: 'rgba(241,119,32,0.25)', color: '#F9A86A',
+                  <span style={{ width: 30, height: 30, borderRadius: 9, background: 'var(--orange-tint)', color: 'var(--orange-deep)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Icon name="trendDown" size={16} />
                   </span>
@@ -241,7 +240,7 @@ export default function Finances({ onPlanClick, refreshKey = 0 }: { onPlanClick?
                 </div>
                 {estimatedTotal > 0 && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ width: 30, height: 30, borderRadius: 9, background: 'rgba(200,180,120,0.25)', color: '#E8C97A',
+                    <span style={{ width: 30, height: 30, borderRadius: 9, background: 'var(--blue-tint)', color: 'var(--blue)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <Icon name="calendar" size={15} />
                     </span>
@@ -255,18 +254,18 @@ export default function Finances({ onPlanClick, refreshKey = 0 }: { onPlanClick?
 
               {budget !== null && budget > 0 && (
                 <div style={{ marginTop: 16 }}>
-                  <div style={{ height: 4, borderRadius: 99, background: 'rgba(255,255,255,0.12)',
+                  <div style={{ height: 4, borderRadius: 99, background: 'var(--line)',
                     overflow: 'hidden', display: 'flex' }}>
                     <div style={{
                       height: '100%',
                       width: (pctSpent * 100) + '%',
-                      background: spent > budget ? '#F9A86A' : '#7BD9A8',
+                      background: spent > budget ? 'var(--orange)' : 'var(--done)',
                       transition: 'width .5s cubic-bezier(.2,.8,.2,1)',
                     }} />
                     <div style={{
                       height: '100%',
                       width: (pctEstimated * 100) + '%',
-                      background: '#E8C97A', opacity: 0.75,
+                      background: 'var(--blue)', opacity: 0.75,
                       transition: 'width .5s cubic-bezier(.2,.8,.2,1)',
                     }} />
                   </div>

@@ -5,7 +5,7 @@ import {
   TrendingUp, TrendingDown, Utensils, Plane, Gift, Coffee, Film,
   Moon, Music, Pencil, Trash2, MoreHorizontal, BookOpen, Feather,
   Route, Tag, Wifi, Users, Settings, LogOut, Star,
-  MessageSquare, Send, ArrowLeft, CalendarCheck,
+  MessageSquare, Send, ArrowLeft, CalendarCheck, Crown,
   type LucideProps,
 } from 'lucide-react'
 
@@ -58,6 +58,7 @@ const ICONS: Record<string, IconComponent> = {
   chat:         MessageSquare,
   send:         Send,
   calendarCheck: CalendarCheck,
+  crown:        Crown,
 }
 
 // googleCal stays as a custom SVG — no Lucide equivalent

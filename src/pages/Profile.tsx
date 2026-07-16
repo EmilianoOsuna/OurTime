@@ -15,6 +15,9 @@ import { useToast } from '../context/ToastContext'
 import { useConfirm } from '../components/ui/ConfirmDialog'
 import { connectGoogleCalendarWithCode, sendTestPushNotification, testGoogleCalendarConnection, usePushNotifications } from '../lib/usePushNotifications'
 import { requestGoogleCalendarCode } from '../lib/googleWeb'
+import { useEntitlement } from '../lib/useEntitlement'
+import { paywallEnabled } from '../lib/stripe'
+import { openPaywall } from '../lib/paywall'
 
 const CAT_COLOR: Record<string, string> = {
   pareja:  'var(--cat-pareja)',
@@ -48,6 +51,7 @@ export function ProfileScreen({ plans, onClose, onGoToFinance, storyCode, isAdmi
   onEditStory?: (s: StoryType) => void
 }) {
   const { profile, user, signOut, refreshProfile, refreshStories, stories, activeStoryId, setActiveStoryId } = useAuth()
+  const entitlement = useEntitlement(activeStoryId)
   const { currency, setCurrency, fmt } = useCurrency()
   const { push: toast } = useToast()
   const confirm = useConfirm()
@@ -56,6 +60,7 @@ export function ProfileScreen({ plans, onClose, onGoToFinance, storyCode, isAdmi
   const [editName, setEditName] = useState(profile?.full_name || '')
   const [editBirthday, setEditBirthday] = useState(profile?.birthday || '')
   const [editNickname, setEditNickname] = useState(profile?.nickname || '')
+  const [editAccessory, setEditAccessory] = useState(profile?.accessory || '')
   const [saving, setSaving] = useState(false)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [codeCopied, setCodeCopied] = useState(false)
@@ -83,6 +88,7 @@ export function ProfileScreen({ plans, onClose, onGoToFinance, storyCode, isAdmi
     initial: (profile?.full_name?.[0] || 'T').toUpperCase(),
     color: '#0474BA',
     avatar_url: profile?.avatar_url,
+    accessory: profile?.accessory,
   }
 
   useEffect(() => {
@@ -109,6 +115,8 @@ export function ProfileScreen({ plans, onClose, onGoToFinance, storyCode, isAdmi
 
   const toggleMemberPermission = async (target: StoryMember) => {
     if (!activeStoryId || !user) return
+    // Roles y permisos por miembro son un beneficio del plan Familia.
+    if (paywallEnabled && !entitlement.limits.roles) { openPaywall('roles'); return }
     const newLevel = target.permissionLevel === 'admin' ? 'member' : 'admin'
     await supabase.from('story_members')
       .update({ permission_level: newLevel })
@@ -202,6 +210,7 @@ export function ProfileScreen({ plans, onClose, onGoToFinance, storyCode, isAdmi
         full_name: editName.trim() || null,
         birthday: editBirthday || null,
         nickname: editNickname.trim() || null,
+        accessory: editAccessory || null,
       }).eq('id', user.id)
       if (error) throw error
       await refreshProfile()
@@ -243,7 +252,10 @@ export function ProfileScreen({ plans, onClose, onGoToFinance, storyCode, isAdmi
         }
       }
     } catch (e: any) {
-      setJoinError(e.message || 'Código inválido')
+      const msg: string = e.message || 'Código inválido'
+      setJoinError(msg.includes('MEMBER_CAP_REACHED')
+        ? 'Esta Historia alcanzó su límite de miembros. Pide al administrador que active el plan Familia.'
+        : msg)
     } finally {
       setJoining(false)
     }
@@ -453,7 +465,7 @@ export function ProfileScreen({ plans, onClose, onGoToFinance, storyCode, isAdmi
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
             <span className="eyebrow">Tu perfil</span>
             {!editing && (
-              <EditAction onClick={() => { setEditName(profile?.full_name || ''); setEditBirthday(profile?.birthday || ''); setEditNickname(profile?.nickname || ''); setEditing(true) }} />
+              <EditAction onClick={() => { setEditName(profile?.full_name || ''); setEditBirthday(profile?.birthday || ''); setEditNickname(profile?.nickname || ''); setEditAccessory(profile?.accessory || ''); setEditing(true) }} />
             )}
           </div>
 
@@ -510,6 +522,46 @@ export function ProfileScreen({ plans, onClose, onGoToFinance, storyCode, isAdmi
                 <input className="field" value={editNickname} onChange={e => setEditNickname(e.target.value)}
                   placeholder="Tu apodo" style={{ marginBottom: 14 }} />
                 <DatePicker label="Cumpleaños" value={editBirthday} onChange={setEditBirthday} />
+                <label className="field-label" style={{ marginTop: 20 }}>Borde de perfil</label>
+                <div style={{ display: 'flex', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
+                  {['none', 'neon', 'dashed', 'double', 'orbit'].map(acc => {
+                    const on = editAccessory === acc || (acc === 'none' && !editAccessory)
+                    
+                    let previewStyle: React.CSSProperties = { width: 22, height: 22, borderRadius: '50%' }
+                    if (acc === 'neon') {
+                      previewStyle.boxShadow = '0 0 6px var(--orange), inset 0 0 4px var(--orange)'
+                      previewStyle.border = '1px solid var(--orange)'
+                    } else if (acc === 'dashed') {
+                      previewStyle.border = '2px dashed var(--orange)'
+                    } else if (acc === 'double') {
+                      previewStyle.border = '3px double var(--orange)'
+                    } else if (acc === 'orbit') {
+                      previewStyle.border = '1.5px solid var(--line-strong)'
+                    }
+                    
+                    return (
+                      <button key={acc} onClick={() => setEditAccessory(acc)} style={{
+                        width: 44, height: 44, borderRadius: 12, border: on ? '2px solid var(--orange)' : '2px solid var(--line)',
+                        background: on ? 'var(--orange-tint)' : 'var(--card-2)', cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', color: on ? 'var(--orange-deep)' : 'var(--ink-soft)',
+                      }}>
+                        {acc === 'none' ? (
+                          <span style={{fontSize: 12, fontWeight: 700}}>Nada</span>
+                        ) : (
+                          <div style={{ position: 'relative' }}>
+                            <div style={previewStyle} />
+                            {acc === 'orbit' && (
+                              <div style={{
+                                position: 'absolute', top: -2, left: 11 - 2.5, width: 5, height: 5,
+                                borderRadius: '50%', background: 'var(--orange)', boxShadow: '0 0 4px var(--orange)'
+                              }} />
+                            )}
+                          </div>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
                 <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
                   <button onClick={() => setEditing(false)} className="btn btn-ghost" style={{ flex: 1 }}>Cancelar</button>
                   <button onClick={saveProfile} className="btn btn-primary" style={{ flex: 1 }} disabled={saving}>
@@ -634,6 +686,36 @@ export function ProfileScreen({ plans, onClose, onGoToFinance, storyCode, isAdmi
             ))}
           </div>
         </div>
+
+        {/* ── SECCIÓN: SUSCRIPCIÓN ── */}
+        {paywallEnabled && (
+          <div style={{ padding: '18px 22px 0' }}>
+            <div className="eyebrow" style={{ marginBottom: 10 }}>Suscripción</div>
+            <button
+              onClick={() => openPaywall('generic')}
+              className="ot-card"
+              style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: 16,
+                cursor: 'pointer', textAlign: 'left', border: entitlement.isPro ? '1px solid var(--line)' : '1.5px solid var(--orange)' }}>
+              <div style={{ width: 38, height: 38, borderRadius: 11, flexShrink: 0, background: 'var(--orange-tint)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--orange)' }}>
+                <Icon name="sparkle" size={19} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 700, fontSize: 15 }}>
+                  {entitlement.isPro
+                    ? `Plan ${entitlement.plan === 'familia' ? 'Familia' : 'Duo'} activo`
+                    : 'Mejora esta Historia'}
+                </div>
+                <div style={{ fontSize: 13, color: 'var(--ink-soft)' }}>
+                  {entitlement.isPro
+                    ? (entitlement.cancelAtPeriodEnd ? 'Se cancelará al final del periodo' : 'Gestiona tu suscripción')
+                    : 'Fotos y momentos ilimitados, y más'}
+                </div>
+              </div>
+              <Icon name="chevR" size={18} style={{ color: 'var(--ink-faint)' }} />
+            </button>
+          </div>
+        )}
 
         {/* ── SECCIÓN: APP ── */}
         <div style={{ padding: '18px 22px 0' }}>
@@ -804,7 +886,8 @@ function PushNotificationsSection() {
 }
 
 function GoogleCalendarSection() {
-  const { user } = useAuth()
+  const { user, activeStoryId } = useAuth()
+  const { limits } = useEntitlement(activeStoryId)
   const { push: toast } = useToast()
   const [connected, setConnected] = useState(false)
   const [, setGcalLoading] = useState(true)
@@ -834,6 +917,8 @@ function GoogleCalendarSection() {
   }, [user])
 
   const connect = async () => {
+    // Google Calendar es un beneficio de pago (Duo/Familia).
+    if (paywallEnabled && !limits.googleCalendar) { openPaywall('calendar'); return }
     setSyncing(true)
     if (!isNative) {
       try {

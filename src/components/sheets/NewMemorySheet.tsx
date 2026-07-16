@@ -6,6 +6,8 @@ import { supabase } from '../../lib/supabase'
 
 import { compressToWebP } from '../../lib/imageUtils'
 import { sendPushToStoryMembers } from '../../lib/usePushNotifications'
+import { useEntitlement } from '../../lib/useEntitlement'
+import { enforceCountGate } from '../../lib/paywall'
 import { Icon } from '../ui/Icon'
 import type { PlanType, AlbumType } from '../../lib/supabase'
 
@@ -13,6 +15,7 @@ interface Props { onClose: () => void; onCreated: () => void; initialAlbumId?: s
 
 export const NewMemorySheet: React.FC<Props> = ({ onClose, onCreated, initialAlbumId }) => {
   const { activeStoryId, stories } = useAuth()
+  const { limits } = useEntitlement(activeStoryId)
   const { push } = useToast()
   const [file, setFile]     = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
@@ -79,6 +82,11 @@ export const NewMemorySheet: React.FC<Props> = ({ onClose, onCreated, initialAlb
 
   const submit = async () => {
     if (!file || !activeStoryId || Date.now() < ignoreSaveUntil.current) return
+    // Gate freemium de fotos (antes de subir al bucket).
+    const blocked = await enforceCountGate({
+      storyId: activeStoryId, table: 'memories', limit: limits.photos, reason: 'photos',
+    })
+    if (blocked) { onClose(); return }
     setSaving(true)
     try {
       const webp = await compressToWebP(file, 1920, 0.82)

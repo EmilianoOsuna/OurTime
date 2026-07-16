@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import type { Session, User } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
-import type { StoryType } from '../lib/supabase'
+import type { StoryType, EntitlementType } from '../lib/supabase'
 
 export type ProfileType = {
   id: string
@@ -11,6 +11,7 @@ export type ProfileType = {
   anniversary_date: string | null
   birthday: string | null
   nickname: string | null
+  accessory: string | null
 }
 
 type AuthContextType = {
@@ -21,9 +22,18 @@ type AuthContextType = {
   stories: StoryType[]
   profile: ProfileType | null
   isLoading: boolean
+  entitlements: Record<string, EntitlementType>
+  userHasPaidStory: boolean
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
   refreshStories: () => Promise<void>
+  refreshEntitlements: () => Promise<void>
+}
+
+function indexEntitlements(rows: EntitlementType[] | null | undefined): Record<string, EntitlementType> {
+  const map: Record<string, EntitlementType> = {}
+  for (const row of rows ?? []) map[row.story_id] = row
+  return map
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -34,9 +44,12 @@ const AuthContext = createContext<AuthContextType>({
   stories: [],
   profile: null,
   isLoading: true,
+  entitlements: {},
+  userHasPaidStory: false,
   signOut: async () => {},
   refreshProfile: async () => {},
   refreshStories: async () => {},
+  refreshEntitlements: async () => {},
 })
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -45,6 +58,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [activeStoryId, _setActiveStoryId] = useState<string | null>(null)
   const [stories, setStories] = useState<StoryType[]>([])
   const [profile, setProfile] = useState<ProfileType | null>(null)
+  const [entitlements, setEntitlements] = useState<Record<string, EntitlementType>>({})
   const [isLoading, setIsLoading] = useState(true)
   const loadedUserIdRef = useRef<string | null>(null)
   const setActiveStoryId = useCallback((id: string | null) => {
@@ -77,6 +91,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           _setActiveStoryId(null)
           setStories([])
           setProfile(null)
+          setEntitlements({})
           setIsLoading(false)
         }
       }
@@ -119,11 +134,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchProfileAndStories = async (userId: string) => {
     try {
-      const [{ data: profileData }, { data: memberships }] = await Promise.all([
+      const [{ data: profileData }, { data: memberships }, { data: entRows }] = await Promise.all([
         supabase.from('profiles').select('*').eq('id', userId).single(),
         supabase.from('story_members')
           .select('story_id, stories(*)')
           .eq('user_id', userId),
+        // RLS limita a las entitlements de las Historias del usuario.
+        supabase.from('story_entitlements').select('*'),
       ])
 
       if (profileData) setProfile(profileData as ProfileType)
@@ -132,6 +149,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .map((m: any) => m.stories)
         .filter(Boolean)
       setStories(storyList)
+
+      setEntitlements(indexEntitlements(entRows as EntitlementType[] | null))
 
       const savedId = localStorage.getItem('activeStoryId')
       if (savedId && storyList.some(s => s.id === savedId)) {
@@ -150,6 +169,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const refreshProfile = useCallback(async () => {
     if (user) await fetchProfileAndStories(user.id)
   }, [user])
+
+  const refreshEntitlements = useCallback(async () => {
+    if (!user) return
+    const { data } = await supabase.from('story_entitlements').select('*')
+    setEntitlements(indexEntitlements(data as EntitlementType[] | null))
+  }, [user])
+
+  // Realtime: el webhook de Stripe (service-role) escribe story_entitlements;
+  // refetch al vuelo para que el plan cambie en vivo sin recargar.
+  useEffect(() => {
+    if (!user) return
+    const channel = supabase
+      .channel('story_entitlements_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'story_entitlements' },
+        () => { void refreshEntitlements() })
+      .subscribe()
+    // Al volver de Stripe (web o deep link nativo) refrescamos como red de
+    // seguridad por si el webhook llega justo después del redirect.
+    const onCheckoutReturn = () => { void refreshEntitlements() }
+    window.addEventListener('ot:checkout-return', onCheckoutReturn)
+    return () => {
+      void supabase.removeChannel(channel)
+      window.removeEventListener('ot:checkout-return', onCheckoutReturn)
+    }
+  }, [user, refreshEntitlements])
 
   const refreshStories = useCallback(async () => {
     if (!user) return
@@ -179,6 +223,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     _setActiveStoryId(null)
     setStories([])
     setProfile(null)
+    setEntitlements({})
     setIsLoading(false)
     localStorage.removeItem('activeStoryId')
     Promise.race([
@@ -187,10 +232,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     ]).catch(() => {})
   }
 
+  const userHasPaidStory = useMemo(
+    () => Object.values(entitlements).some(
+      e => e.payer_user_id === user?.id && (e.status === 'active' || e.status === 'trialing'),
+    ),
+    [entitlements, user],
+  )
+
   const value = useMemo(() => ({
     session, user, activeStoryId, setActiveStoryId,
-    stories, profile, isLoading, signOut, refreshProfile, refreshStories,
-  }), [session, user, activeStoryId, stories, profile, isLoading, signOut, refreshProfile, refreshStories])
+    stories, profile, isLoading, entitlements, userHasPaidStory,
+    signOut, refreshProfile, refreshStories, refreshEntitlements,
+  }), [session, user, activeStoryId, stories, profile, isLoading, entitlements, userHasPaidStory,
+    signOut, refreshProfile, refreshStories, refreshEntitlements])
 
   return (
     <AuthContext.Provider value={value}>
