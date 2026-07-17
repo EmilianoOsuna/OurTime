@@ -26,7 +26,6 @@ test.describe('Plan Detail — Detalle de momento', () => {
     const planCards = page.locator('[data-testid="plan-card"]')
     const count = await planCards.count()
     if (count > 0) {
-      const planTitle = await planCards.first().textContent()
       await planCards.first().click()
       await page.waitForTimeout(600)
       await page.screenshot({ path: 'playwright-review/qa-plan-detail-open.png', fullPage: false })

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, lazy, Suspense } from 'react'
+import { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { ToastProvider, useToast } from './context/ToastContext'
 import { CurrencyProvider } from './context/CurrencyContext'
@@ -93,9 +93,11 @@ function AppInner() {
 
   // Detect Google duplicate-account issue: signed in via Google but 0 stories and account is old
   const isGoogleProvider = session?.user?.app_metadata?.provider === 'google'
-  const accountAgeMs = session?.user?.created_at
+  /* eslint-disable react-hooks/purity -- Date.now() is acceptable here for duplicate-account age check */
+  const accountAgeMs = useMemo(() => session?.user?.created_at
     ? Date.now() - new Date(session.user.created_at).getTime()
-    : 0
+    : 0, [session?.user?.created_at])
+  /* eslint-enable react-hooks/purity */
   const likelyDuplicateAccount = needsOnboarding && isGoogleProvider && accountAgeMs > 5 * 60 * 1000
 
   const handleAuth = useCallback(() => setStateLoading(true), [])

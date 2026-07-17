@@ -177,6 +177,7 @@ async function setupPushListeners(): Promise<void> {
   if (!isNative) return
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const PN: any = PushNotifications
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   PN.addListener('registration', async ({ value }: any) => {
     try {
       await savePushToken(value)
@@ -195,6 +196,7 @@ async function setupPushListeners(): Promise<void> {
     registrationWaiter = null
   })
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   PN.addListener('pushNotificationReceived', (notification: any) => {
     console.log('Push received:', notification)
     if (Capacitor.getPlatform() !== 'android') return
@@ -209,11 +211,13 @@ async function setupPushListeners(): Promise<void> {
     }).catch(console.error)
   })
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   PN.addListener('pushNotificationActionPerformed', (action: any) => {
     console.log('Push action:', action)
     dispatchNavigation(action.notification?.data?.url ?? action.notification?.data?.link)
   })
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   LocalNotifications.addListener('localNotificationActionPerformed', (action: any) => {
     dispatchNavigation(action.notification?.extra?.url ?? action.notification?.extra?.link)
   })

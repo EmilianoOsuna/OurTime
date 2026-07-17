@@ -1,8 +1,10 @@
 @import "tailwindcss";
 
 /* ───────────────────────────────────────────────────────────
-   OurTime — "Nuestra Historia" — Editorial Design System
-   Warm paper, orange + blue, numbered chapters.
+   OurTime — "Nuestra Historia" — Design System v3 "Vivo"
+   Una sola sans (Hanken Grotesk) con tracking apretado,
+   crema + bloques drenched de color, radios generosos,
+   squiggles como firma. Look & feel: mindmarket.com.
    ─────────────────────────────────────────────────────────── */
 
 :root {
@@ -12,15 +14,15 @@
   --sab: env(safe-area-inset-bottom, 0px);
   --sal: env(safe-area-inset-left, 0px);
 
-  /* Type */
-  --font-display: 'Newsreader', Georgia, serif;
+  /* Type — una sola familia, el display se distingue por peso + tracking */
+  --font-display: 'Hanken Grotesk', system-ui, sans-serif;
   --font-ui: 'Hanken Grotesk', system-ui, sans-serif;
 
   /* Paper & ink — warm, low chroma */
-  --paper:      #F4EEE4;
-  --paper-band: #ECE3D5;
-  --card:       #FFFCF7;
-  --card-2:     #FBF6EE;
+  --paper:      #F4EFE3;
+  --paper-band: #ECE5D4;
+  --card:       #FFFFFF;
+  --card-2:     #F7F2E7;
   --ink:        #211D18;
   --ink-soft:   #6E655A;
   --ink-faint:  #A99F90;
@@ -34,6 +36,14 @@
   --blue:        #0474BA;
   --blue-deep:   #045E96;
   --blue-tint:   #D7E9F4;
+
+  /* Sun — amarillo de bloques de apoyo (estilo mindmarket). La tinta
+     es fija porque el amarillo es claro en ambos modos. */
+  --sun:      #F3BC3F;
+  --sun-deep: #D89B14;
+  --sun-tint: #FBEED0;
+  --sun-ink:  #2E2005;
+  --sun-soft: rgba(46,32,5,0.62);
 
   /* Status */
   --done:      #2E7D5B;
@@ -50,14 +60,14 @@
   --glass-bg-soft:   rgba(255,252,247,0.82);
   --glass-border:    rgba(255,255,255,0.60);
 
-  /* Hero card */
-  --hero-bg:   var(--card);
-  --hero-text: var(--ink);
-  --hero-soft: var(--ink-soft);
+  /* Hero card — drenched en naranja, tinta oscura encima (5.8:1) */
+  --hero-bg:   var(--orange);
+  --hero-text: #2A1505;
+  --hero-soft: rgba(42,21,5,0.66);
 
-  --r-lg: 30px;
-  --r-md: 22px;
-  --r-sm: 14px;
+  --r-lg: 34px;
+  --r-md: 26px;
+  --r-sm: 16px;
 
   /* Stable per-category colors — never overridden by accent switching */
   --cat-pareja:  var(--orange); /* Sunset Orange (Romance) */
@@ -109,28 +119,42 @@ input, textarea {
 }
 
 /* ── Typography helpers ──────────────────────────────── */
-.serif   { font-family: var(--font-display); font-weight: 400; }
-.serif-i { font-family: var(--font-display); font-style: italic; font-weight: 400; }
+.serif   { font-family: var(--font-display); font-weight: 600; letter-spacing: -0.02em; }
+.serif-i { font-family: var(--font-display); font-style: normal; font-weight: 600; letter-spacing: -0.02em; }
 .display {
   font-family: var(--font-display);
-  font-weight: 500;
-  letter-spacing: -0.01em;
+  font-weight: 600;
+  letter-spacing: -0.035em;
   line-height: 1.02;
 }
 .eyebrow {
   font-family: var(--font-ui);
-  font-weight: 700;
-  font-size: 11px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--ink-faint);
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: -0.01em;
+  text-transform: none;
+  color: var(--ink-soft);
 }
 .chapter-no {
   font-family: var(--font-display);
-  font-weight: 400;
-  font-style: italic;
+  font-weight: 700;
   line-height: 0.8;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.04em;
+}
+
+/* Squiggle — subrayado ondulado firma de la marca.
+   Mask + currentColor: colorable, sin SVG inline ni JS. */
+.squiggle {
+  display: inline-block;
+  width: 100%;
+  height: 7px;
+  background: currentColor;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 8' preserveAspectRatio='none'%3E%3Cpath d='M0 5.5 Q 3.5 1 7 4 T 14 4 T 21 4 T 28 4' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 8' preserveAspectRatio='none'%3E%3Cpath d='M0 5.5 Q 3.5 1 7 4 T 14 4 T 21 4 T 28 4' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E");
+  -webkit-mask-repeat: repeat-x;
+  mask-repeat: repeat-x;
+  -webkit-mask-size: 28px 8px;
+  mask-size: 28px 8px;
 }
 
 /* ── Buttons ──────────────────────────────────────────── */
@@ -206,7 +230,9 @@ input, textarea {
   position: relative;
   overflow: hidden;
   background:
-    repeating-linear-gradient(135deg, rgba(241,119,32,0.10) 0 10px, rgba(241,119,32,0.04) 10px 20px),
+    repeating-linear-gradient(135deg,
+      color-mix(in srgb, var(--orange) 10%, transparent) 0 10px,
+      color-mix(in srgb, var(--orange) 4%, transparent) 10px 20px),
     var(--card-2);
   display: flex;
   align-items: center;
@@ -214,7 +240,9 @@ input, textarea {
 }
 .ph.blue {
   background:
-    repeating-linear-gradient(135deg, rgba(4,116,186,0.10) 0 10px, rgba(4,116,186,0.04) 10px 20px),
+    repeating-linear-gradient(135deg,
+      color-mix(in srgb, var(--blue) 10%, transparent) 0 10px,
+      color-mix(in srgb, var(--blue) 4%, transparent) 10px 20px),
     var(--card-2);
 }
 
@@ -235,7 +263,7 @@ input, textarea {
   align-items: center;
   justify-content: center;
   font-family: var(--font-display);
-  font-style: italic;
+  font-weight: 700;
   color: #fff;
   flex-shrink: 0;
 }
@@ -351,6 +379,10 @@ html {
     --blue-deep:   #2D8AC9;
     --blue-tint:   rgba(59, 158, 223, 0.12);
 
+    --sun:      #E9B53B;
+    --sun-deep: #F3BC3F;
+    --sun-tint: rgba(243,188,63,0.14);
+
     --done:        #34D399;
     --done-deep:   #10B981;
     --done-tint:   rgba(16, 185, 129, 0.12);
@@ -364,10 +396,10 @@ html {
     --glass-bg-soft: rgba(9, 9, 11, 0.70);
     --glass-border:  rgba(255,255,255,0.08);
 
-    /* Hero card stays dark-on-dark (slightly elevated) */
-    --hero-bg:   #18181B;
-    --hero-text: #FAFAFA;
-    --hero-soft: rgba(250, 250, 250, 0.6);
+    /* Hero card sigue drenched en naranja también en oscuro */
+    --hero-bg:   var(--orange);
+    --hero-text: #2A1505;
+    --hero-soft: rgba(42,21,5,0.66);
 
     /* Stable per-category colors — dark mode variants */
     --cat-pareja:  var(--orange);
@@ -411,16 +443,16 @@ html {
   --color-primary-container:   #FBE6D2;
   --color-secondary:           #0474BA;
   --color-secondary-container: #D7E9F4;
-  --color-surface:             #F4EEE4;
-  --color-surface-low:         #ECE3D5;
-  --color-surface-highest:     #FBF6EE;
-  --color-surface-lowest:      #FFFCF7;
-  --color-surface-variant:     #ECE3D5;
+  --color-surface:             #F4EFE3;
+  --color-surface-low:         #ECE5D4;
+  --color-surface-highest:     #F7F2E7;
+  --color-surface-lowest:      #FFFFFF;
+  --color-surface-variant:     #ECE5D4;
   --color-on-surface:          #211D18;
   --color-outline-variant:     rgba(33,29,24,0.10);
 
   --font-sans:    'Hanken Grotesk', system-ui, sans-serif;
-  --font-display: 'Newsreader', Georgia, serif;
+  --font-display: 'Hanken Grotesk', system-ui, sans-serif;
 
   --radius-full: 1.5rem;
   --backdrop-blur-lg: 20px;
@@ -429,7 +461,10 @@ html {
 @layer base {
   h1, h2, h3 {
     font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.035em;
     color: var(--ink);
+    text-wrap: balance;
   }
 }
 
@@ -459,11 +494,10 @@ html {
     box-shadow: var(--sh-lg);
   }
 
+  /* Nav pill flotante — sólida (sin backdrop-filter: más barata de pintar) */
   .ot-glass-nav {
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
+    background: var(--card);
+    border: 1px solid var(--line-soft);
     box-shadow: var(--sh-lg);
   }
 

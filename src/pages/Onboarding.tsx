@@ -63,8 +63,8 @@ function Onboarding({ onComplete }: { onComplete: () => void }) {
 
       setInviteCode(ic)
       go(4)
-    } catch (e: any) {
-      setError(e.message)
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : String(e))
     } finally {
       setLoading(false)
     }
@@ -84,8 +84,8 @@ function Onboarding({ onComplete }: { onComplete: () => void }) {
       }
 
       go(5)
-    } catch (e: any) {
-      setError(e.message)
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : String(e))
     } finally {
       setLoading(false)
     }

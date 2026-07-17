@@ -39,10 +39,6 @@ test.describe('Calendar — Agenda', () => {
 
   test('navegación entre meses', async ({ page }) => {
     // Look for prev/next month buttons
-    const prevBtn = page.locator('button').filter({ has: page.locator('[data-icon="chevL"], svg') }).first()
-    const nextBtn = page.locator('button').filter({ has: page.locator('[data-icon="chevR"], svg') }).last()
-
-    // Just verify calendar renders and has navigation
     const calBody = page.locator('div').filter({ hasText: /[0-9]{1,2}/ }).first()
     await expect(calBody).toBeVisible()
   })

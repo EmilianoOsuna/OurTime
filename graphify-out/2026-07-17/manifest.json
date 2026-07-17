@@ -5,7 +5,7 @@
     "semantic_hash": ""
   },
   ".opencode/pilot-state.json": {
-    "mtime": 1784305652.1642585,
+    "mtime": 1784304889.55579,
     "ast_hash": "5d93e1bd419863ea6f8c529f7a8eae01",
     "semantic_hash": ""
   },
@@ -170,7 +170,7 @@
     "semantic_hash": "6d81939f0073facf9cb4673636f9bef1"
   },
   "dev-dist/registerSW.js": {
-    "mtime": 1784305733.6102457,
+    "mtime": 1784303693.8428726,
     "ast_hash": "b2999fa3193e9ce6a83fa7d0681b1d1b",
     "semantic_hash": "b2999fa3193e9ce6a83fa7d0681b1d1b"
   },
@@ -325,8 +325,8 @@
     "semantic_hash": ""
   },
   "src/components/AppShell.tsx": {
-    "mtime": 1784305652.168441,
-    "ast_hash": "b9f411226d8f2166d86381c999c0d9ac",
+    "mtime": 1784304889.5563657,
+    "ast_hash": "2298ebd93e9ed1f20af71d42fabb22ba",
     "semantic_hash": ""
   },
   "src/components/NotificationsPanel.tsx": {
@@ -400,7 +400,7 @@
     "semantic_hash": "9f35968861fbb59a3245661ef747376b"
   },
   "src/components/ui/EditAction.tsx": {
-    "mtime": 1784305652.168441,
+    "mtime": 1784304889.5564704,
     "ast_hash": "be95e85dabefb1413c1dbd4f8ba340b2",
     "semantic_hash": ""
   },
@@ -425,7 +425,7 @@
     "semantic_hash": ""
   },
   "src/components/ui/LiveEditBadge.tsx": {
-    "mtime": 1784305652.168441,
+    "mtime": 1784304889.5565584,
     "ast_hash": "b2fc5fac2ae0d1da05ce89ddb474f4dd",
     "semantic_hash": ""
   },
@@ -535,8 +535,8 @@
     "semantic_hash": "95464f4400f4cdaeb05f4d456ee8d30b"
   },
   "src/lib/supabase.ts": {
-    "mtime": 1784305652.16858,
-    "ast_hash": "d02b4ed15fb1d6ef44d5348375664247",
+    "mtime": 1784147183.092378,
+    "ast_hash": "89f1520b2fdc2c06b506e741f9fc20d6",
     "semantic_hash": ""
   },
   "src/lib/themeUtils.ts": {
@@ -555,7 +555,7 @@
     "semantic_hash": ""
   },
   "src/pages/Auth.tsx": {
-    "mtime": 1784305652.16858,
+    "mtime": 1784304889.5568109,
     "ast_hash": "7042d96fc75b3770c93942f2ed5c95a3",
     "semantic_hash": ""
   },
@@ -565,17 +565,17 @@
     "semantic_hash": ""
   },
   "src/pages/Chat.tsx": {
-    "mtime": 1784305677.297094,
-    "ast_hash": "51d9beb1e4dace4ea839ec8b9a3a24d7",
-    "semantic_hash": ""
+    "mtime": 1781294682.1405718,
+    "ast_hash": "ea8650a9d2d4f87b58a072b3c047ce52",
+    "semantic_hash": "ea8650a9d2d4f87b58a072b3c047ce52"
   },
   "src/pages/Dashboard.tsx": {
-    "mtime": 1784305652.1695802,
+    "mtime": 1784304889.5569198,
     "ast_hash": "f018006f92ca357becc9699d1d998785",
     "semantic_hash": ""
   },
   "src/pages/Finances.tsx": {
-    "mtime": 1784305652.170122,
+    "mtime": 1784304889.5569828,
     "ast_hash": "fd6127accd46addfcc4b23ec2f667537",
     "semantic_hash": ""
   },
@@ -585,7 +585,7 @@
     "semantic_hash": ""
   },
   "src/pages/Landing.tsx": {
-    "mtime": 1784305652.1704676,
+    "mtime": 1784304889.5572357,
     "ast_hash": "11d949da457b1f585c58d8dbee756ab8",
     "semantic_hash": ""
   },
@@ -600,7 +600,7 @@
     "semantic_hash": ""
   },
   "src/pages/Profile.tsx": {
-    "mtime": 1784305652.1704676,
+    "mtime": 1784304889.557453,
     "ast_hash": "a9f3b6d18fb3e912d08c1a909dd633f5",
     "semantic_hash": ""
   },
@@ -815,7 +815,7 @@
     "semantic_hash": ""
   },
   ".opencode/pilot-banner.txt": {
-    "mtime": 1784305652.1636016,
+    "mtime": 1784304889.5557106,
     "ast_hash": "7b8001065b541f70a2e8a32f5af9f4b9",
     "semantic_hash": ""
   },
@@ -945,13 +945,13 @@
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1784305652.1642585,
-    "ast_hash": "40182d2e07036385680570fdaad3c57e",
+    "mtime": 1784304889.5559254,
+    "ast_hash": "78e14490f974895fddb9dbabde2207c2",
     "semantic_hash": ""
   },
   "DESIGN.md": {
-    "mtime": 1784305652.1642585,
-    "ast_hash": "fd28bc85119e05e79ba4384f86b49cad",
+    "mtime": 1784098673.810946,
+    "ast_hash": "849d7038d3bac9e77ee479cec83fc4d7",
     "semantic_hash": ""
   },
   "MONETIZATION_PLAN.md": {
@@ -995,7 +995,7 @@
     "semantic_hash": ""
   },
   "index.html": {
-    "mtime": 1784305652.1675801,
+    "mtime": 1784304889.5559828,
     "ast_hash": "51a71b6547e8c8902ff5ba4d14719384",
     "semantic_hash": ""
   },
@@ -1602,16 +1602,6 @@
   "AI_CHAT_PLAN.md": {
     "mtime": 1784304821.6425922,
     "ast_hash": "a7345d551300e319af2c98f88114bdf6",
-    "semantic_hash": ""
-  },
-  "supabase/functions/ai-chat/index.ts": {
-    "mtime": 1784305455.7895644,
-    "ast_hash": "7940d3030e1b7a274d6ad2703960dde0",
-    "semantic_hash": ""
-  },
-  "supabase/migrations/20260717000000_ai_chat.sql": {
-    "mtime": 1784305424.573926,
-    "ast_hash": "a72e9bf0199161955426a93a3b582e38",
     "semantic_hash": ""
   }
 }

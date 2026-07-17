@@ -3,6 +3,7 @@ import { useAuth } from './AuthContext'
 
 export type CurrencyKey = 'eur' | 'usd' | 'mxn' | 'cop' | 'ars' | 'bob' | 'brl' | 'gbp'
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const CURRENCIES: Record<CurrencyKey, { symbol: string; name: string }> = {
   eur: { symbol: '€',  name: 'Euro (€)'              },
   usd: { symbol: '$',  name: 'Dólar USD ($)'          },
@@ -26,6 +27,7 @@ const Ctx = createContext<CurrencyCtx>({
   fmt: (n) => '€' + n,
 })
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useCurrency = () => useContext(Ctx)
 
 function storyKey(storyId: string | null) {
@@ -41,6 +43,7 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // When story changes, load that story's saved currency
   useEffect(() => {
     const saved = localStorage.getItem(storyKey(activeStoryId)) as CurrencyKey | null
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCurrencyState(saved || 'eur')
   }, [activeStoryId])
 

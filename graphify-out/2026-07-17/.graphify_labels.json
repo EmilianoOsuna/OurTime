@@ -138,7 +138,6 @@
   "136": "Core Principles",
   "137": "Architecture",
   "138": "Git Branching Workflow Extension",
-  "139": "AuthContext.tsx",
   "140": "2026-07-15T05-26-42Z__src.md",
   "141": "Create Feature Branch",
   "142": "Create Feature Branch",
@@ -168,7 +167,6 @@
   "166": "20260612_integrations.sql",
   "167": "graphify.md",
   "168": "graphify.md",
-  "169": "Chat.tsx",
   "170": "@capacitor/share",
   "171": "@types/react",
   "172": "20260612190000_story_cover_position.sql",
@@ -181,11 +179,7 @@
   "179": "goodsecrets-scroll3.md",
   "180": "goodsecrets-snapshot.md",
   "181": "20260715000000_entitlements.sql",
-  "182": ".delete",
   "183": "@capgo/capacitor-social-login",
   "184": "react-colorful",
-  "185": "supabase",
-  "186": "index.ts",
-  "187": "@capacitor/app",
-  "188": "20260717000000_ai_chat.sql"
+  "185": "supabase"
 }

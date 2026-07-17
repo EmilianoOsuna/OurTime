@@ -2,6 +2,11 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Rules (IMPORTANT)
+
+- **NUNCA hacer `git push`** a este repositorio bajo ninguna circunstancia. El push lo hace siempre el usuario manualmente. Puedes hacer commits locales solo si el usuario lo pide, pero jamás subirlos.
+- **No añadir el trailer `Co-Authored-By: Claude`** en los commits de este repo.
+
 ## What this is
 
 OurTime ("Our Time") — a Spanish-language app for couples/friends/family to share plans, finances, photos, and chat. Ships as both a PWA and a Capacitor Android app from the same React codebase, backed by Supabase.
@@ -51,6 +56,6 @@ Everything hangs off a **story** (a shared space with category `pareja | amigos 
 
 ### Styling
 
-Design system is CSS custom properties in `src/index.css` ("editorial" warm-paper theme: `--paper`, `--ink`, `--orange`, `--blue`, fonts `--font-display`/`--font-ui`, radii `--r-*`, shadows `--sh-*`). Components use inline styles with these vars plus a small set of utility classes defined in `index.css` (`ot-card`, `eyebrow`, `display`, `field`, `skeleton`, …) — Tailwind is imported but its utility classes are essentially unused. Dark mode is `@media (prefers-color-scheme: dark)` overriding the vars, so **always use the vars, never hardcoded colors** (e.g. `var(--paper)`, not `#FBF6EE`). The hero card intentionally stays dark in both modes (`--hero-*`).
+Design system is CSS custom properties in `src/index.css` (v3 "Vivo", look & feel inspired by mindmarket.com: cream paper `--paper` + pure-white cards `--card`, single sans Hanken Grotesk for both `--font-display`/`--font-ui` with tight tracking, drenched color blocks, generous radii `--r-*`, shadows `--sh-*`, signature `.squiggle` underline). Supporting block colors: `--orange` (accent, story-themable), `--blue`, `--done` (green), `--sun` (yellow, fixed dark ink `--sun-ink`/`--sun-soft`). Components use inline styles with these vars plus a small set of utility classes defined in `index.css` (`ot-card`, `eyebrow`, `display`, `field`, `skeleton`, `squiggle`, `hero-card`, …) — Tailwind is imported but its utility classes are essentially unused. Dark mode is `@media (prefers-color-scheme: dark)` overriding the vars, so **always use the vars, never hardcoded colors** (e.g. `var(--paper)`, not `#F4EFE3`). Hero surfaces (`--hero-bg`/`--hero-text`/`--hero-soft`) are drenched in the active accent in both modes; when a story sets `theme_color` (or a category override applies), `AppShell` recomputes `--hero-*` with `heroInk()` (luminance-based contrast pick) because `--hero-bg: var(--orange)` declared at `:root` resolves against `:root`, not scoped overrides.
 
 All user-facing text is Spanish.

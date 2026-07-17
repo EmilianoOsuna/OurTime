@@ -93,10 +93,11 @@ export type AlbumType = {
 export type MessageType = {
   id: string
   story_id: string
-  sender_id: string
+  sender_id: string | null
   text: string
   created_at: string
   read_at: string | null
+  role: 'user' | 'ai'
 }
 
 export type TransactionType = {
@@ -145,7 +146,7 @@ export type PersonDisplay = {
   accessory?: string | null
 }
 
-export function imageUrl(url: string | null | undefined, _width = 400): string | null {
+export function imageUrl(url: string | null | undefined, _width?: number): string | null { // eslint-disable-line @typescript-eslint/no-unused-vars
   return url || null
 }
 

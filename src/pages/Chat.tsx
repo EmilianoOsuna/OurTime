@@ -1,10 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
-import { sendPushToStoryMembers } from '../lib/usePushNotifications'
 import { Icon } from '../components/ui/Icon'
-import { Avatar } from '../components/ui/Avatar'
-import type { MessageType, PersonDisplay } from '../lib/supabase'
+import type { MessageType } from '../lib/supabase'
 
 function fmtTime(iso: string): string {
   const d = new Date(iso)
@@ -35,24 +33,60 @@ function fmtDateLabel(iso: string): string {
   return d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })
 }
 
+const QUICK_PROMPTS = [
+  'Ideas para una cita este finde',
+  'Juegos para jugar a distancia',
+  'Plan barato para hoy',
+  'Ideas para un aniversario',
+]
+
+function AiAvatar({ size = 30 }: { size?: number }) {
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: size * 0.4,
+      background: 'color-mix(in srgb, var(--blue) 18%, transparent)',
+      color: 'var(--blue)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+    }}>
+      <Icon name="sparkle" size={size * 0.55} />
+    </div>
+  )
+}
+
+function TypingIndicator() {
+  return (
+    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 7, marginTop: 4 }}>
+      <div style={{ width: 30, alignSelf: 'flex-end' }}><AiAvatar /></div>
+      <div style={{
+        padding: '13px 16px', borderRadius: '6px 18px 18px 18px',
+        background: 'var(--card)', boxShadow: 'var(--sh-sm)',
+        display: 'flex', gap: 5, alignItems: 'center',
+      }}>
+        {[0, 1, 2].map(i => (
+          <span key={i} style={{
+            width: 7, height: 7, borderRadius: '50%', background: 'var(--blue)',
+            opacity: 0.6, animation: `pulse 1s ease-in-out ${i * 0.18}s infinite alternate`,
+          }} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
 interface Props {
-  me: PersonDisplay
-  partner: PersonDisplay | null
   storyName?: string
-  storyCoverUrl?: string | null
-  storyCoverPosition?: { x: number; y: number }
   onBack: () => void
 }
 
-export default function Chat({ me, partner, storyName, storyCoverUrl, storyCoverPosition, onBack }: Props) {
-  const { activeStoryId, user } = useAuth()
+export default function Chat({ storyName, onBack }: Props) {
+  const { activeStoryId } = useAuth()
   const [messages, setMessages] = useState<MessageType[]>([])
   const [text, setText] = useState('')
   const [sending, setSending] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [members, setMembers] = useState<(PersonDisplay & { userId?: string })[]>([])
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  const tempSeq = useRef(0)
 
   const mounted = useRef(true)
   useEffect(() => { return () => { mounted.current = false } }, [])
@@ -63,6 +97,7 @@ export default function Chat({ me, partner, storyName, storyCoverUrl, storyCover
 
   useEffect(() => {
     if (!activeStoryId) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true)
     setMessages([])
     supabase.from('messages').select('*')
@@ -75,65 +110,40 @@ export default function Chat({ me, partner, storyName, storyCoverUrl, storyCover
         setLoading(false)
         scrollToBottom('instant' as ScrollBehavior)
       })
-
-    supabase.from('story_members')
-      .select('user_id, profiles(full_name, avatar_url)')
-      .eq('story_id', activeStoryId)
-      .then(({ data }) => {
-        if (!mounted.current) return
-        if (data) {
-          setMembers(data.map((m: any) => ({
-            userId: m.user_id,
-            name: m.profiles?.full_name || 'Anónimo',
-            initial: (m.profiles?.full_name?.[0] || '?').toUpperCase(),
-            color: 'var(--orange)',
-          })))
-        }
-      })
-
-    const channel = supabase.channel('chat:' + activeStoryId)
-      .on('postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'messages', filter: `story_id=eq.${activeStoryId}` },
-        payload => {
-          if (!mounted.current) return
-          setMessages(prev => [...prev, payload.new as MessageType])
-          scrollToBottom()
-        })
-      .subscribe()
-
-    return () => { supabase.removeChannel(channel) }
   }, [activeStoryId, scrollToBottom])
 
-  useEffect(() => {
-    if (!activeStoryId || !user || messages.length === 0) return
-    const unread = messages.filter(m => m.sender_id !== user.id && !m.read_at)
-    if (unread.length === 0) return
-    supabase.from('messages')
-      .update({ read_at: new Date().toISOString() })
-      .eq('story_id', activeStoryId)
-      .neq('sender_id', user.id)
-      .is('read_at', null)
-      .then(undefined, console.error)
-  }, [messages, activeStoryId, user])
-
-  const send = async () => {
-    const trimmed = text.trim()
-    if (!trimmed || !activeStoryId || !user || sending) return
+  const send = async (raw?: string) => {
+    const trimmed = (raw ?? text).trim()
+    if (!trimmed || !activeStoryId || sending) return
     setSending(true)
     setText('')
-    const { error } = await supabase.from('messages').insert({
-      story_id: activeStoryId, sender_id: user.id, text: trimmed,
+
+    // Mensaje optimista mientras responde la IA
+    tempSeq.current += 1
+    const tempId = 'temp-' + tempSeq.current
+    const optimistic: MessageType = {
+      id: tempId, story_id: activeStoryId, sender_id: 'me',
+      text: trimmed, created_at: new Date().toISOString(), read_at: null, role: 'user',
+    }
+    setMessages(prev => [...prev, optimistic])
+    scrollToBottom()
+
+    const { data, error } = await supabase.functions.invoke('ai-chat', {
+      body: { text: trimmed, story_id: activeStoryId },
     })
-    if (error) {
+
+    if (!mounted.current) return
+    if (error || data?.error || !data?.aiMessage) {
+      // Revertir el optimista y devolver el texto al input
+      setMessages(prev => prev.filter(m => m.id !== tempId))
       setText(trimmed)
     } else {
-      sendPushToStoryMembers(
-        activeStoryId, user.id,
-        `${me.name || 'Alguien'} · ${storyName || 'OurTime'}`,
-        trimmed.length > 80 ? trimmed.slice(0, 80) + '…' : trimmed,
-        `/?shortcut=chat&story=${encodeURIComponent(activeStoryId)}`,
-        { event_type: 'message' },
-      ).catch(console.error)
+      setMessages(prev => [
+        ...prev.filter(m => m.id !== tempId),
+        data.userMessage as MessageType,
+        data.aiMessage as MessageType,
+      ])
+      scrollToBottom()
     }
     setSending(false)
     inputRef.current?.focus()
@@ -142,8 +152,6 @@ export default function Chat({ me, partner, storyName, storyCoverUrl, storyCover
   const handleKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() }
   }
-
-  const title = storyName || partner?.name || 'Chat'
 
   return (
     <div style={{
@@ -169,25 +177,15 @@ export default function Chat({ me, partner, storyName, storyCoverUrl, storyCover
           <Icon name="chevL" size={20} />
         </button>
 
-        <div style={{ position: 'relative', flexShrink: 0 }}>
-          {storyCoverUrl ? (
-            <img src={storyCoverUrl} alt="" style={{ width: 40, height: 40, borderRadius: 12, objectFit: 'cover',
-              objectPosition: `${storyCoverPosition?.x ?? 50}% ${storyCoverPosition?.y ?? 50}%` }} />
-          ) : (
-            <div style={{ width: 40, height: 40, borderRadius: 12, background: 'var(--orange-tint)',
-              color: 'var(--orange-deep)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Icon name="chat" size={20} />
-            </div>
-          )}
-        </div>
+        <AiAvatar size={40} />
 
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{
             fontWeight: 700, fontSize: 15.5, lineHeight: 1.1,
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-          }}>{title}</div>
+          }}>Asistente OurTime</div>
           <div style={{ fontSize: 11.5, color: 'var(--ink-soft)', fontWeight: 500, marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {members.filter(m => m.userId !== user?.id).map(m => m.name).join(', ') || 'Solo tú'}
+            {storyName ? `Ideas de planes para ${storyName}` : 'Ideas de planes'}
           </div>
         </div>
       </div>
@@ -213,31 +211,42 @@ export default function Chat({ me, partner, storyName, storyCoverUrl, storyCover
 
         {!loading && messages.length === 0 && (
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
-            justifyContent: 'center', gap: 10, color: 'var(--ink-faint)', paddingBottom: 40 }}>
-            <div style={{ width: 64, height: 64, borderRadius: 22, background: 'var(--orange-tint)',
-              color: 'var(--orange)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Icon name="chat" size={30} />
+            justifyContent: 'center', gap: 10, color: 'var(--ink-faint)', paddingBottom: 24 }}>
+            <div style={{ width: 64, height: 64, borderRadius: 22,
+              background: 'color-mix(in srgb, var(--blue) 15%, transparent)',
+              color: 'var(--blue)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Icon name="sparkle" size={30} />
             </div>
             <div style={{ fontSize: 15.5, fontWeight: 700, color: 'var(--ink-soft)', marginTop: 4 }}>
-              Empiecen a escribir
+              ¿Qué hacemos hoy?
             </div>
-            <div style={{ fontSize: 13, textAlign: 'center', maxWidth: 200, lineHeight: 1.5 }}>
-              Este es su espacio privado. Solo ustedes pueden leer esto.
+            <div style={{ fontSize: 13, textAlign: 'center', maxWidth: 230, lineHeight: 1.5 }}>
+              Pídeme ideas de citas, planes y actividades para compartir.
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center', marginTop: 8, maxWidth: 320 }}>
+              {QUICK_PROMPTS.map(p => (
+                <button key={p} onClick={() => send(p)} disabled={sending} style={{
+                  border: '1.5px solid var(--line)', borderRadius: 999, padding: '8px 14px',
+                  background: 'var(--card)', color: 'var(--ink)', cursor: 'pointer',
+                  fontFamily: 'var(--font-ui)', fontSize: 12.5, fontWeight: 600,
+                }}>
+                  {p}
+                </button>
+              ))}
             </div>
           </div>
         )}
 
         {messages.map((msg, idx) => {
-          const isMe = msg.sender_id === user?.id
+          const isAi = msg.role === 'ai'
           const showDate = shouldShowDate(messages, idx)
-          const person = isMe ? me : (partner ?? { name: 'Compañero', initial: 'C', color: 'var(--orange)' })
           const prev = idx > 0 ? messages[idx - 1] : null
           const next = idx < messages.length - 1 ? messages[idx + 1] : null
-          const prevSame = !!(prev && prev.sender_id === msg.sender_id && !shouldShowDate(messages, idx))
-          const nextSame = !!(next && next.sender_id === msg.sender_id && !shouldShowDate(messages, idx + 1))
+          const prevSame = !!(prev && (prev.role === 'ai') === isAi && !shouldShowDate(messages, idx))
+          const nextSame = !!(next && (next.role === 'ai') === isAi && !shouldShowDate(messages, idx + 1))
 
-          // Border-radius: tail corner (bottom-right for me, bottom-left for them) rounds down when last in group
-          const br = isMe
+          // Border-radius: tail corner (bottom-right for me, bottom-left for the AI) rounds down when last in group
+          const br = !isAi
             ? (nextSame ? '18px 6px 6px 18px' : '18px 6px 18px 18px')
             : (nextSame ? '6px 18px 18px 6px' : '6px 18px 18px 18px')
 
@@ -251,35 +260,34 @@ export default function Chat({ me, partner, storyName, storyCoverUrl, storyCover
                 </div>
               )}
               <div style={{
-                display: 'flex', flexDirection: isMe ? 'row-reverse' : 'row',
+                display: 'flex', flexDirection: isAi ? 'row' : 'row-reverse',
                 alignItems: 'flex-end', gap: 7,
                 marginBottom: nextSame ? 2 : 10,
                 marginTop: !prevSame && !showDate && idx > 0 ? 4 : 0,
               }}>
-                {!isMe && (
+                {isAi && (
                   <div style={{ width: 30, flexShrink: 0, alignSelf: 'flex-end' }}>
-                    {!nextSame && <Avatar person={person} size={30} />}
+                    {!nextSame && <AiAvatar />}
                   </div>
                 )}
 
                 <div style={{ display: 'flex', flexDirection: 'column',
-                  alignItems: isMe ? 'flex-end' : 'flex-start', maxWidth: '74%' }}>
+                  alignItems: isAi ? 'flex-start' : 'flex-end', maxWidth: '78%' }}>
                   <div style={{
                     padding: '10px 14px',
                     borderRadius: br,
-                    background: isMe ? 'var(--orange)' : 'var(--card)',
-                    color: isMe ? '#fff' : 'var(--ink)',
-                    boxShadow: isMe ? 'none' : 'var(--sh-sm)',
+                    background: isAi ? 'var(--card)' : 'var(--orange)',
+                    color: isAi ? 'var(--ink)' : '#fff',
+                    boxShadow: isAi ? 'var(--sh-sm)' : 'none',
+                    border: isAi ? '1px solid color-mix(in srgb, var(--blue) 25%, transparent)' : 'none',
                     fontSize: 15, lineHeight: 1.45,
                     wordBreak: 'break-word', whiteSpace: 'pre-wrap',
                   }}>
                     {msg.text}
                   </div>
                   {!nextSame && (
-                    <div style={{ fontSize: 10.5, color: 'var(--ink-faint)', marginTop: 3,
-                      display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <div style={{ fontSize: 10.5, color: 'var(--ink-faint)', marginTop: 3 }}>
                       {fmtTime(msg.created_at)}
-                      {isMe && msg.read_at && <Icon name="check" size={11} style={{ color: 'var(--orange)' }} />}
                     </div>
                   )}
                 </div>
@@ -287,6 +295,8 @@ export default function Chat({ me, partner, storyName, storyCoverUrl, storyCover
             </div>
           )
         })}
+
+        {sending && <TypingIndicator />}
         <div ref={bottomRef} />
       </div>
 
@@ -309,7 +319,7 @@ export default function Chat({ me, partner, storyName, storyCoverUrl, storyCover
             e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'
           }}
           onKeyDown={handleKey}
-          placeholder="Escribe algo…"
+          placeholder="Pide una idea de plan…"
           rows={1}
           style={{
             flex: 1, border: '1.5px solid var(--line)', borderRadius: 22, padding: '10px 16px',
@@ -320,15 +330,15 @@ export default function Chat({ me, partner, storyName, storyCoverUrl, storyCover
           onFocus={e => (e.target.style.borderColor = 'var(--orange)')}
           onBlur={e => (e.target.style.borderColor = 'var(--line)')}
         />
-        <button onClick={send} disabled={!text.trim() || sending} style={{
+        <button onClick={() => send()} disabled={!text.trim() || sending} style={{
           width: 44, height: 44, borderRadius: '50%', border: 'none', flexShrink: 0,
-          background: text.trim() ? 'var(--orange)' : 'var(--card-2)',
-          color: text.trim() ? '#fff' : 'var(--ink-faint)',
+          background: text.trim() && !sending ? 'var(--orange)' : 'var(--card-2)',
+          color: text.trim() && !sending ? '#fff' : 'var(--ink-faint)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          cursor: text.trim() ? 'pointer' : 'default',
+          cursor: text.trim() && !sending ? 'pointer' : 'default',
           transition: 'all .18s',
-          boxShadow: text.trim() ? '0 3px 12px color-mix(in srgb, var(--orange) 45%, transparent)' : 'none',
-          transform: text.trim() ? 'scale(1)' : 'scale(0.92)',
+          boxShadow: text.trim() && !sending ? '0 3px 12px color-mix(in srgb, var(--orange) 45%, transparent)' : 'none',
+          transform: text.trim() && !sending ? 'scale(1)' : 'scale(0.92)',
         }}>
           <Icon name="send" size={18} />
         </button>

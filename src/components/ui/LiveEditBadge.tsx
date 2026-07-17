@@ -9,7 +9,7 @@ export function LiveEditBadge({ inline = false }: { inline?: boolean }) {
     }}>
       <div className="avatar" style={{ width: 18, height: 18, background: '#F17720',
         fontSize: 9, boxShadow: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        borderRadius: '50%', fontFamily: 'var(--font-display)', fontStyle: 'italic', color: '#fff',
+        borderRadius: '50%', fontFamily: 'var(--font-display)', color: '#fff',
       }}>L</div>
       <span>Lucía está editando</span>
       <span style={{ display: 'flex', gap: 2 }}>

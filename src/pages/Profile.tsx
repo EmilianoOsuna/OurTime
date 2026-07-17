@@ -98,6 +98,7 @@ export function ProfileScreen({ plans, onClose, onGoToFinance, storyCode, isAdmi
       .eq('story_id', activeStoryId)
       .then(({ data }) => {
         if (!data) return
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const list: StoryMember[] = data.map((m: any) => ({
           userId: m.user_id,
           name: m.profiles?.full_name || 'Miembro',
@@ -146,8 +147,8 @@ export function ProfileScreen({ plans, onClose, onGoToFinance, storyCode, isAdmi
       setMembers(ms => ms.filter(m => m.userId !== target.userId))
       setSelectedMember(null)
       toast({ icon: 'trash', eyebrow: 'Miembro', title: 'Miembro expulsado', body: `${target.name} ya no forma parte de la historia.` })
-    } catch (e: any) {
-      toast({ icon: 'x', title: 'Error', body: e.message })
+    } catch (e: unknown) {
+      toast({ icon: 'x', title: 'Error', body: e instanceof Error ? e.message : String(e) })
     }
   }
 
@@ -180,8 +181,8 @@ export function ProfileScreen({ plans, onClose, onGoToFinance, storyCode, isAdmi
       const url = publicUrl + '?t=' + Date.now()
       await supabase.from('profiles').update({ avatar_url: url }).eq('id', user.id)
       await refreshProfile()
-    } catch (e: any) {
-      toast({ icon: 'x', title: 'Error subiendo foto', body: e.message })
+    } catch (e: unknown) {
+      toast({ icon: 'x', title: 'Error subiendo foto', body: e instanceof Error ? e.message : String(e) })
     } finally {
       setUploadingAvatar(false)
       e.target.value = ''
@@ -195,8 +196,8 @@ export function ProfileScreen({ plans, onClose, onGoToFinance, storyCode, isAdmi
       await supabase.from('profiles').update({ avatar_url: googleAvatarUrl }).eq('id', user.id)
       await refreshProfile()
       toast({ icon: 'check', title: 'Foto actualizada', body: 'Usando tu foto de Google' })
-    } catch (e: any) {
-      toast({ icon: 'x', title: 'Error', body: e.message })
+    } catch (e: unknown) {
+      toast({ icon: 'x', title: 'Error', body: e instanceof Error ? e.message : String(e) })
     } finally {
       setUploadingAvatar(false)
     }
@@ -215,8 +216,8 @@ export function ProfileScreen({ plans, onClose, onGoToFinance, storyCode, isAdmi
       if (error) throw error
       await refreshProfile()
       setEditing(false)
-    } catch (e: any) {
-      toast({ icon: 'x', title: 'Error', body: e.message })
+    } catch (e: unknown) {
+      toast({ icon: 'x', title: 'Error', body: e instanceof Error ? e.message : String(e) })
     } finally {
       setSaving(false)
     }
@@ -251,8 +252,8 @@ export function ProfileScreen({ plans, onClose, onGoToFinance, storyCode, isAdmi
           setJoinedStoryName(storyData.name)
         }
       }
-    } catch (e: any) {
-      const msg: string = e.message || 'Código inválido'
+    } catch (e: unknown) {
+      const msg: string = (e instanceof Error ? e.message : String(e)) || 'Código inválido'
       setJoinError(msg.includes('MEMBER_CAP_REACHED')
         ? 'Esta Historia alcanzó su límite de miembros. Pide al administrador que active el plan Familia.'
         : msg)
@@ -277,6 +278,7 @@ export function ProfileScreen({ plans, onClose, onGoToFinance, storyCode, isAdmi
         .select('user_id, role, joined_at, permission_level, profiles(full_name, avatar_url)')
         .eq('story_id', activeStoryId)
       if (data) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const list: StoryMember[] = data.map((m: any) => ({
           userId: m.user_id,
           name: m.profiles?.full_name || 'Miembro',
@@ -299,19 +301,20 @@ export function ProfileScreen({ plans, onClose, onGoToFinance, storyCode, isAdmi
       display: 'flex', flexDirection: 'column',
       animation: 'sheetUp .42s cubic-bezier(.2,.9,.2,1) both',
     }}>
-      {/* Header */}
+      {/* Header — bloque drenched amarillo (firma mindmarket) */}
       <div style={{
-        paddingTop: 56, paddingBottom: 14, paddingLeft: 22, paddingRight: 18,
+        paddingTop: 56, paddingBottom: 18, paddingLeft: 22, paddingRight: 18,
         display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
-        flexShrink: 0, borderBottom: '1px solid var(--line-soft)', background: 'var(--paper)',
+        flexShrink: 0, background: 'var(--sun)',
+        borderBottomLeftRadius: 'var(--r-md)', borderBottomRightRadius: 'var(--r-md)',
       }}>
         <div>
-          <div className="eyebrow" style={{ marginBottom: 5 }}>Configuración</div>
-          <h1 className="display" style={{ fontSize: 28, margin: 0 }}>Perfil</h1>
+          <div className="eyebrow" style={{ marginBottom: 5, color: 'var(--sun-soft)' }}>Configuración</div>
+          <h1 className="display" style={{ fontSize: 28, margin: 0, color: 'var(--sun-ink)' }}>Perfil</h1>
         </div>
         <button data-testid="profile-close-btn" onClick={onClose} style={{
           width: 42, height: 42, borderRadius: '50%', border: 'none',
-          background: 'var(--card)', cursor: 'pointer', color: 'var(--ink)',
+          background: 'rgba(255,255,255,0.92)', cursor: 'pointer', color: 'var(--sun-ink)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           boxShadow: 'var(--sh-sm)', flexShrink: 0,
         }}>
@@ -507,7 +510,7 @@ export function ProfileScreen({ plans, onClose, onGoToFinance, storyCode, isAdmi
                   </div>
                   {profile?.birthday
                     ? <div style={{ fontSize: 13, color: 'var(--ink-soft)', marginTop: 3 }}>Cumpleaños: {fmtDate(profile.birthday)}</div>
-                    : <div style={{ fontSize: 13, color: 'var(--ink-faint)', fontStyle: 'italic', marginTop: 3 }}>Sin cumpleaños</div>
+                    : <div style={{ fontSize: 13, color: 'var(--ink-faint)', marginTop: 3 }}>Sin cumpleaños</div>
                   }
                 </div>
               )}
@@ -527,7 +530,7 @@ export function ProfileScreen({ plans, onClose, onGoToFinance, storyCode, isAdmi
                   {['none', 'neon', 'dashed', 'double', 'orbit'].map(acc => {
                     const on = editAccessory === acc || (acc === 'none' && !editAccessory)
                     
-                    let previewStyle: React.CSSProperties = { width: 22, height: 22, borderRadius: '50%' }
+                    const previewStyle: React.CSSProperties = { width: 22, height: 22, borderRadius: '50%' }
                     if (acc === 'neon') {
                       previewStyle.boxShadow = '0 0 6px var(--orange), inset 0 0 4px var(--orange)'
                       previewStyle.border = '1px solid var(--orange)'
@@ -961,8 +964,8 @@ function GoogleCalendarSection() {
   const testConnection = async () => {
     setSyncing(true)
     try {
-      const result = await testGoogleCalendarConnection()
-      toast({ icon: 'check', title: 'Google Calendar conectado', body: result?.calendar ? `Calendario: ${result.calendar}` : 'La conexión funciona correctamente.' })
+      const result = await testGoogleCalendarConnection() as Record<string, unknown> | null
+      toast({ icon: 'check', title: 'Google Calendar conectado', body: result?.calendar ? `Calendario: ${String(result.calendar)}` : 'La conexión funciona correctamente.' })
     } catch (error) {
       if (error instanceof Error && error.message.includes('Desconecta y vuelve a conectar')) {
         setConnected(false)

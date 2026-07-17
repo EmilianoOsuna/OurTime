@@ -12,6 +12,7 @@ interface ConfirmOpts {
 type ConfirmFn = (opts: ConfirmOpts) => Promise<boolean>
 
 const Ctx = createContext<ConfirmFn>(async () => false)
+// eslint-disable-next-line react-refresh/only-export-components
 export const useConfirm = () => useContext(Ctx)
 
 export function ConfirmProvider({ children }: { children: React.ReactNode }) {

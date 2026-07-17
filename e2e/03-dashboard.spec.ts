@@ -57,8 +57,6 @@ test.describe('Dashboard — Pantalla de Inicio', () => {
 
   test('múltiples historias muestran el stories switcher', async ({ page }) => {
     // If user has multiple stories, a switcher chip should appear in the header
-    const switcher = page.locator('button').filter({ hasText: /historia/i })
-    // Just verify the page has loaded correctly regardless
     await expect(page.locator('body')).toBeVisible()
   })
 })

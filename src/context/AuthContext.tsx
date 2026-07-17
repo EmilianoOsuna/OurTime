@@ -146,7 +146,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (profileData) setProfile(profileData as ProfileType)
 
       const storyList: StoryType[] = (memberships ?? [])
-        .map((m: any) => m.stories)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .map((m: any) => m.stories as StoryType)
         .filter(Boolean)
       setStories(storyList)
 
@@ -202,7 +203,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       .select('story_id, stories(*)')
       .eq('user_id', user.id)
     const storyList: StoryType[] = (memberships ?? [])
-      .map((m: any) => m.stories)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .map((m: any) => m.stories as StoryType)
       .filter(Boolean)
     setStories(storyList)
     if (storyList.length > 0 && storyList[0]) {
@@ -217,7 +219,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [user, activeStoryId])
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     setSession(null)
     setUser(null)
     _setActiveStoryId(null)
@@ -230,7 +232,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       supabase.auth.signOut(),
       new Promise(resolve => setTimeout(resolve, 5000)),
     ]).catch(() => {})
-  }
+  }, [])
 
   const userHasPaidStory = useMemo(
     () => Object.values(entitlements).some(
@@ -244,7 +246,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     stories, profile, isLoading, entitlements, userHasPaidStory,
     signOut, refreshProfile, refreshStories, refreshEntitlements,
   }), [session, user, activeStoryId, stories, profile, isLoading, entitlements, userHasPaidStory,
-    signOut, refreshProfile, refreshStories, refreshEntitlements])
+    signOut, refreshProfile, refreshStories, refreshEntitlements, setActiveStoryId])
 
   return (
     <AuthContext.Provider value={value}>
@@ -253,4 +255,5 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => useContext(AuthContext)

@@ -18,7 +18,7 @@ export function EditAction({ label = 'Editar', onClick, disabled = false, color 
       style={{
         minHeight: 34,
         border: onDark ? 'none' : '1px solid var(--line)',
-        borderRadius: 11,
+        borderRadius: 999,
         background: onDark ? '#fff' : 'var(--card-2)',
         cursor: disabled ? 'default' : 'pointer',
         fontSize: 13,

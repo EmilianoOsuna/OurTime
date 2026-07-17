@@ -25,8 +25,6 @@ test.describe('Finances — Presupuesto/Gasto', () => {
     // Should show some financial information
     const body = await page.locator('body').textContent()
     // Check for common finance terms
-    const hasFinanceContent = /saldo|gastado|presupuesto|gasto|ingreso|\$|€|MX/i.test(body || '')
-    // The page should have loaded some content
     expect(body?.length).toBeGreaterThan(100)
   })
 

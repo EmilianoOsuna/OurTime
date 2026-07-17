@@ -160,6 +160,7 @@ export default function Finances({ onPlanClick, refreshKey = 0 }: { onPlanClick?
             </div>
             <div style={{ position: 'relative', zIndex: 1 }}>
               <EditAction
+                tone="onDark"
                 label={budget !== null ? 'Editar' : 'Añadir presupuesto'}
                 onClick={() => {
                   setBudgetInput(budget === null ? '' : String(budget))
@@ -203,8 +204,7 @@ export default function Finances({ onPlanClick, refreshKey = 0 }: { onPlanClick?
             </div>
           ) : (
             <>
-              <div className="display" style={{ fontSize: 42, margin: '6px 0 0',
-                color: projected !== null && projected < 0 ? 'var(--orange-deep)' : 'var(--hero-text)' }}>
+              <div className="display" style={{ fontSize: 46, margin: '6px 0 0', color: 'var(--hero-text)' }}>
                 {budget !== null ? (projected! < 0 ? '−' : '') + fmt(projected!) : fmt(spent)}
               </div>
               {budget !== null && estimatedTotal > 0 && (
@@ -218,7 +218,7 @@ export default function Finances({ onPlanClick, refreshKey = 0 }: { onPlanClick?
               <div style={{ display: 'flex', gap: 20, marginTop: 18, flexWrap: 'wrap' }}>
                 {budget !== null && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ width: 30, height: 30, borderRadius: 9, background: 'var(--done-tint)', color: 'var(--done)',
+                    <span style={{ width: 30, height: 30, borderRadius: 999, background: 'rgba(255,255,255,0.4)', color: 'var(--hero-text)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <Icon name="wallet" size={16} />
                     </span>
@@ -229,7 +229,7 @@ export default function Finances({ onPlanClick, refreshKey = 0 }: { onPlanClick?
                   </div>
                 )}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ width: 30, height: 30, borderRadius: 9, background: 'var(--orange-tint)', color: 'var(--orange-deep)',
+                  <span style={{ width: 30, height: 30, borderRadius: 999, background: 'rgba(255,255,255,0.4)', color: 'var(--hero-text)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Icon name="trendDown" size={16} />
                   </span>
@@ -240,7 +240,7 @@ export default function Finances({ onPlanClick, refreshKey = 0 }: { onPlanClick?
                 </div>
                 {estimatedTotal > 0 && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ width: 30, height: 30, borderRadius: 9, background: 'var(--blue-tint)', color: 'var(--blue)',
+                    <span style={{ width: 30, height: 30, borderRadius: 999, background: 'rgba(255,255,255,0.4)', color: 'var(--hero-text)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <Icon name="calendar" size={15} />
                     </span>

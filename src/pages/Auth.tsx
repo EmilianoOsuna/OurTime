@@ -103,7 +103,7 @@ export default function Auth({ onAuth }: { onAuth: () => void }) {
       if (error) throw error
       if (data.session) onAuth()
       else setError('Revisa tu correo para confirmar tu cuenta.')
-    } catch (e: any) { setError(e.message) }
+    } catch (e: unknown) { setError(e instanceof Error ? e.message : String(e)) }
     finally { setLoading(false) }
   }
 
@@ -115,7 +115,7 @@ export default function Auth({ onAuth }: { onAuth: () => void }) {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) throw error
       onAuth()
-    } catch (e: any) { setError(e.message) }
+    } catch (e: unknown) { setError(e instanceof Error ? e.message : String(e)) }
     finally { setLoading(false) }
   }
 
@@ -126,7 +126,7 @@ export default function Auth({ onAuth }: { onAuth: () => void }) {
     try {
       await supabase.auth.resetPasswordForEmail(email)
       setForgotSent(true)
-    } catch {}
+    } catch { /* reset email sent */ }
     finally { setLoading(false) }
   }
 
@@ -138,7 +138,7 @@ export default function Auth({ onAuth }: { onAuth: () => void }) {
         // Clear native session cache first to force account picker
         try {
           await SocialLogin.logout({ provider: 'google' })
-        } catch (_) {}
+        } catch { /* ignore */ }
 
         // Native Google Sign-In on mobile devices
         const result = await SocialLogin.login({
@@ -220,29 +220,27 @@ export default function Auth({ onAuth }: { onAuth: () => void }) {
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}>
 
-            {/* Hero image — top 44% */}
-            <div className="ph" style={{
-              height: '44%', flexShrink: 0,
-              maskImage: 'linear-gradient(to bottom, black 55%, transparent)',
-              WebkitMaskImage: 'linear-gradient(to bottom, black 55%, transparent)',
-            }} />
+            {/* Bloque hero drenched — portada estilo mindmarket */}
+            <div className="anim-up" style={{
+              flexShrink: 0, background: 'var(--hero-bg)',
+              borderBottomLeftRadius: 'var(--r-lg)', borderBottomRightRadius: 'var(--r-lg)',
+              padding: 'max(76px, env(safe-area-inset-top, 0px) + 56px) 28px 36px',
+            }}>
+              <div className="eyebrow" style={{ color: 'var(--hero-soft)', marginBottom: 14 }}>Bienvenidos a OurTime</div>
+              <h1 className="display" style={{ fontSize: 44, margin: 0, lineHeight: 0.98, color: 'var(--hero-text)' }}>
+                Su historia,<br />un momento<br />a la vez.
+              </h1>
+              <span className="squiggle" aria-hidden="true" style={{ color: 'var(--hero-text)', width: 112, marginTop: 14 }} />
+              <p style={{ fontSize: 15, color: 'var(--hero-soft)', lineHeight: 1.55, marginTop: 10, maxWidth: 300 }}>
+                Planes, recuerdos y cuentas compartidas. Escriban juntos lo que viene.
+              </p>
+            </div>
 
-            {/* Content — distributes title at top, buttons at bottom */}
+            {/* Content — buttons at bottom */}
             <div style={{
-              flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+              flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
               padding: '20px 28px max(72px, env(safe-area-inset-bottom, 72px))',
             }}>
-              <div className="anim-up">
-                <div className="eyebrow" style={{ color: 'var(--orange-deep)', marginBottom: 14 }}>· Bienvenidos a OurTime ·</div>
-                <h1 className="display" style={{ fontSize: 40, margin: 0, lineHeight: 0.98 }}>
-                  Su historia,<br />
-                  <span className="serif-i" style={{ color: 'var(--orange)' }}>un momento</span><br />a la vez.
-                </h1>
-                <p style={{ fontSize: 15, color: 'var(--ink-soft)', lineHeight: 1.55, marginTop: 14, maxWidth: 300 }}>
-                  Planes, recuerdos y cuentas compartidas. Escriban juntos lo que viene.
-                </p>
-              </div>
-
               <div className="anim-up">
                 <button className="btn btn-orange btn-block" style={{ fontSize: 16 }} onClick={() => go('register')}>
                   Crear cuenta <Icon name="arrowR" size={18} />

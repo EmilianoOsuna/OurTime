@@ -4,21 +4,23 @@ description: App de relaciones compartidas y recuerdos
 colors:
   primary: "#F17720"
   secondary: "#0474BA"
-  neutral-bg: "#F4EEE4"
+  green: "#2E7D5B"
+  sun: "#F3BC3F"
+  neutral-bg: "#F4EFE3"
   neutral-ink: "#211D18"
 typography:
   display:
-    fontFamily: "'Newsreader', Georgia, serif"
-    fontWeight: 500
+    fontFamily: "'Hanken Grotesk', system-ui, sans-serif"
+    fontWeight: 600
     lineHeight: 1.02
-    letterSpacing: "-0.01em"
+    letterSpacing: "-0.035em"
   body:
     fontFamily: "'Hanken Grotesk', system-ui, sans-serif"
     fontWeight: 400
 rounded:
-  sm: "14px"
-  md: "22px"
-  lg: "30px"
+  sm: "16px"
+  md: "26px"
+  lg: "34px"
   full: "999px"
 spacing:
   sm: "8px"
@@ -35,97 +37,85 @@ components:
     rounded: "{rounded.full}"
     padding: "15px 24px"
   card:
-    backgroundColor: "#FFFCF7"
+    backgroundColor: "#FFFFFF"
     rounded: "{rounded.md}"
 ---
 
-# Design System: OurTime
+# Design System: OurTime — v3 "Vivo"
 
 ## 1. Overview
 
-**Creative North Star: "El Álbum de Conexiones"**
+**Creative North Star: "Su historia, a todo color"**
 
-El diseño visual de OurTime evoca un entorno íntimo, vivo y táctil, priorizando la conexión humana. Aprovechando una base de colores "papel y tinta" cálidos, se contrasta con acentos vibrantes que dan vida a la interfaz. A diferencia de un sistema de bases de datos o de una red social pública, esta aplicación se siente cálida, minimalista y viva, con capas flotantes modernas. Se rechaza explícitamente cualquier estética estéril, corporativa o excesivamente utilitaria.
+Look & feel inspirado en mindmarket.com: una sola sans con tracking apretado, crema cálido de base, tarjetas blancas puras, y bloques de color saturado ("drenched blocks") como acentos emocionales. La app se siente viva, cálida y directa — nada estéril ni corporativo. La firma de la marca es el subrayado ondulado (`.squiggle`) bajo los títulos principales.
 
 **Key Characteristics:**
-- Estilo editorial con un toque moderno y acogedor.
-- Calidez en el contraste (fondos tipo papel contra tintas oscuras).
-- Superficies flotantes y efectos cristalinos suaves para diferenciar capas.
-- Interacciones táctiles, amigables y fluidas.
+- Una sola familia tipográfica (Hanken Grotesk) diferenciada por peso y tracking, no por familia.
+- Bloques drenched: superficies bañadas por completo en un color (acento de la historia, azul, verde, amarillo) con tinta de alto contraste encima.
+- Píldoras por todas partes: nav, chips, botones e iconos circulares.
+- Radios generosos (16/26/34px) y sombras suaves.
 
 ## 2. Colors
 
-La paleta evoca un libro de recuerdos moderno, combinando neutrales cálidos de fondo con acentos emocionales y vivos.
-
 ### Primary
-- **Naranja Atardecer** (#F17720): El color clave de la experiencia y de las interacciones orientadas a la relación de pareja. Transmite energía, calidez y vida.
+- **Naranja Atardecer** (#F17720): acento por defecto. Cada historia puede sustituirlo vía `theme_color`; todo lo que usa `var(--orange)` y `var(--hero-*)` se retiñe automáticamente.
 
-### Secondary
-- **Azul Océano** (#0474BA): Usado como color complementario, para categorizaciones (ej. amigos) o acciones de estabilidad y calma.
+### Supporting blocks
+- **Azul Océano** (#0474BA): bloques informativos y categoría amigos.
+- **Verde** (#2E7D5B, `--done`): estados completados y bloques de "momentos".
+- **Sol** (#F3BC3F, `--sun`): bloques de apoyo (header de Perfil). Su tinta es fija y oscura (`--sun-ink` #2E2005) porque el amarillo es claro en ambos modos.
 
 ### Neutral
-- **Papel** (#F4EEE4): El fondo principal de la aplicación, aportando una base cálida y descansada para la lectura.
-- **Tinta** (#211D18): El color principal de texto y elementos de alto contraste (como el botón primario).
+- **Papel** (#F4EFE3): fondo principal, crema cálido.
+- **Tarjeta** (#FFFFFF): blanco puro sobre el crema — el contraste papel/tarjeta es parte del look.
+- **Tinta** (#211D18): texto y botón primario.
 
 ### Named Rules
-**The Warm Base Rule.** Los fondos nunca deben ser blanco o gris puro. Siempre deben tener un tinte cálido (crema o papel) para mantener la sensación íntima y acogedora.
+**The Drenched Block Rule.** Un bloque de color se pinta completo: fondo saturado + tinta elegida por contraste (`heroInk()` en AppShell para acentos arbitrarios). Nunca texto de color sobre fondo de color parecido.
+**The Vars Rule.** Siempre `var(--*)`, nunca hex directos: el dark mode y el acento por historia dependen de ello.
 
 ## 3. Typography
 
-**Display Font:** Newsreader (with Georgia, serif)
-**Body Font:** Hanken Grotesk (with system-ui, sans-serif)
-
-**Character:** Una combinación editorial clásica con una legibilidad moderna. El serif aporta elegancia y un tono nostálgico, mientras que el sans-serif asegura claridad en la interfaz de uso diario.
+**Única familia:** Hanken Grotesk (system-ui fallback). No hay serif ni itálicas.
 
 ### Hierarchy
-- **Display** (500, -0.01em, 1.02): Encabezados principales, títulos de historias o capítulos. Aporta la personalidad "editorial".
-- **Headline** (400, italic, 0.8): Usado para numerales o marcadores de capítulos, agregando elegancia.
-- **Body** (400): Texto general, chats, y descripciones. Diseñado para alta legibilidad en pantallas largas.
-- **Label** (700, 11px, 0.18em uppercase): "Eyebrows" o etiquetas de metadatos, muy espaciadas para dar ritmo y jerarquía.
+- **Display** (600, -0.035em, 1.02): títulos grandes. La personalidad viene del peso y el tracking apretado.
+- **Chapter numerals** (700, -0.04em, 0.8): numerales de capítulos.
+- **Body** (400): texto general.
+- **Eyebrow** (600, 13px, -0.01em, sentence case): etiquetas de sección. Ya NO van en mayúsculas espaciadas.
+
+### La firma
+`.squiggle`: subrayado ondulado (CSS mask + `currentColor`), se usa con moderación — título del home y hero de Auth.
 
 ## 4. Elevation
 
-El sistema utiliza sombras suaves combinadas con superficies difuminadas (`backdrop-filter: blur`) para lograr una sensación de elementos flotando sobre la base.
-
-### Shadow Vocabulary
-- **sh-sm** (`0 1px 2px rgba(60,40,20,0.05), 0 2px 8px rgba(60,40,20,0.04)`): Sombras base para tarjetas y botones suaves.
-- **sh-md** (`0 2px 6px rgba(60,40,20,0.06), 0 12px 28px rgba(60,40,20,0.08)`): Botones primarios y elementos elevados que requieren atención.
-- **sh-lg**: Reservado para islas flotantes de navegación o modales importantes.
-- **Glass Surfaces**: Usadas en la barra de navegación y modales para mantener el contexto debajo visible.
-
-### Named Rules
-**The Floating Layers Rule.** La interfaz debe sentirse flotante y en capas, usando transparencias y "cristales" suaves para diferenciar el contenido del contexto en lugar de líneas rígidas.
+Sombras suaves cálidas (`--sh-sm/md/lg`). La nav inferior es una **píldora blanca sólida** (`.ot-glass-nav`, sin `backdrop-filter` — más barato de pintar). Los blur de cristal quedan solo para overlays donde el contexto importa.
 
 ## 5. Components
 
-Los elementos interactivos son táctiles, suaves y amigables, promoviendo la interacción cómoda en cualquier dispositivo.
-
 ### Buttons
-- **Shape:** Completamente redondeados (999px).
-- **Primary:** Tinta sobre Papel (`#211D18`), acolchados (15px 24px) y con sombra `sh-md`.
-- **Hover / Focus:** Cuentan con un sutil efecto de escala (`scale(0.965)` en `:active`) haciéndolos sentir físicos.
-- **Orange / Blue variants:** Tienen sombras teñidas de su propio color para un efecto luminoso.
+- Completamente redondeados (999px), efecto físico `scale(0.965)` en `:active`.
+- Primary: tinta sobre papel. Orange/Blue: sombra teñida de su color.
+- Sobre bloques drenched: píldora blanca con tinta oscura (`EditAction tone="onDark"`).
 
-### Cards / Containers
-- **Corner Style:** Suaves pero definidos (22px radius).
-- **Background:** Blanco roto ligeramente más claro que el papel (`#FFFCF7`).
-- **Shadow Strategy:** Utilizan `sh-sm` para separarse sutilmente del fondo de papel.
+### Cards
+- Blanco puro, radio 26px, `sh-sm`. Hero cards (`.hero-card`): bañadas en `var(--hero-bg)` con `--hero-text`/`--hero-soft`.
+- Stat cards estilo mindmarket: bloque de color pleno con número display gigante (contador de días del home, presupuesto de Finanzas).
 
-### Inputs / Fields
-- **Style:** Sin bordes duros, fondo sutil (`#FBF6EE`), radio de 14px y una sutil sombra interior.
-- **Focus:** Cambian su sombra interior a Naranja Atardecer para dar retroalimentación clara.
+### Inputs
+- Sin bordes duros, fondo `--card-2`, radio 16px, focus en acento.
 
-### Chips
-- **Style:** Cápsulas suaves y amigables, usadas para selección y filtrado.
+### Iconos
+- Chips de icono circulares (999px); sobre bloques drenched van en blanco `rgba(255,255,255,0.92)` con el icono del color del bloque.
 
 ## 6. Do's and Don'ts
 
 ### Do:
-- **Do** usar siempre fondos cálidos tintados para mantener la intimidad del "Refugio Cálido".
-- **Do** dar amplio espacio y `padding` a los elementos para mantener el minimalismo.
-- **Do** usar la tipografía serif (`Newsreader`) en los títulos para mantener el tono "Álbum de Conexiones".
+- **Do** bañar secciones completas en color (headers, hero cards, quick links) — el color es protagonista, no decoración.
+- **Do** usar `--hero-*` para cualquier superficie teñida del acento (respeta `theme_color` por historia).
+- **Do** mantener el squiggle escaso para que siga siendo firma.
 
 ### Don't:
-- **Don't** usar colores estériles, rígidos o "grises tecnológicos" que lo hagan sentir como una app de banco corporativa o de gestión de bases de datos.
-- **Don't** crear interfaces ruidosas que parezcan redes sociales públicas; el foco está en la privacidad.
-- **Don't** abusar de los bordes duros de 1px (borders laterales o outlines fuertes) que interrumpan la sensación suave y táctil de las tarjetas.
+- **Don't** usar serif, itálicas o mayúsculas espaciadas — son del sistema v2, ya retirado.
+- **Don't** hardcodear colores ni asumir que la tinta del hero es oscura: con acentos oscuros (ej. navy) la tinta es blanca cálida.
+- **Don't** añadir `backdrop-filter` a superficies nuevas sin justificación de rendimiento.

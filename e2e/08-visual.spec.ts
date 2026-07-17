@@ -64,7 +64,7 @@ test.describe('Visual — Screenshots exhaustivos de todas las pantallas', () =>
 
   test('app: chat (tab Chat)', async ({ page }) => {
     await loginUser(page)
-    await page.getByText('Chat').click()
+    await page.getByText('Ideas').click()
     await page.waitForTimeout(800)
     await page.screenshot({ path: 'playwright-review/visual-09-chat.png', fullPage: true })
   })

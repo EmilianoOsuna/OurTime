@@ -97,7 +97,7 @@ export function PlanDetail({ plan: initialPlan, onClose, onUpdated }: {
       }
       subPlanByBack.current = false
     }
-  }, [!!activeSubPlan])
+  }, [activeSubPlan])
 
   // Memory lightbox
   const [lightboxMemory, setLightboxMemory] = useState<Memory | null>(null)

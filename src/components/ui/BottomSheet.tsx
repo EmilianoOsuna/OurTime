@@ -18,6 +18,7 @@ export const BottomSheet: React.FC<Props> = ({ onClose, children, maxHeight = '9
 
   React.useEffect(() => {
     animate(y, 0, { type: 'spring', damping: 25, stiffness: 200 })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const close = (afterDrag = false) => {

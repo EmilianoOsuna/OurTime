@@ -102,8 +102,8 @@ export const NewStorySheet: React.FC<Props> = ({ onClose, onCreated }) => {
       push({ icon: 'sparkle', eyebrow: 'Historia creada', title: `«${name.trim()}»`, body: 'Ya puedes empezar a escribirla' })
       onCreated()
       onClose()
-    } catch (e: any) {
-      push({ icon: 'x', title: 'Error', body: e.message })
+    } catch (e: unknown) {
+      push({ icon: 'x', title: 'Error', body: e instanceof Error ? e.message : String(e) })
     } finally {
       setSaving(false)
     }

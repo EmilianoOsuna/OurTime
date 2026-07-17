@@ -126,8 +126,8 @@ export const EditStorySheet: React.FC<Props> = ({ story, onClose, onUpdated, isA
         })
         .eq('id', story.id)
       if (error) throw error
-    } catch (e: any) {
-      toast({ icon: 'x', title: 'Error', body: e.message })
+    } catch (e: unknown) {
+      toast({ icon: 'x', title: 'Error', body: e instanceof Error ? e.message : String(e) })
       setSaving(false)
       return
     }

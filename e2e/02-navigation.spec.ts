@@ -12,16 +12,12 @@ test.describe('Navegación — NavBar', () => {
     await expect(nav.getByText('Agenda')).toBeVisible()
     await expect(nav.getByText('Fotos')).toBeVisible()
     await expect(nav.getByText('Fondo', { exact: true })).toBeVisible()
-    await expect(nav.getByText('Chat')).toBeVisible()
+    await expect(nav.getByText('Ideas')).toBeVisible()
     await expect(nav.getByText('Yo')).toBeVisible()
   })
 
   test('el FAB (+) abre el GlobalActionSheet', async ({ page }) => {
     // Click the FAB — the circular button with the plus icon in the NavBar
-    const nav = page.locator('nav').last()
-    const fab = nav.locator('button').filter({ hasNot: page.locator('span') }).nth(2)
-    // More reliable: find the button with Plus icon by looking for the center button
-    // The FAB has a circular style with background accent color
     await page.locator('[data-testid="fab-btn"]').click()
     await expect(page.getByText('¿Qué añadimos?')).toBeVisible({ timeout: 5_000 })
   })
@@ -66,7 +62,7 @@ test.describe('Navegación — NavBar', () => {
   })
 
   test('navega al tab Chat', async ({ page }) => {
-    await page.locator('nav').last().getByText('Chat').click()
+    await page.locator('nav').last().getByText('Ideas').click()
     await page.waitForTimeout(500)
     // When in Chat, FAB should be hidden (NavBar is hidden in chat)
     await expect(page.locator('[data-testid="fab-btn"]')).not.toBeVisible()
@@ -74,7 +70,7 @@ test.describe('Navegación — NavBar', () => {
   })
 
   test('el NavBar se oculta en el tab Chat y el botón "atrás" regresa a Inicio', async ({ page }) => {
-    await page.locator('nav').last().getByText('Chat').click()
+    await page.locator('nav').last().getByText('Ideas').click()
     await page.waitForTimeout(300)
     // NavBar hidden in chat — FAB is not visible
     await expect(page.locator('[data-testid="fab-btn"]')).not.toBeVisible()

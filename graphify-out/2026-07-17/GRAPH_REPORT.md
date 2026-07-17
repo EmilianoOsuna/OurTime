@@ -1,11 +1,11 @@
 # Graph Report - OurTime  (2026-07-17)
 
 ## Corpus Check
-- 199 files · ~412,757 words
+- 197 files · ~412,268 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1392 nodes · 2035 edges · 189 communities (114 shown, 75 thin omitted)
+- 1384 nodes · 2037 edges · 183 communities (109 shown, 74 thin omitted)
 - Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 48 edges (avg confidence: 0.5)
 - Token cost: 0 input · 0 output
 
@@ -133,7 +133,6 @@
 - Core Principles
 - Architecture
 - Git Branching Workflow Extension
-- AuthContext.tsx
 - 2026-07-15T05-26-42Z__src.md
 - Create Feature Branch
 - Create Feature Branch
@@ -163,20 +162,15 @@
 - 20260612_integrations.sql
 - graphify.md
 - graphify.md
-- Chat.tsx
 - @capacitor/share
 - @types/react
 - 20260612190000_story_cover_position.sql
 - 20260612190100_plan_calendar_events.sql
 - 20260612230000_memory_position.sql
 - 20260715000000_entitlements.sql
-- .delete
 - @capgo/capacitor-social-login
 - react-colorful
 - supabase
-- index.ts
-- @capacitor/app
-- 20260717000000_ai_chat.sql
 
 ## God Nodes (most connected - your core abstractions)
 1. `useAuth()` - 38 edges
@@ -205,23 +199,23 @@
 ## Import Cycles
 - None detected.
 
-## Communities (189 total, 75 thin omitted)
+## Communities (183 total, 74 thin omitted)
 
 ### Community 0 - "AppShell.tsx"
 Cohesion: 0.06
 Nodes (38): AppShell(), Calendar, CAT_COLOR_STABLE, Dashboard, EditStorySheet, Finances, Gallery, getInitialTab() (+30 more)
 
 ### Community 1 - "StrategyHandler"
-Cohesion: 0.11
-Nodes (7): NetworkFirst, PrecacheStrategy, StaleWhileRevalidate, Strategy, StrategyHandler, toRequest(), WorkboxError
+Cohesion: 0.10
+Nodes (10): CacheFirst, executeQuotaErrorCallbacks(), NetworkFirst, PrecacheStrategy, StaleWhileRevalidate, Strategy, StrategyHandler, timeout() (+2 more)
 
 ### Community 2 - "usePushNotifications.ts"
-Cohesion: 0.19
-Nodes (12): CodeClient, getGoogleClientId(), GOOGLE_CLIENT_ID, GoogleCodeResponse, GoogleCredentialResponse, hasGoogleClientId(), loadGoogleIdentityServices(), renderGoogleSignInButton() (+4 more)
+Cohesion: 0.08
+Nodes (38): CodeClient, getGoogleClientId(), GOOGLE_CLIENT_ID, GoogleCodeResponse, GoogleCredentialResponse, hasGoogleClientId(), loadGoogleIdentityServices(), renderGoogleSignInButton() (+30 more)
 
 ### Community 3 - "PlanDetail.tsx"
-Cohesion: 0.10
-Nodes (28): Tab, CoupleAvatars(), CAT_ICON, CatMedallion(), CAT_ICON, CatTag(), CAT_META, countdown() (+20 more)
+Cohesion: 0.09
+Nodes (34): CAT_ICON, CatMedallion(), CAT_ICON, CatTag(), Lightbox(), LightboxProps, pushBack(), removeBack() (+26 more)
 
 ### Community 4 - "compilerOptions"
 Cohesion: 0.06
@@ -236,24 +230,24 @@ Cohesion: 0.22
 Nodes (3): ErrorBoundary, Props, State
 
 ### Community 7 - "useAuth"
-Cohesion: 0.26
-Nodes (18): AppInner(), Paywall(), EditStorySheet(), MoneySheet(), NewMemorySheet(), Props, NewPlanSheet(), NewStorySheet() (+10 more)
+Cohesion: 0.20
+Nodes (20): AppInner(), EditStorySheet(), MoneySheet(), NewMemorySheet(), Props, CAT_ICON, NewPlanSheet(), Props (+12 more)
 
 ### Community 8 - "workbox-1e60b829.js"
 Cohesion: 0.11
-Nodes (15): addRoute(), CacheFirst, cacheWillUpdate(), canConstructResponseFromBodyStream(), copyResponse(), Deferred, executeQuotaErrorCallbacks(), precache() (+7 more)
+Nodes (14): addRoute(), cacheWillUpdate(), canConstructResponseFromBodyStream(), cleanupOutdatedCaches(), copyResponse(), Deferred, precache(), precacheAndRoute() (+6 more)
 
 ### Community 9 - "supabase.ts"
-Cohesion: 0.33
-Nodes (7): EntitlementType, canCreateStory(), effectivePlan(), Entitlement, isActiveStatus(), PLAN_LIMITS, PlanLimits
+Cohesion: 0.15
+Nodes (17): CATEGORIES, FAMILY_ROLES, NewStorySheet(), Props, randomCode(), AuthContext, AuthContextType, AuthProvider() (+9 more)
 
 ### Community 10 - "compilerOptions"
 Cohesion: 0.10
 Nodes (20): node, vite.config.ts, compilerOptions, allowImportingTsExtensions, erasableSyntaxOnly, lib, module, moduleDetection (+12 more)
 
 ### Community 11 - "supabase"
-Cohesion: 0.19
-Nodes (14): btnBase, btnPrimary, btnSecondary, Props, TierCard, TIERS, isNative, PAYWALL_COPY (+6 more)
+Cohesion: 0.20
+Nodes (15): btnBase, btnPrimary, btnSecondary, Paywall(), Props, TierCard, TIERS, PAYWALL_COPY (+7 more)
 
 ### Community 12 - "common.sh"
 Cohesion: 0.11
@@ -268,12 +262,12 @@ Cohesion: 0.12
 Nodes (6): COLORS, Confetti(), Category, CATS, genCode(), Onboarding()
 
 ### Community 15 - "PrecacheController"
-Cohesion: 0.15
-Nodes (5): createCacheKey(), _nestedGroup(), PrecacheController, PrecacheRoute, printInstallDetails()
+Cohesion: 0.13
+Nodes (7): createCacheKey(), generateURLVariations(), _nestedGroup(), PrecacheController, PrecacheRoute, printInstallDetails(), removeIgnoredSearchParams()
 
 ### Community 16 - "Profile.tsx"
-Cohesion: 0.11
-Nodes (23): CATS, Props, EditAction(), Props, PresenceDot(), Segmented(), SegOpt, Ctx (+15 more)
+Cohesion: 0.09
+Nodes (28): CATS, Props, EditAction(), Props, PresenceDot(), Segmented(), SegOpt, Ctx (+20 more)
 
 ### Community 17 - "Tasks: [FEATURE NAME]"
 Cohesion: 0.07
@@ -284,8 +278,8 @@ Cohesion: 0.12
 Nodes (3): COUPLES, easeOut, PLANS
 
 ### Community 19 - "waitUntil"
-Cohesion: 0.23
-Nodes (6): CacheExpiration, cleanupOutdatedCaches(), dontWaitFor(), ExpirationPlugin, registerQuotaErrorCallback(), waitUntil()
+Cohesion: 0.22
+Nodes (6): CacheExpiration, cacheMatchIgnoreParams(), dontWaitFor(), ExpirationPlugin, stripParams(), waitUntil()
 
 ### Community 21 - "scripts"
 Cohesion: 0.20
@@ -304,8 +298,8 @@ Cohesion: 0.15
 Nodes (3): ToastCtx, ToastProvider(), useToast()
 
 ### Community 26 - "Icon.tsx"
-Cohesion: 0.12
-Nodes (17): ITEMS, CAT_ICON, Props, CATEGORIES, FAMILY_ROLES, Props, randomCode(), BottomSheet() (+9 more)
+Cohesion: 0.17
+Nodes (9): CAT_OPTIONS, Props, ITEMS, BottomSheet(), Props, Icon(), IconComponent, ICONS (+1 more)
 
 ### Community 28 - "create-new-feature.sh"
 Cohesion: 0.20
@@ -328,8 +322,8 @@ Cohesion: 0.15
 Nodes (13): autoprefixer, eslint, eslint-plugin-react-refresh, devDependencies, autoprefixer, eslint, eslint-plugin-react-refresh, tailwindcss (+5 more)
 
 ### Community 37 - ".delete"
-Cohesion: 0.18
-Nodes (12): CacheableResponse, cacheDonePromiseForTransaction(), get(), getCursorAdvanceMethods(), getIdbProxyableTypes(), getMethod(), has(), openDB() (+4 more)
+Cohesion: 0.15
+Nodes (13): CacheableResponse, cacheDonePromiseForTransaction(), get(), getCursorAdvanceMethods(), getIdbProxyableTypes(), getMethod(), has(), openDB() (+5 more)
 
 ### Community 38 - "dashboard.jsx"
 Cohesion: 0.43
@@ -353,7 +347,7 @@ Nodes (6): corsHeaders, FCM_SERVICE_ACCOUNT_B64, FCM_SERVICE_ACCOUNT_JSON, getFC
 
 ### Community 44 - "dependencies"
 Cohesion: 0.29
-Nodes (7): @capacitor/android, @capacitor/camera, @capacitor/core, dependencies, @capacitor/android, @capacitor/camera, @capacitor/core
+Nodes (7): @capacitor/android, @capacitor/app, @capacitor/core, dependencies, @capacitor/android, @capacitor/app, @capacitor/core
 
 ### Community 46 - "index.ts"
 Cohesion: 0.40
@@ -371,17 +365,13 @@ Nodes (5): Fase 1: Cambios en la Base de Datos (Supabase), Fase 2: Crear el Back
 Cohesion: 0.08
 Nodes (25): 1. Initialize Analysis Context, 2. Load Artifacts (Progressive Disclosure), 3. Build Semantic Models, 4. Detection Passes (Token-Efficient Analysis), 5. Severity Assignment, 6. Produce Compact Analysis Report, 7. Provide Next Actions, 8. Offer Remediation (+17 more)
 
-### Community 63 - "@capacitor/camera"
-Cohesion: 0.12
-Nodes (23): pushBack(), removeBack(), scheduleIgnorePop(), getNativePushTarget(), showNativeNotificationTest(), connectGoogleCalendarWithCode(), deletePlanFromGoogleCalendar(), invokeCalendarFunction() (+15 more)
-
 ### Community 80 - "OurTime — Plan de Monetización y Go-to-Market"
 Cohesion: 0.09
 Nodes (22): 1. ¿Qué es OurTime y por qué alguien pagaría?, 2. Modelo de negocio recomendado: Freemium + Suscripción, 3. Roadmap de funciones por fase de crecimiento, 4. Plan de marketing, 5. Competidores y diferenciadores, 6. Métricas clave a trackear desde el día 1, 7. Pasos inmediatos (esta semana), 8. Proyección de ingresos (conservadora) (+14 more)
 
 ### Community 83 - "Design System: OurTime"
 Cohesion: 0.10
-Nodes (19): 1. Overview, 2. Colors, 3. Typography, 4. Elevation, 5. Components, 6. Do's and Don'ts, Buttons, Cards (+11 more)
+Nodes (20): 1. Overview, 2. Colors, 3. Typography, 4. Elevation, 5. Components, 6. Do's and Don'ts, Buttons, Cards / Containers (+12 more)
 
 ### Community 88 - "Constitución OurTime"
 Cohesion: 0.13
@@ -392,8 +382,8 @@ Cohesion: 0.15
 Nodes (12): Assumptions, Edge Cases, Feature Specification: [FEATURE NAME], Functional Requirements, Key Entities *(include if feature involves data)*, Measurable Outcomes, Requirements *(mandatory)*, Success Criteria *(mandatory)* (+4 more)
 
 ### Community 100 - "@types/node"
-Cohesion: 0.26
-Nodes (12): dispatchNavigation(), enableNativePushNotifications(), savePushToken(), setupNativeApp(), setupPushListeners(), syncNativePushToken(), isPushSubscription(), normalizePushSubscriptions() (+4 more)
+Cohesion: 0.40
+Nodes (5): DatePicker(), DIAS, MESES, Mode, parseSafe()
 
 ### Community 106 - "QA Report"
 Cohesion: 0.17
@@ -431,10 +421,6 @@ Nodes (9): Architecture, Commands, Contexts, Data model (Supabase), Dual platfor
 Cohesion: 0.20
 Nodes (9): Commands, Configuration, Disabling, Git Branching Workflow Extension, Graceful Degradation, Hooks, Installation, Overview (+1 more)
 
-### Community 139 - "AuthContext.tsx"
-Cohesion: 0.29
-Nodes (8): CAT_OPTIONS, Props, AuthContext, AuthContextType, AuthProvider(), indexEntitlements(), StoryType, supabase
-
 ### Community 140 - "2026-07-15T05-26-42Z__src.md"
 Cohesion: 0.22
 Nodes (8): Anti-Patterns Verdict, Design Health Score, Minor Observations, Overall Impression, Persona Red Flags, Priority Issues, Questions to Consider, What's Working
@@ -456,8 +442,8 @@ Cohesion: 0.25
 Nodes (7): Anti-Examples: What NOT To Do, Checklist Purpose: "Unit Tests for English", Example Checklist Types & Sample Items, Execution Steps, Post-Execution Checks, Pre-Execution Checks, User Input
 
 ### Community 145 - "AuthContext.tsx"
-Cohesion: 0.14
-Nodes (15): Avatar(), Person, useConfirm(), capacitorStorageAdapter, AlbumType, imageUrl(), isNative, MemoryType (+7 more)
+Cohesion: 0.12
+Nodes (18): Avatar(), CoupleAvatars(), Person, useConfirm(), capacitorStorageAdapter, AlbumType, imageUrl(), isNative (+10 more)
 
 ### Community 146 - "speckit.clarify.md"
 Cohesion: 0.29
@@ -539,41 +525,29 @@ Nodes (3): Behavior, Execution, Update Coding Agent Context
 Cohesion: 0.67
 Nodes (3): plans, public.is_story_admin(), story_members
 
-### Community 169 - "Chat.tsx"
-Cohesion: 0.27
-Nodes (7): MessageType, Chat(), fmtDateLabel(), fmtTime(), Props, QUICK_PROMPTS, shouldShowDate()
-
 ### Community 181 - "20260715000000_entitlements.sql"
 Cohesion: 0.50
 Nodes (3): public.enforce_member_cap(), public.story_entitlements, trg_enforce_member_cap
 
-### Community 182 - ".delete"
-Cohesion: 0.29
-Nodes (5): cacheMatchIgnoreParams(), generateURLVariations(), printCleanupDetails(), removeIgnoredSearchParams(), stripParams()
-
-### Community 186 - "index.ts"
-Cohesion: 0.40
-Nodes (3): ANTHROPIC_API_KEY, CATEGORY_LABEL, corsHeaders
-
 ## Knowledge Gaps
-- **539 isolated node(s):** `update-agent-context.sh script`, `auto-commit.sh script`, `create-new-feature.sh script`, `git-common.sh script`, `initialize-repo.sh script` (+534 more)
+- **533 isolated node(s):** `update-agent-context.sh script`, `auto-commit.sh script`, `create-new-feature.sh script`, `git-common.sh script`, `initialize-repo.sh script` (+528 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **75 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **74 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `react` connect `react` to `overlays.jsx`, `dependencies`, `ui.jsx`, `Icon.tsx`, `onboarding.jsx`?**
-  _High betweenness centrality (0.068) - this node is a cross-community bridge._
-- **Why does `BottomSheet()` connect `Icon.tsx` to `react`, `AppShell.tsx`, `useAuth`, `supabase`, `AuthContext.tsx`, `Profile.tsx`?**
+  _High betweenness centrality (0.069) - this node is a cross-community bridge._
+- **Why does `BottomSheet()` connect `Icon.tsx` to `react`, `AppShell.tsx`, `useAuth`, `supabase.ts`, `supabase`, `Profile.tsx`?**
   _High betweenness centrality (0.061) - this node is a cross-community bridge._
-- **Why does `dependencies` connect `dependencies` to `package.json`, `react`, `@capacitor/share`, `@capgo/capacitor-social-login`, `react-colorful`, `@capacitor/app`, `@capacitor/browser`, `@capacitor/cli`, `@capacitor/clipboard`, `@capacitor/device`, `@capacitor/dialog`, `@capacitor/filesystem`, `@capacitor/geolocation`, `@capacitor/haptics`, `@capacitor/local-notifications`, `@capacitor/network`, `@capacitor/preferences`, `@capacitor/push-notifications`, `@capacitor/screen-orientation`, `@capacitor/splash-screen`, `@capacitor/status-bar`, `@capacitor/toast`, `framer-motion`, `lucide-react`, `react-dom`, `@supabase/supabase-js`?**
-  _High betweenness centrality (0.051) - this node is a cross-community bridge._
+- **Why does `dependencies` connect `dependencies` to `package.json`, `react`, `@capacitor/share`, `@capgo/capacitor-social-login`, `react-colorful`, `@capacitor/browser`, `@capacitor/camera`, `@capacitor/cli`, `@capacitor/clipboard`, `@capacitor/device`, `@capacitor/dialog`, `@capacitor/filesystem`, `@capacitor/geolocation`, `@capacitor/haptics`, `@capacitor/local-notifications`, `@capacitor/network`, `@capacitor/preferences`, `@capacitor/push-notifications`, `@capacitor/screen-orientation`, `@capacitor/splash-screen`, `@capacitor/status-bar`, `@capacitor/toast`, `framer-motion`, `lucide-react`, `react-dom`, `@supabase/supabase-js`?**
+  _High betweenness centrality (0.052) - this node is a cross-community bridge._
 - **What connects `update-agent-context.sh script`, `auto-commit.sh script`, `create-new-feature.sh script` to the rest of the system?**
-  _539 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _533 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `AppShell.tsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.05877551020408163 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.06037414965986394 - nodes in this community are weakly interconnected._
 - **Should `StrategyHandler` be split into smaller, more focused modules?**
-  _Cohesion score 0.10953058321479374 - nodes in this community are weakly interconnected._
-- **Should `PlanDetail.tsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.09672830725462304 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.0975609756097561 - nodes in this community are weakly interconnected._
+- **Should `usePushNotifications.ts` be split into smaller, more focused modules?**
+  _Cohesion score 0.08115942028985507 - nodes in this community are weakly interconnected._

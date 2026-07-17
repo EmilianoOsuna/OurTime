@@ -12,6 +12,7 @@ export type Toast = {
 
 type ToastCtx = { push: (t: Omit<Toast, 'id'>) => void }
 const Ctx = createContext<ToastCtx>({ push: () => {} })
+// eslint-disable-next-line react-refresh/only-export-components
 export const useToast = () => useContext(Ctx)
 
 export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {

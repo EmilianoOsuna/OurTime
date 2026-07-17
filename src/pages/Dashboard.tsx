@@ -57,10 +57,11 @@ export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpe
       <div style={{ padding: '0 0 16px' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
           <div>
-            <div className="eyebrow" style={{ marginBottom: 7 }}>Nuestra Historia</div>
-            <h1 className="display" style={{ fontSize: 34, margin: 0, lineHeight: 0.98 }}>
+            <div className="eyebrow" style={{ marginBottom: 6 }}>Nuestra Historia</div>
+            <h1 className="display" style={{ fontSize: 38, margin: 0, lineHeight: 0.98 }}>
               {activeStory?.name || 'Nuestro espacio'}
             </h1>
+            <span className="squiggle" aria-hidden="true" style={{ color: 'var(--orange)', width: 92, marginTop: 8 }} />
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {stories.length > 1 && onStorySwitcher && (
@@ -96,16 +97,16 @@ export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpe
 
         {/* Stats card — for all stories */}
         {since && (
-          <motion.button whileTap={{ scale: 0.98 }} onClick={onProfileOpen} className="ot-card" style={{
-            marginTop: 16, padding: '12px 15px', display: 'flex', alignItems: 'center', gap: 13,
-            border: 'none', cursor: 'pointer', textAlign: 'left', width: '100%',
+          <motion.button whileTap={{ scale: 0.98 }} onClick={onProfileOpen} className="ot-card hero-card" style={{
+            marginTop: 16, padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 13,
+            border: 'none', cursor: 'pointer', textAlign: 'left', width: '100%', boxShadow: 'var(--sh-md)',
           }}>
             <div style={{ position: 'relative' }}>
-              <CoupleAvatars me={me} partner={partner || { name: partnerName, initial: partnerName.charAt(0).toUpperCase(), color: 'var(--orange)' }} size={38} />
+              <CoupleAvatars me={me} partner={partner || { name: partnerName, initial: partnerName.charAt(0).toUpperCase(), color: 'var(--orange)' }} size={40} />
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink)' }}>Tú y {partner?.name ? partner.name.split(' ')[0] : defaultPartnerName.toLowerCase()}</div>
-              <div style={{ fontSize: 12.5, color: 'var(--ink-soft)' }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--hero-text)' }}>Tú y {partner?.name ? partner.name.split(' ')[0] : defaultPartnerName.toLowerCase()}</div>
+              <div style={{ fontSize: 12.5, color: 'var(--hero-soft)' }}>
                 {activeStory?.category === 'pareja' ? `Juntos desde ${fmtDate(since)}` :
                  activeStory?.category === 'amigos' ? `Amigos desde ${fmtDate(since)}` :
                  activeStory?.category === 'familia' ? `Familia desde ${fmtDate(since)}` :
@@ -114,8 +115,8 @@ export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpe
             </div>
             {days !== null && (
               <div style={{ textAlign: 'right' }}>
-                <div className="display" style={{ fontSize: 24, color: 'var(--orange-deep)', lineHeight: 1 }}>{days}</div>
-                <div className="eyebrow" style={{ fontSize: 9 }}>días</div>
+                <div className="display" style={{ fontSize: 40, fontWeight: 700, color: 'var(--hero-text)', lineHeight: 0.95 }}>{days}</div>
+                <div className="eyebrow" style={{ fontSize: 10, color: 'var(--hero-soft)' }}>días juntos</div>
               </div>
             )}
           </motion.button>
@@ -126,7 +127,7 @@ export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpe
       {/* Next chapter hero */}
       {next ? (
         <div style={{ marginTop: 20 }}>
-          <div className="eyebrow" style={{ marginBottom: 12, color: 'var(--orange-deep)' }}>· Su próximo momento ·</div>
+          <div className="eyebrow" style={{ marginBottom: 12, color: 'var(--orange-deep)' }}>Su próximo momento</div>
           <NextHero plan={next} onPlanClick={onPlanClick} />
         </div>
       ) : plans.length === 0 && <EmptyDashboard onNewPlan={onNewPlan} category={activeStory?.category} />}
@@ -187,29 +188,29 @@ export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpe
       {past.length === 0 && plans.length > 0 && (
         <div style={{ marginTop: 28, display: 'flex', gap: 12 }}>
           <motion.button whileTap={{ scale: 0.96 }} onClick={() => go('gallery')} className="ot-card" style={{
-            flex: 1, border: 'none', cursor: 'pointer', padding: '18px 16px',
-            display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8,
+            flex: 1, border: 'none', cursor: 'pointer', padding: '18px 16px', background: 'var(--blue)',
+            display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 10,
           }}>
-            <div style={{ width: 40, height: 40, borderRadius: 12, background: 'var(--orange-tint)',
-              color: 'var(--orange-deep)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: 40, height: 40, borderRadius: 999, background: 'rgba(255,255,255,0.92)',
+              color: 'var(--blue)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Icon name="image" size={20} />
             </div>
             <div>
-              <div style={{ fontWeight: 700, fontSize: 15 }}>Recuerdos</div>
-              <div style={{ fontSize: 12, color: 'var(--ink-soft)' }}>Su galería</div>
+              <div style={{ fontWeight: 700, fontSize: 15, color: '#fff' }}>Recuerdos</div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.78)' }}>Su galería</div>
             </div>
           </motion.button>
           <motion.button whileTap={{ scale: 0.96 }} onClick={() => go('calendar')} className="ot-card" style={{
-            flex: 1, border: 'none', cursor: 'pointer', padding: '18px 16px',
-            display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8,
+            flex: 1, border: 'none', cursor: 'pointer', padding: '18px 16px', background: 'var(--done)',
+            display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 10,
           }}>
-            <div style={{ width: 40, height: 40, borderRadius: 12, background: 'var(--orange-tint)',
-              color: 'var(--orange-deep)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: 40, height: 40, borderRadius: 999, background: 'rgba(255,255,255,0.92)',
+              color: 'var(--done)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Icon name="calendar" size={20} />
             </div>
             <div>
-              <div style={{ fontWeight: 700, fontSize: 15 }}>Momentos</div>
-              <div style={{ fontSize: 12, color: 'var(--ink-soft)' }}>{upcoming.length} por escribir</div>
+              <div style={{ fontWeight: 700, fontSize: 15, color: '#fff' }}>Momentos</div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.78)' }}>{upcoming.length} por escribir</div>
             </div>
           </motion.button>
         </div>
@@ -294,7 +295,7 @@ const UpcomingRow = memo(function UpcomingRow({ plan, onClick }: { plan: PlanTyp
       border: 'none', cursor: 'pointer', padding: '13px 15px', textAlign: 'left',
       display: 'flex', alignItems: 'center', gap: 12,
     }}>
-      <div style={{ width: 38, height: 38, borderRadius: 11, background: 'var(--orange-tint)',
+      <div style={{ width: 38, height: 38, borderRadius: 999, background: 'var(--orange-tint)',
         color: 'var(--orange-deep)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
         <Icon name="clock" size={17} />
       </div>
@@ -334,7 +335,7 @@ function EmptyDashboard({ onNewPlan, category }: { onNewPlan?: () => void, categ
         <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
           background: 'var(--orange-tint)', borderRadius: 18, boxShadow: 'var(--sh-md)',
           animation: 'floatY 4s ease-in-out infinite', color: 'var(--orange)' }}>
-          <Icon name={iconName as any} size={44} />
+          <Icon name={iconName as string} size={44} />
         </div>
       </div>
       <div className="display" style={{ fontSize: 25, marginBottom: 8, maxWidth: 250 }}>{title}</div>

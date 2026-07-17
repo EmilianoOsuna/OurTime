@@ -4,20 +4,11 @@ import { Avatar } from '../components/ui/Avatar'
 import { fmtDateShort } from '../lib/chapterUtils'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
-import type { PersonDisplay, AlbumType } from '../lib/supabase'
+import type { PersonDisplay, AlbumType, MemoryType } from '../lib/supabase'
 import { useToast } from '../context/ToastContext'
 import { useConfirm } from '../components/ui/ConfirmDialog'
 
-interface Memory {
-  id: string
-  image_url: string
-  position_x?: number
-  position_y?: number
-  caption: string | null
-  created_at: string
-  plan_id?: string | null
-  album_id?: string | null
-}
+type Memory = MemoryType
 
 function CircBtn({ icon, onClick }: { icon: string; onClick: () => void }) {
   return (
@@ -151,7 +142,7 @@ export default function Gallery({ memories, setMemories, onImageClick, me }: {
       if (data) setAlbums(prev => [data as AlbumType, ...prev])
       setNewAlbumName('')
       setCreatingAlbum(false)
-    } catch (e: any) { toast({ icon: 'x', title: 'Error', body: e.message }) }
+    } catch (e: unknown) { toast({ icon: 'x', title: 'Error', body: e instanceof Error ? e.message : String(e) }) }
     finally { setSavingAlbum(false) }
   }
 
@@ -166,7 +157,7 @@ export default function Gallery({ memories, setMemories, onImageClick, me }: {
   const togglePickerSelection = (id: string) => {
     setPickerSelected(prev => {
       const next = new Set(prev)
-      next.has(id) ? next.delete(id) : next.add(id)
+      if (next.has(id)) next.delete(id); else next.add(id)
       return next
     })
   }
@@ -180,7 +171,7 @@ export default function Gallery({ memories, setMemories, onImageClick, me }: {
       setMemories(memories.map(m => ids.includes(m.id) ? { ...m, album_id: activeAlbumId } : m))
       setPickerSelected(new Set())
       setPickerOpen(false)
-    } catch (e: any) { toast({ icon: 'x', title: 'Error', body: e.message }) }
+    } catch (e: unknown) { toast({ icon: 'x', title: 'Error', body: e instanceof Error ? e.message : String(e) }) }
     finally { setAssigningPhotos(false) }
   }
 

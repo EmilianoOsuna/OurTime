@@ -3,7 +3,7 @@ import { motion, animate, useMotionValue, useTransform } from 'framer-motion'
 import { useAuth } from '../context/AuthContext'
 import type { ProfileType } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
-import { buildPerson, type PersonDisplay, type StoryType } from '../lib/supabase'
+import { buildPerson, type PersonDisplay, type StoryType, type PlanType, type MemoryType, type NotificationType } from '../lib/supabase'
 import { consumeNativeNavigationUrl, setBackHandler, isNative } from '../lib/native'
 import { invokeTopBack, consumeIgnorePop } from '../lib/backStack'
 import { recoverNextClickAfterDrag } from '../lib/recoverClickAfterDrag'
@@ -34,6 +34,22 @@ import { Lightbox } from './ui/Lightbox'
 import { DashboardSkeleton, CalendarSkeleton, GallerySkeleton, FinancesSkeleton, ChatSkeleton } from './ui/Skeletons'
 
 
+// Tinta del hero drenched: elige oscuro o claro según cuál contrasta más con el acento
+function heroInk(hex: string): { text: string; soft: string } {
+  const raw = hex.replace('#', '')
+  const full = raw.length === 3 ? raw.split('').map(c => c + c).join('') : raw
+  const [r, g, b] = [0, 2, 4].map(i => {
+    const v = parseInt(full.slice(i, i + 2), 16) / 255
+    return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)
+  })
+  const L = 0.2126 * (r ?? 0) + 0.7152 * (g ?? 0) + 0.0722 * (b ?? 0)
+  const contrastDark = (L + 0.05) / 0.0631   // vs #2A1505
+  const contrastWhite = 1.05 / (L + 0.05)    // vs blanco cálido
+  return contrastDark >= contrastWhite
+    ? { text: '#2A1505', soft: 'rgba(42,21,5,0.66)' }
+    : { text: '#FFF9F4', soft: 'rgba(255,249,244,0.85)' }
+}
+
 // Stable colors that never get overridden by the accent-switching effect
 const CAT_COLOR_STABLE: Record<string, string> = {
   pareja:  'var(--cat-pareja)',
@@ -43,30 +59,12 @@ const CAT_COLOR_STABLE: Record<string, string> = {
 }
 
 export type Tab = 'home' | 'calendar' | 'gallery' | 'finance' | 'chat'
-type Overlay = { type: 'plan'; data: any } | { type: 'action' } | { type: 'newplan' } | { type: 'money' } | { type: 'memory' } | { type: 'profile' } | { type: 'newstory' } | { type: 'editstory'; story: StoryType } | { type: 'paywall'; reason?: PaywallReason } | null
+type Overlay = { type: 'plan'; data: PlanType } | { type: 'action' } | { type: 'newplan' } | { type: 'money' } | { type: 'memory' } | { type: 'profile' } | { type: 'newstory' } | { type: 'editstory'; story: StoryType } | { type: 'paywall'; reason?: PaywallReason } | null
 
 function getInitialTab(): Tab {
   const saved = sessionStorage.getItem('activeTab')
   if (saved === 'home' || saved === 'calendar' || saved === 'gallery' || saved === 'finance' || saved === 'chat') return saved
   return 'home'
-}
-
-// Unread message count badge
-function useUnreadCount(activeStoryId: string | null, userId: string | undefined, refreshKey?: number): number {
-  const [count, setCount] = useState(0)
-  useEffect(() => {
-    if (!activeStoryId || !userId) return
-    const fetchCount = () =>
-      supabase.from('messages').select('id', { count: 'exact', head: true })
-        .eq('story_id', activeStoryId).neq('sender_id', userId).is('read_at', null)
-        .then(({ count: n }) => setCount(n ?? 0))
-    fetchCount()
-    const ch = supabase.channel('unread:' + activeStoryId)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages', filter: `story_id=eq.${activeStoryId}` }, fetchCount)
-      .subscribe()
-    return () => { supabase.removeChannel(ch) }
-  }, [activeStoryId, userId, refreshKey])
-  return count
 }
 
 export default function AppShell() {
@@ -88,19 +86,17 @@ export default function AppShell() {
   })
   const [notifsVisible, setNotifsVisible] = useState(false)
   const [storySwitcherOpen, setStorySwitcherOpen] = useState(false)
-  const [plans, setPlans] = useState<any[]>([])
+  const [plans, setPlans] = useState<PlanType[]>([])
   const [loadingPlans, setLoadingPlans] = useState(true)
-  const [allCalendarPlans, setAllCalendarPlans] = useState<any[]>([])
-  const [memories, setMemories] = useState<any[]>([])
+  const [allCalendarPlans, setAllCalendarPlans] = useState<(PlanType & { storyName: string; storyCategory: string })[]>([])
+  const [memories, setMemories] = useState<MemoryType[]>([])
   const [financeKey, setFinanceKey] = useState(0)
   const [lightbox, setLightbox] = useState<{ url: string; id?: string } | null>(null)
   const [partner, setPartner] = useState<ProfileType | null>(null)
   const [storyCode, setStoryCode] = useState<string | null>(null)
-  const [unreadRefreshKey, setUnreadRefreshKey] = useState(0)
   const [notifications, setNotifications] = useState<(NotifItem & { id: string })[]>([])
   const [isAdmin, setIsAdmin] = useState(false)
   const [adminStoryIds, setAdminStoryIds] = useState<Set<string>>(new Set())
-  const prevTabRef = useRef<Tab>(tab)
   const scrollPositions = useRef<Record<string, number>>({})
   const [visitedTabs, setVisitedTabs] = useState<Tab[]>([tab])
 
@@ -151,9 +147,10 @@ export default function AppShell() {
       .eq('user_id', user.id)
       .then(({ data }) => {
         if (data) setAdminStoryIds(new Set(
-          data.filter((m: any) => m.permission_level === 'admin').map((m: any) => m.story_id as string)
+          data.filter((m: { story_id: string; permission_level: string }) => m.permission_level === 'admin').map((m: { story_id: string; permission_level: string }) => m.story_id)
         ))
       })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, stories.length])
 
   useEffect(() => {
@@ -212,33 +209,13 @@ export default function AppShell() {
       .limit(50)
       .then(({ data }) => {
         if (!data) return
-        const withStory = data.map((p: any) => {
-          const story = stories.find((s: any) => s.id === p.story_id)
+        const withStory = data.map((p: PlanType) => {
+          const story = stories.find((s: StoryType) => s.id === p.story_id)
           return { ...p, storyName: story?.name || '', storyCategory: story?.category || 'otro' }
         })
         setAllCalendarPlans(withStory)
       })
   }, [stories])
-
-  // Mark chat messages as read when ENTERING chat — so badge is already 0 when NavBar reappears on exit
-  useEffect(() => {
-    if (tab === 'chat' && prevTabRef.current !== 'chat') {
-      if (activeStoryId && user) {
-        supabase.from('messages')
-          .update({ read_at: new Date().toISOString() })
-          .eq('story_id', activeStoryId)
-          .neq('sender_id', user.id)
-          .is('read_at', null)
-          .then(() => setUnreadRefreshKey(k => k + 1), console.error)
-      } else {
-        setUnreadRefreshKey(k => k + 1)
-      }
-    } else if (prevTabRef.current === 'chat' && tab !== 'chat') {
-      // Leaving chat — force refresh to confirm count is 0
-      setUnreadRefreshKey(k => k + 1)
-    }
-    prevTabRef.current = tab
-  }, [tab, activeStoryId, user])
 
   // ── Back gesture / hardware back button ──
   const historyPushed = useRef(false)
@@ -316,18 +293,7 @@ export default function AppShell() {
     const ret = returnTabFromChat.current || 'home'
     setTab(ret)
     sessionStorage.setItem('activeTab', ret)
-    // Mark messages as read and then refresh the unread count
-    if (activeStoryId && user) {
-      supabase.from('messages')
-        .update({ read_at: new Date().toISOString() })
-        .eq('story_id', activeStoryId)
-        .neq('sender_id', user.id)
-        .is('read_at', null)
-        .then(() => setUnreadRefreshKey(k => k + 1), console.error)
-    } else {
-      setUnreadRefreshKey(k => k + 1)
-    }
-  }, [activeStoryId, user])
+  }, [])
 
   const go = useCallback((t: Tab) => {
     if (t === tabRef.current) {
@@ -423,14 +389,19 @@ export default function AppShell() {
       root.style.setProperty('--orange', c.o)
       root.style.setProperty('--orange-deep', c.od)
       root.style.setProperty('--orange-tint', c.ot)
+      const ink = heroInk(c.o)
+      root.style.setProperty('--hero-text', ink.text)
+      root.style.setProperty('--hero-soft', ink.soft)
     } else {
       root.style.removeProperty('--orange')
       root.style.removeProperty('--orange-deep')
       root.style.removeProperty('--orange-tint')
+      root.style.removeProperty('--hero-text')
+      root.style.removeProperty('--hero-soft')
     }
   }, [activeStoryId, stories])
 
-  const openPlan = (p: any) => setOverlay({ type: 'plan', data: p })
+  const openPlan = (p: PlanType) => setOverlay({ type: 'plan', data: p })
 
   const me: PersonDisplay = buildPerson(profile, true)
   const partnerDisplay: PersonDisplay | null = partner ? buildPerson(partner, false) : null
@@ -470,8 +441,8 @@ export default function AppShell() {
 
       setMemories(prev => prev.filter(m => m.id !== id))
       toast({ icon: 'trash', eyebrow: 'Recuerdo', title: 'Foto eliminada de la galería' })
-    } catch (err: any) {
-      toast({ icon: 'x', title: 'Error al eliminar', body: err.message })
+    } catch (err: unknown) {
+      toast({ icon: 'x', title: 'Error al eliminar', body: err instanceof Error ? err.message : String(err) })
       throw err
     }
   }, [toast])
@@ -495,6 +466,7 @@ export default function AppShell() {
       )
       .subscribe()
     return () => { supabase.removeChannel(channel) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeStoryId])
 
   // Realtime notifications from DB
@@ -508,7 +480,7 @@ export default function AppShell() {
         .limit(40)
         .then(({ data }) => {
           if (!data) return
-          setNotifications(data.map((n: any) => ({
+          setNotifications(data.map((n: NotificationType) => ({
             id: n.id,
             icon: n.type === 'plan_created' ? 'calendarCheck'
                 : n.type === 'plan_completed' ? 'checkCircle'
@@ -527,7 +499,6 @@ export default function AppShell() {
     return () => { supabase.removeChannel(ch) }
   }, [activeStoryId, user?.id])
 
-  const unreadCount = useUnreadCount(activeStoryId, user?.id, unreadRefreshKey)
   const unreadNotifs = notifications.filter(n => !n.read).length
 
   const markNotifsRead = () => {
@@ -548,23 +519,23 @@ export default function AppShell() {
             loading={loadingPlans} />,
     calendar: <Calendar plans={allCalendarPlans} onOpenPlan={openPlan} />,
     gallery: <Gallery memories={memories} setMemories={setMemories}
-               onImageClick={(m: any) => setLightbox({ url: m.image_url, id: m.id })} me={me} />,
+               onImageClick={(m: MemoryType) => setLightbox({ url: m.image_url, id: m.id })} me={me} />,
     finance: <Finances onPlanClick={openPlan} refreshKey={financeKey} />,
-    chat: <Chat key={activeStoryId} me={me} partner={partnerDisplay}
+    chat: <Chat key={activeStoryId}
              storyName={stories.find(s => s.id === activeStoryId)?.name}
-             storyCoverUrl={stories.find(s => s.id === activeStoryId)?.cover_url ?? null}
-             storyCoverPosition={{
-               x: stories.find(s => s.id === activeStoryId)?.cover_position_x ?? 50,
-               y: stories.find(s => s.id === activeStoryId)?.cover_position_y ?? 50,
-             }}
              onBack={leaveChat} />,
   }
 
   const activeStory = stories.find(s => s.id === activeStoryId)
+  const storyHeroInk = activeStory?.theme_color ? heroInk(activeStory.theme_color) : null
   const customStyles = activeStory?.theme_color ? {
     '--orange': activeStory.theme_color,
     '--orange-deep': `color-mix(in srgb, ${activeStory.theme_color} 85%, black)`,
     '--orange-tint': `color-mix(in srgb, ${activeStory.theme_color} 15%, transparent)`,
+    /* --hero-* se resuelven en :root, así que el acento scoped no los alcanza: fijarlos aquí */
+    '--hero-bg': activeStory.theme_color,
+    '--hero-text': storyHeroInk!.text,
+    '--hero-soft': storyHeroInk!.soft,
   } as React.CSSProperties : {}
 
   return (
@@ -684,8 +655,7 @@ export default function AppShell() {
 
       {tab !== 'chat' && (
         <NavBar tab={tab} setTab={go} onFab={() => setOverlay({ type: 'action' })}
-          me={me} onProfileOpen={() => setOverlay({ type: 'profile' })}
-          unreadCount={unreadCount} />
+          me={me} onProfileOpen={() => setOverlay({ type: 'profile' })} />
       )}
     </div>
   )
@@ -693,13 +663,12 @@ export default function AppShell() {
 
 
 
-function NavBar({ tab, setTab, onFab, me, onProfileOpen, unreadCount }: {
+function NavBar({ tab, setTab, onFab, me, onProfileOpen }: {
   tab: Tab
   setTab: (t: Tab) => void
   onFab: () => void
   me: PersonDisplay
   onProfileOpen: () => void
-  unreadCount: number
 }) {
   const catColor = 'var(--orange)'
 
@@ -708,7 +677,7 @@ function NavBar({ tab, setTab, onFab, me, onProfileOpen, unreadCount }: {
     { tab: 'calendar' as const, icon: 'calendar' as const, label: 'Agenda'      },
     { tab: 'gallery' as const,  icon: 'image' as const,    label: 'Recuerdos'   },
     { tab: 'finance' as const,  icon: 'wallet' as const,   label: 'Fondo'       },
-    { tab: 'chat' as const,     icon: 'chat' as const,     label: 'Chat', badge: unreadCount },
+    { tab: 'chat' as const,     icon: 'sparkle' as const,  label: 'Ideas'       },
   ]
 
   return (
@@ -758,7 +727,7 @@ function NavBar({ tab, setTab, onFab, me, onProfileOpen, unreadCount }: {
 
         <NavBtn icon={items[2]!.icon} label={items[2]!.label} active={tab === items[2]!.tab} onClick={() => setTab(items[2]!.tab)} />
         <NavBtn icon={items[3]!.icon} label={items[3]!.label} active={tab === items[3]!.tab} onClick={() => setTab(items[3]!.tab)} />
-        <NavBtn icon={items[4]!.icon} label={items[4]!.label} badge={items[4]!.badge} active={tab === items[4]!.tab} onClick={() => setTab(items[4]!.tab)} />
+        <NavBtn icon={items[4]!.icon} label={items[4]!.label} active={tab === items[4]!.tab} onClick={() => setTab(items[4]!.tab)} />
       </div>
     </nav>
   )

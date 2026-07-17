@@ -17,6 +17,7 @@ export function Avatar({ person, size = 40, ring = true, style = {} }: {
   style?: React.CSSProperties
 }) {
   const [failed, setFailed] = useState(false)
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => setFailed(false), [person.avatar_url])
   const shadow = ring ? '0 0 0 2px rgba(255,255,255,0.6)' : 'none'
 
@@ -25,7 +26,7 @@ export function Avatar({ person, size = 40, ring = true, style = {} }: {
     
     const padding = Math.max(4, size * 0.1)
     const outerSize = size + padding * 2
-    let frameStyle: React.CSSProperties = {
+    const frameStyle: React.CSSProperties = {
       position: 'absolute', top: -padding, left: -padding,
       width: outerSize, height: outerSize, borderRadius: '50%',
       pointerEvents: 'none', zIndex: 2,

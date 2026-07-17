@@ -20,7 +20,7 @@ export function Lightbox({ url, memoryId, onDelete, onClose }: LightboxProps) {
     try {
       await onDelete(memoryId, url)
       onClose()
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error deleting memory:', err)
     } finally {
       setDeleting(false)

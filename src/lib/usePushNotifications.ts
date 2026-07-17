@@ -22,7 +22,7 @@ async function invokeCalendarFunction(body: Record<string, unknown>) {
   }
 
   let status: number
-  let payload: any
+  let payload: string | Record<string, unknown> | null
   try {
     if (isNative) {
       const response = await CapacitorHttp.post({
@@ -33,7 +33,7 @@ async function invokeCalendarFunction(body: Record<string, unknown>) {
         readTimeout: 30_000,
       })
       status = response.status
-      payload = response.data
+      payload = response.data as string | Record<string, unknown> | null
     } else {
       const response = await fetch(url, {
         method: 'POST',
@@ -42,7 +42,7 @@ async function invokeCalendarFunction(body: Record<string, unknown>) {
       })
       status = response.status
       const text = await response.text()
-      payload = text ? JSON.parse(text) : null
+      payload = text ? JSON.parse(text) as Record<string, unknown> : null
     }
   } catch (error) {
     throw new Error(`No se pudo conectar con Supabase: ${error instanceof Error ? error.message : String(error)}`)
@@ -51,9 +51,9 @@ async function invokeCalendarFunction(body: Record<string, unknown>) {
   if (typeof payload === 'string') {
     try { payload = JSON.parse(payload) } catch { /* Keep the server text for the error below. */ }
   }
-  if (status < 200 || status >= 300 || payload?.error) {
-    const detail = typeof payload === 'string' ? payload : payload?.detail || payload?.error
-    throw new Error(detail || `Google Calendar respondió ${status}.`)
+  if (status < 200 || status >= 300 || (typeof payload === 'object' && payload !== null && 'error' in payload && payload.error)) {
+    const detail = typeof payload === 'string' ? payload : (payload as Record<string, unknown>)?.detail || (payload as Record<string, unknown>)?.error
+    throw new Error(String(detail) || `Google Calendar respondió ${status}.`)
   }
   return payload
 }

@@ -104,14 +104,14 @@ function MagneticButton({ children, className = '', style, onClick }: {
 
 // ─── Floating particle background ──────────────────────────
 function ParticleField() {
-  const particles = Array.from({ length: 30 }, () => ({
+  const [particles] = useState(() => Array.from({ length: 30 }, () => ({
     x: Math.random() * 100,
     y: Math.random() * 100,
     size: Math.random() * 4 + 1,
     duration: Math.random() * 10 + 10,
     delay: Math.random() * 5,
     opacity: Math.random() * 0.3 + 0.05,
-  }))
+  })))
 
   return (
     <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
@@ -483,7 +483,7 @@ function HorizontalFeatures() {
           letterSpacing: '-0.035em',
         }}>
           Lo que necesitan,{' '}
-          <span style={{ fontStyle: 'italic', color: 'var(--orange)' }}>
+          <span style={{ color: 'var(--orange)' }}>
             donde lo necesitan
           </span>
         </h2>
@@ -657,7 +657,7 @@ function CouplesScrollSection() {
           letterSpacing: '-0.035em', color: 'var(--paper)',
         }}>
           Parejas que ya{' '}
-          <span style={{ fontStyle: 'italic', color: 'var(--orange)' }}>usan OurTime</span>
+          <span style={{ color: 'var(--orange)' }}>usan OurTime</span>
         </h2>
       </motion.div>
 
@@ -754,7 +754,7 @@ function SocialProofSection() {
           style={{ textAlign: 'center' }}
         >
           <div style={{
-            fontFamily: 'var(--font-display)', fontStyle: 'italic',
+            fontFamily: 'var(--font-display)',
             fontSize: 28, color: 'var(--orange)', lineHeight: 1.1, marginBottom: 2,
           }}>
             {counts.users.toLocaleString()}+
@@ -773,7 +773,7 @@ function SocialProofSection() {
           style={{ textAlign: 'center' }}
         >
           <div style={{
-            fontFamily: 'var(--font-display)', fontStyle: 'italic',
+            fontFamily: 'var(--font-display)',
             fontSize: 28, color: 'var(--blue)', lineHeight: 1.1, marginBottom: 2,
           }}>
             {counts.stories.toLocaleString()}+
@@ -792,7 +792,7 @@ function SocialProofSection() {
           style={{ textAlign: 'center' }}
         >
           <div style={{
-            fontFamily: 'var(--font-display)', fontStyle: 'italic',
+            fontFamily: 'var(--font-display)',
             fontSize: 28, color: 'var(--done)', lineHeight: 1.1, marginBottom: 2,
           }}>
             {counts.plans.toLocaleString()}+
@@ -811,7 +811,7 @@ function SocialProofSection() {
           style={{ textAlign: 'center' }}
         >
           <div style={{
-            fontFamily: 'var(--font-display)', fontStyle: 'italic',
+            fontFamily: 'var(--font-display)',
             fontSize: 28, color: 'var(--done)', lineHeight: 1.1, marginBottom: 2,
           }}>
             {counts.plans.toLocaleString()}+
@@ -830,7 +830,7 @@ function SocialProofSection() {
           style={{ textAlign: 'center' }}
         >
           <div style={{
-            fontFamily: 'var(--font-display)', fontStyle: 'italic',
+            fontFamily: 'var(--font-display)',
             fontSize: 28, color: 'var(--orange)', lineHeight: 1.1, marginBottom: 2,
           }}>
             {'⭐ '}4.8
@@ -874,7 +874,7 @@ function PricingSection({ onGetStarted }: { onGetStarted: () => void }) {
             fontSize: 42, lineHeight: 1.02, margin: '0 0 12px', letterSpacing: '-0.03em',
           }}>
             Un plan para cada<br />
-            <span style={{ fontStyle: 'italic', color: 'var(--orange)' }}>historia</span>
+            <span style={{ color: 'var(--orange)' }}>historia</span>
           </h2>
           <p style={{
             fontSize: 15, color: 'var(--ink-soft)', fontFamily: 'var(--font-ui)',
@@ -932,7 +932,7 @@ function PricingSection({ onGetStarted }: { onGetStarted: () => void }) {
                 }}>{plan.name}</div>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 4 }}>
                   <span style={{
-                    fontFamily: 'var(--font-display)', fontStyle: 'italic',
+                    fontFamily: 'var(--font-display)',
                     fontSize: 32, color: plan.color, lineHeight: 1,
                   }}>
                     {plan.price}
@@ -1097,7 +1097,7 @@ function CTASection({ onGetStarted }: { onGetStarted: () => void }) {
           letterSpacing: '-0.03em',
         }}>
           ¿Listos para escribir<br />
-          <span style={{ fontStyle: 'italic', color: 'var(--orange)' }}>su próximo</span> capítulo?
+          <span style={{ color: 'var(--orange)' }}>su próximo</span> capítulo?
         </h2>
         <p style={{
           fontSize: 16, color: 'var(--ink-soft)', lineHeight: 1.6,
@@ -1166,7 +1166,7 @@ function Footer({ onGetStarted }: { onGetStarted: () => void }) {
           viewport={{ once: true }}
           transition={{ delay: 0.1, duration: 0.5, ease: easeOut }}
           style={{
-            fontFamily: 'var(--font-display)', fontStyle: 'italic',
+            fontFamily: 'var(--font-display)',
             fontSize: 'clamp(32px, 8vw, 72px)',
             color: 'rgba(255,255,255,0.08)',
             lineHeight: 0.9,
