@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Icon } from '../components/ui/Icon'
+import { useConfirm } from '../components/ui/ConfirmDialog'
 import type { MessageType } from '../lib/supabase'
 
 function fmtTime(iso: string): string {
@@ -80,6 +81,7 @@ interface Props {
 
 export default function Chat({ storyName, onBack }: Props) {
   const { activeStoryId } = useAuth()
+  const confirm = useConfirm()
   const [messages, setMessages] = useState<MessageType[]>([])
   const [text, setText] = useState('')
   const [sending, setSending] = useState(false)
@@ -135,7 +137,17 @@ export default function Chat({ storyName, onBack }: Props) {
     if (!mounted.current) return
     if (error || data?.error || !data?.aiMessage) {
       console.error('Edge function error:', error, data)
-      alert('Error en la IA: ' + (data?.error || error?.message || 'Error desconocido'))
+      const err = data?.error || error?.message || 'Error desconocido'
+      
+      // Mostrar el error usando el diseño de la app en lugar de un feo alert() nativo
+      confirm({
+        title: 'Error de Conexión',
+        body: `Hubo un problema al contactar a la IA: ${err}. Revisa tu conexión o las claves API.`,
+        confirmLabel: 'Entendido',
+        cancelLabel: 'Cerrar',
+        danger: true
+      })
+      
       // Revertir el optimista y devolver el texto al input
       setMessages(prev => prev.filter(m => m.id !== tempId))
       setText(trimmed)
