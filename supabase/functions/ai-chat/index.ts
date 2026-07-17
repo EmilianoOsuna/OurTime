@@ -14,18 +14,21 @@ const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const GEMINI_KEY = Deno.env.get('GEMINI_API_KEY') ?? Deno.env.get('GOOGLE_API_KEY')
 const ANTHROPIC_KEY = Deno.env.get('ANTHROPIC_API_KEY')
 const OPENAI_KEY = Deno.env.get('OPENAI_API_KEY')
+const GROQ_KEY = Deno.env.get('GROQ_API_KEY')
 
-type Provider = 'google' | 'anthropic' | 'openai'
+type Provider = 'google' | 'anthropic' | 'openai' | 'groq'
 
 const DEFAULT_MODEL: Record<Provider, string> = {
-  google: 'gemini-1.5-flash',
+  google: 'gemini-3-flash-preview',
   anthropic: 'claude-3-5-sonnet-20240620',
   openai: 'gpt-4o-mini',
+  groq: 'llama-3.1-8b-instant',
 }
 
 function resolveProvider(): Provider | null {
   const forced = (Deno.env.get('LLM_PROVIDER') ?? '').toLowerCase()
-  if (forced === 'google' || forced === 'anthropic' || forced === 'openai') return forced
+  if (forced === 'google' || forced === 'anthropic' || forced === 'openai' || forced === 'groq') return forced
+  if (GROQ_KEY) return 'groq'
   if (GEMINI_KEY) return 'google'
   if (ANTHROPIC_KEY) return 'anthropic'
   if (OPENAI_KEY) return 'openai'
@@ -101,10 +104,26 @@ async function callOpenAI(model: string, system: string, turns: ChatTurn[]): Pro
   return (data?.choices?.[0]?.message?.content ?? '').trim()
 }
 
+async function callGroq(model: string, system: string, turns: ChatTurn[]): Promise<string> {
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${GROQ_KEY!}` },
+    body: JSON.stringify({
+      model,
+      max_tokens: MAX_OUTPUT_TOKENS,
+      messages: [{ role: 'system', content: system }, ...turns],
+    }),
+  })
+  if (!res.ok) throw new Error(`Groq ${res.status}: ${(await res.text()).slice(0, 300)}`)
+  const data = await res.json()
+  return (data?.choices?.[0]?.message?.content ?? '').trim()
+}
+
 const CALLERS: Record<Provider, (model: string, system: string, turns: ChatTurn[]) => Promise<string>> = {
   google: callGemini,
   anthropic: callAnthropic,
   openai: callOpenAI,
+  groq: callGroq,
 }
 
 // ── HTTP ───────────────────────────────────────────────────────────────
@@ -134,7 +153,7 @@ Deno.serve(async req => {
   try {
     const provider = resolveProvider()
     if (!provider) {
-      return json({ error: 'Sin proveedor de IA: configura GEMINI_API_KEY, ANTHROPIC_API_KEY u OPENAI_API_KEY como secret' }, 500)
+      return json({ error: 'Sin proveedor de IA: configura GROQ_API_KEY, GEMINI_API_KEY, ANTHROPIC_API_KEY u OPENAI_API_KEY como secret' }, 200)
     }
     const model = Deno.env.get('LLM_MODEL') || DEFAULT_MODEL[provider]
 
@@ -144,7 +163,7 @@ Deno.serve(async req => {
     if (userError || !userData?.user) return json({ error: 'No autorizado' }, 401)
     const user = userData.user
 
-    const { text, story_id } = await req.json()
+    const { text, story_id, location } = await req.json()
     if (typeof text !== 'string' || !text.trim() || typeof story_id !== 'string') {
       return json({ error: 'Faltan datos: text y story_id son obligatorios' }, 400)
     }
@@ -161,10 +180,11 @@ Deno.serve(async req => {
     const { count: userMessageCount, error: countError } = await admin.from('messages')
       .select('id', { count: 'exact', head: true })
       .eq('sender_id', user.id)
+      .eq('role', 'user')
       .gte('created_at', oneHourAgo)
     
     if (countError) throw countError
-    if (userMessageCount !== null && userMessageCount > 30) {
+    if (userMessageCount !== null && userMessageCount >= 30) {
       return json({ error: 'Has alcanzado el límite de sugerencias por hora. Por favor, intenta más tarde.' }, 429)
     }
     // ─────────────────────────────────────────────────────────────────────────
@@ -189,19 +209,17 @@ Deno.serve(async req => {
       .map(p => `- ${p.title}${p.date ? ` (${p.date})` : ''}${p.place ? ` en ${p.place}` : ''}`)
       .join('\n')
 
-    // Guardar el mensaje del usuario antes de llamar al modelo
-    const { data: userMessage, error: insertError } = await admin.from('messages')
-      .insert({ story_id, sender_id: user.id, text: trimmed, role: 'user' })
-      .select().single()
-    if (insertError) throw insertError
-
     const system = [
       'Eres el asistente de OurTime, una app para compartir planes, recuerdos y finanzas con las personas que quieres.',
       `Hablas con los miembros de la historia "${story?.name ?? 'sin nombre'}", que es ${CATEGORY_LABEL[story?.category ?? 'otro'] ?? CATEGORY_LABEL.otro}.`,
       memberNames.length ? `Miembros: ${memberNames.join(', ')}.` : '',
+      location?.lat && location?.lng ? `📍 ATENCIÓN: El usuario se encuentra AHORA MISMO en las coordenadas GPS: Latitud ${location.lat}, Longitud ${location.lng}. Usa esta ubicación para recomendar restaurantes, parques o actividades locales reales CERCANAS a él.` : '',
       'Tu objetivo es sugerir planes, citas y actividades: ideas creativas para hacer juntos, restaurantes o lugares locales si te dicen dónde están, e ideas de citas virtuales o juegos si están a distancia.',
       upcomingPlans ? `Planes próximos que ya tienen (evita repetirlos, puedes complementarlos):\n${upcomingPlans}` : '',
-      'Responde siempre en español, con calidez y cercanía. Sé concreto: propón 2 o 3 ideas accionables como máximo, con detalles breves. Usa listas cortas cuando ayuden. No inventes datos de la historia que no conoces.',
+      'Responde siempre en español, con calidez y cercanía. Sé concreto: propón 2 o 3 ideas accionables como máximo.',
+      '✨ INTERFAZ RICA (ARTIFACTS): Nuestra app puede renderizar componentes nativos. SIEMPRE que recomiendes un lugar, restaurante o destino físico específico, DEBES incluir este link especial en tu respuesta para que mostremos un mapa interactivo:',
+      '`[MAP: Nombre exacto del lugar, Ciudad](map:Nombre exacto del lugar, Ciudad)`',
+      'Ejemplo: "Te recomiendo ir a cenar a Pujol. [MAP: Pujol, CDMX](map:Pujol, CDMX)". NO inventes otras URLs, usa exactamente map:Nombre.',
     ].filter(Boolean).join('\n\n')
 
     // Historial (viene en orden descendente): invertir y mapear a turnos del modelo.
@@ -211,18 +229,26 @@ Deno.serve(async req => {
     while (history.length && history[0].role === 'assistant') history.shift()
     const turns: ChatTurn[] = [...history, { role: 'user', content: trimmed }]
 
+    // ── GUARDAR MENSAJE DEL USUARIO INMEDIATAMENTE ──
+    const { data: insertedUserMsg, error: insertError } = await admin.from('messages')
+      .insert({ story_id, sender_id: user.id, text: trimmed, role: 'user' })
+      .select().single()
+    if (insertError) throw insertError
+
     const reply = (await CALLERS[provider](model, system, turns))
       || 'Lo siento, no pude generar una respuesta. Inténtalo de nuevo.'
 
+    // ── GUARDAR MENSAJE DE LA IA ──
     const { data: aiMessage, error: aiInsertError } = await admin.from('messages')
       .insert({ story_id, sender_id: null, text: reply, role: 'ai' })
       .select().single()
     if (aiInsertError) throw aiInsertError
 
-    return json({ userMessage, aiMessage })
+    return json({ userMessage: insertedUserMsg, aiMessage })
   } catch (error) {
     console.error('ai-chat error:', error)
     const message = error instanceof Error ? error.message : 'Error inesperado'
-    return json({ error: message }, 500)
+    // Devolver 200 para que supabase-js no enmascare el error con "non-2xx status code" y podamos leerlo
+    return json({ error: message }, 200)
   }
 })

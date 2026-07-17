@@ -301,28 +301,60 @@ export function ProfileScreen({ plans, onClose, onGoToFinance, storyCode, isAdmi
       display: 'flex', flexDirection: 'column',
       animation: 'sheetUp .42s cubic-bezier(.2,.9,.2,1) both',
     }}>
-      {/* Header — bloque drenched amarillo (firma mindmarket) */}
+      {/* Header — bloque drenched masivo */}
       <div style={{
-        paddingTop: 56, paddingBottom: 18, paddingLeft: 22, paddingRight: 18,
-        display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
-        flexShrink: 0, background: 'var(--sun)',
-        borderBottomLeftRadius: 'var(--r-md)', borderBottomRightRadius: 'var(--r-md)',
+        paddingTop: 56, paddingBottom: 60, paddingLeft: 22, paddingRight: 22,
+        position: 'relative', flexShrink: 0,
+        background: 'var(--blue)', color: '#fff',
+        borderBottomLeftRadius: 36, borderBottomRightRadius: 36,
+        textAlign: 'center',
       }}>
-        <div>
-          <div className="eyebrow" style={{ marginBottom: 5, color: 'var(--sun-soft)' }}>Configuración</div>
-          <h1 className="display" style={{ fontSize: 28, margin: 0, color: 'var(--sun-ink)' }}>Perfil</h1>
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <h1 className="display" style={{ fontSize: 44, margin: '0 0 6px', color: '#fff', lineHeight: 1 }}>
+            {me.name}
+          </h1>
+          <div style={{ fontSize: 16, fontWeight: 600, color: 'rgba(255,255,255,0.85)' }}>
+            {profile?.nickname || 'Explorador'}
+          </div>
         </div>
+
         <button data-testid="profile-close-btn" onClick={onClose} style={{
-          width: 42, height: 42, borderRadius: '50%', border: 'none',
-          background: 'rgba(255,255,255,0.92)', cursor: 'pointer', color: 'var(--sun-ink)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: 'var(--sh-sm)', flexShrink: 0,
+          position: 'absolute', top: 56, right: 18, width: 42, height: 42,
+          borderRadius: '50%', border: 'none', background: 'rgba(255,255,255,0.2)',
+          cursor: 'pointer', color: '#fff', display: 'flex', alignItems: 'center',
+          justifyContent: 'center', zIndex: 10,
         }}>
           <Icon name="chevD" size={22} />
         </button>
+
+        {/* Floating Avatar */}
+        <div style={{ position: 'absolute', bottom: -50, left: '50%', transform: 'translateX(-50%)', zIndex: 10 }}>
+          <input id="avatar-file" type="file" accept="image/*" style={{ display: 'none' }} onChange={handleAvatarUpload} />
+          <button onClick={() => document.getElementById('avatar-file')?.click()}
+            style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer', position: 'relative', display: 'block' }}>
+            <div style={{ borderRadius: '50%', padding: 4, background: 'var(--paper)', boxShadow: 'var(--sh-md)' }}>
+              <Avatar person={me} size={92} />
+            </div>
+            <div style={{
+              position: 'absolute', inset: 4, borderRadius: '50%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: uploadingAvatar ? 'rgba(0,0,0,0.45)' : 'transparent',
+            }}>
+              {uploadingAvatar && <div style={{ width: 20, height: 20, borderRadius: '50%', border: '3px solid var(--paper)', borderTopColor: 'transparent', animation: 'spin 0.7s linear infinite' }} />}
+            </div>
+            <div style={{
+              position: 'absolute', bottom: 0, right: 0, width: 30, height: 30,
+              borderRadius: '50%', background: 'var(--blue)', border: '3px solid var(--paper)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#fff'
+            }}>
+              <Icon name="camera" size={13} stroke={2.5} />
+            </div>
+          </button>
+        </div>
       </div>
 
-      <div className="ot-scroll" style={{ flex: 1, paddingBottom: 40 }}>
+      <div className="ot-scroll" style={{ flex: 1, paddingBottom: 40, paddingTop: 60 }}>
 
         {/* ── SECCIÓN: ESTA HISTORIA ── */}
         {activeStory && (
@@ -475,45 +507,28 @@ export function ProfileScreen({ plans, onClose, onGoToFinance, storyCode, isAdmi
           <div className="card" style={{ padding: '18px 18px 16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: editing ? 16 : 0 }}>
               {/* Avatar */}
-              <div style={{ flexShrink: 0 }}>
-                <input id="avatar-file" type="file" accept="image/*" style={{ display: 'none' }} onChange={handleAvatarUpload} />
-                <button onClick={() => document.getElementById('avatar-file')?.click()}
-                  style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer', position: 'relative', display: 'block' }}>
-                  <Avatar person={me} size={60} />
-                  <div style={{
-                    position: 'absolute', inset: 0, borderRadius: '50%',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    background: uploadingAvatar ? 'rgba(0,0,0,0.45)' : 'rgba(0,0,0,0.18)',
-                  }}>
-                    {uploadingAvatar
-                      ? <div style={{ width: 16, height: 16, borderRadius: '50%', border: '2px solid var(--paper)', borderTopColor: 'transparent', animation: 'spin 0.7s linear infinite' }} />
-                      : <Icon name="camera" size={13} style={{ color: 'var(--paper)' }} />
-                    }
-                  </div>
-                </button>
+              {/* Datos (el avatar ahora está arriba) */}
+              <div style={{ flex: 1 }}>
                 {googleAvatarUrl && googleAvatarUrl !== profile?.avatar_url && (
                   <button onClick={useGoogleAvatar} disabled={uploadingAvatar} style={{
-                    marginTop: 6, border: 'none', background: 'var(--card-2)', borderRadius: 8,
-                    padding: '4px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center',
-                    gap: 4, fontSize: 10.5, fontWeight: 700, color: 'var(--blue)',
-                    fontFamily: 'var(--font-ui)', whiteSpace: 'nowrap',
+                    marginBottom: 10, border: 'none', background: 'var(--card-2)', borderRadius: 8,
+                    padding: '6px 10px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center',
+                    gap: 6, fontSize: 11, fontWeight: 700, color: 'var(--blue)',
+                    fontFamily: 'var(--font-ui)',
                   }}>
-                    <Icon name="googleCal" size={11} style={{ color: 'var(--blue)' }} /> Google
+                    <Icon name="googleCal" size={13} style={{ color: 'var(--blue)' }} /> Usar foto de Google
                   </button>
                 )}
-              </div>
 
               {!editing && (
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: 17 }}>
-                    {me.name}{profile?.nickname ? ` · ${profile.nickname}` : ''}
-                  </div>
                   {profile?.birthday
-                    ? <div style={{ fontSize: 13, color: 'var(--ink-soft)', marginTop: 3 }}>Cumpleaños: {fmtDate(profile.birthday)}</div>
-                    : <div style={{ fontSize: 13, color: 'var(--ink-faint)', marginTop: 3 }}>Sin cumpleaños</div>
+                    ? <div style={{ fontSize: 14, color: 'var(--ink-soft)' }}>Cumpleaños: <strong>{fmtDate(profile.birthday)}</strong></div>
+                    : <div style={{ fontSize: 14, color: 'var(--ink-faint)' }}>Sin cumpleaños configurado</div>
                   }
                 </div>
               )}
+              </div>
             </div>
 
             {editing && (

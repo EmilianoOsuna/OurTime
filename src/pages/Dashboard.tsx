@@ -50,18 +50,24 @@ export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpe
   const isPareja = activeStory?.category === 'pareja'
 
   return (
-    <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
+    <div className="animate-fade-up"
       style={{ padding: 'max(env(safe-area-inset-top), 32px) 22px 150px' }}>
 
-      {/* Header */}
-      <div style={{ padding: '0 0 16px' }}>
+      {/* Header - Drenched Block */}
+      <div style={{ 
+        margin: 'calc(-1 * max(env(safe-area-inset-top), 32px)) -22px 24px -22px',
+        padding: 'max(env(safe-area-inset-top), 32px) 22px 28px',
+        background: 'var(--hero-bg)',
+        color: 'var(--hero-text)',
+        borderRadius: '0 0 34px 34px'
+      }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
           <div>
-            <div className="eyebrow" style={{ marginBottom: 6 }}>Nuestra Historia</div>
-            <h1 className="display" style={{ fontSize: 38, margin: 0, lineHeight: 0.98 }}>
+            <div className="eyebrow" style={{ marginBottom: 6, color: 'var(--hero-soft)' }}>Nuestra Historia</div>
+            <h1 className="display" style={{ fontSize: 44, margin: 0 }}>
               {activeStory?.name || 'Nuestro espacio'}
             </h1>
-            <span className="squiggle" aria-hidden="true" style={{ color: 'var(--orange)', width: 92, marginTop: 8 }} />
+            <span className="squiggle" aria-hidden="true" style={{ color: 'currentColor', width: 112, marginTop: 12 }} />
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {stories.length > 1 && onStorySwitcher && (
@@ -95,18 +101,19 @@ export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpe
           </div>
         </div>
 
-        {/* Stats card — for all stories */}
+        {/* Stats card */}
         {since && (
-          <motion.button whileTap={{ scale: 0.98 }} onClick={onProfileOpen} className="ot-card hero-card" style={{
-            marginTop: 16, padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 13,
-            border: 'none', cursor: 'pointer', textAlign: 'left', width: '100%', boxShadow: 'var(--sh-md)',
+          <motion.button whileTap={{ scale: 0.96 }} onClick={onProfileOpen} className="ot-card" style={{
+            marginTop: 22, padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 13,
+            border: 'none', cursor: 'pointer', textAlign: 'left', width: '100%', boxShadow: 'var(--sh-lg)',
+            background: 'var(--card)'
           }}>
             <div style={{ position: 'relative' }}>
-              <CoupleAvatars me={me} partner={partner || { name: partnerName, initial: partnerName.charAt(0).toUpperCase(), color: 'var(--orange)' }} size={40} />
+              <CoupleAvatars me={me} partner={partner || { name: partnerName, initial: partnerName.charAt(0).toUpperCase(), color: 'var(--orange)' }} size={42} />
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--hero-text)' }}>Tú y {partner?.name ? partner.name.split(' ')[0] : defaultPartnerName.toLowerCase()}</div>
-              <div style={{ fontSize: 12.5, color: 'var(--hero-soft)' }}>
+              <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink)' }}>Tú y {partner?.name ? partner.name.split(' ')[0] : defaultPartnerName.toLowerCase()}</div>
+              <div style={{ fontSize: 13, color: 'var(--ink-soft)' }}>
                 {activeStory?.category === 'pareja' ? `Juntos desde ${fmtDate(since)}` :
                  activeStory?.category === 'amigos' ? `Amigos desde ${fmtDate(since)}` :
                  activeStory?.category === 'familia' ? `Familia desde ${fmtDate(since)}` :
@@ -115,8 +122,8 @@ export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpe
             </div>
             {days !== null && (
               <div style={{ textAlign: 'right' }}>
-                <div className="display" style={{ fontSize: 40, fontWeight: 700, color: 'var(--hero-text)', lineHeight: 0.95 }}>{days}</div>
-                <div className="eyebrow" style={{ fontSize: 10, color: 'var(--hero-soft)' }}>días juntos</div>
+                <div className="display" style={{ fontSize: 44, fontWeight: 800, color: 'var(--ink)', lineHeight: 0.95 }}>{days}</div>
+                <div className="eyebrow" style={{ fontSize: 11, color: 'var(--orange)' }}>días juntos</div>
               </div>
             )}
           </motion.button>
@@ -126,8 +133,8 @@ export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpe
 
       {/* Next chapter hero */}
       {next ? (
-        <div style={{ marginTop: 20 }}>
-          <div className="eyebrow" style={{ marginBottom: 12, color: 'var(--orange-deep)' }}>Su próximo momento</div>
+        <div className="animate-fade-up delay-1">
+          <div className="eyebrow" style={{ marginBottom: 14, color: 'var(--orange-deep)' }}>Su próximo momento</div>
           <NextHero plan={next} onPlanClick={onPlanClick} />
         </div>
       ) : plans.length === 0 && <EmptyDashboard onNewPlan={onNewPlan} category={activeStory?.category} />}
@@ -215,7 +222,7 @@ export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpe
           </motion.button>
         </div>
       )}
-    </motion.div>
+    </div>
   )
 }
 
@@ -318,10 +325,10 @@ function EmptyDashboard({ onNewPlan, category }: { onNewPlan?: () => void, categ
   const isAmigos = category === 'amigos';
 
   const iconName = isPareja ? 'heartFill' : (isAmigos ? 'sparkle' : 'star');
-  const title = isPareja ? 'El primer momento' : (isFamilia ? 'Tiempo en familia' : 'Un nuevo comienzo');
+  const title = isPareja ? '¡El lienzo está en blanco!' : (isFamilia ? 'Tiempo en familia' : '¡Un nuevo comienzo!');
   const desc = isPareja
-    ? 'Toda gran historia empieza con un plan compartido. ¿Cuál será el primero?'
-    : 'Empiecen a construir nuevos recuerdos juntos. ¿Qué tienen en mente?';
+    ? 'Toda gran historia empieza con un plan loco o romántico. ¿Qué hacemos primero?'
+    : 'Cero recuerdos a la vista. ¡Es hora de pintar algo increíble juntos!';
 
   return (
     <div className="anim-up" style={{

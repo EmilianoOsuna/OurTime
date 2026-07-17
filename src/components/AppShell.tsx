@@ -869,12 +869,14 @@ function NavBtn({ icon, label, active, onClick, badge }: { icon: string; label: 
     }}>
       {active && (
         <motion.div layoutId="nav-pill" style={{
-          position: 'absolute', bottom: 0, width: 20, height: 3, background: `var(--orange)`, 
-          borderRadius: '3px 3px 0 0', zIndex: 0
-        }} transition={{ type: 'spring', bounce: 0.2, duration: 0.5 }} />
+          position: 'absolute', inset: 0, background: `var(--orange-tint)`, 
+          borderRadius: 16, zIndex: 0
+        }} transition={{ type: 'spring', stiffness: 350, damping: 25 }} />
       )}
       <div style={{ position: 'relative', zIndex: 1 }}>
-        <Icon name={icon} size={21} stroke={active ? 2.3 : 1.8} />
+        <motion.div animate={active ? { scale: [1, 1.25, 1] } : {}} transition={{ duration: 0.4, type: 'spring' }}>
+          <Icon name={icon} size={21} stroke={active ? 2.5 : 1.8} />
+        </motion.div>
         {badge != null && badge > 0 && (
           <span style={{
             position: 'absolute', top: -4, right: -7,

@@ -298,6 +298,42 @@ export async function enableNativePushNotifications(): Promise<boolean> {
   return registered
 }
 
+let cachedLocation: { lat: number; lng: number } | null = null
+let lastLocationTime = 0
+
+export async function requestLocationPermission(): Promise<boolean> {
+  try {
+    const status = await Geolocation.checkPermissions()
+    if (status.location !== 'granted') {
+      const request = await Geolocation.requestPermissions()
+      return request.location === 'granted'
+    }
+    return true
+  } catch (e) {
+    console.warn('Geolocation permission error:', e)
+    return false
+  }
+}
+
+export async function getCachedLocation(): Promise<{ lat: number; lng: number } | null> {
+  const now = Date.now()
+  if (cachedLocation && (now - lastLocationTime) < 300000) {
+    return cachedLocation
+  }
+  
+  try {
+    const status = await Geolocation.checkPermissions()
+    if (status.location !== 'granted') return cachedLocation
+
+    const pos = await Geolocation.getCurrentPosition({ enableHighAccuracy: false, timeout: 4000 })
+    cachedLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude }
+    lastLocationTime = now
+  } catch (e) {
+    console.warn('Failed to get location:', e)
+  }
+  return cachedLocation
+}
+
 export {
   Capacitor,
   Camera,

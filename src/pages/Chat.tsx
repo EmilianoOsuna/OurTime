@@ -1,8 +1,10 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, memo } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Icon } from '../components/ui/Icon'
 import { useConfirm } from '../components/ui/ConfirmDialog'
+import ReactMarkdown from 'react-markdown'
+import { getCachedLocation, requestLocationPermission } from '../lib/native'
 import type { MessageType } from '../lib/supabase'
 
 function fmtTime(iso: string): string {
@@ -41,12 +43,12 @@ const QUICK_PROMPTS = [
   'Ideas para un aniversario',
 ]
 
-function AiAvatar({ size = 30 }: { size?: number }) {
+function AiAvatar({ size = 30, drenched = false }: { size?: number; drenched?: boolean }) {
   return (
     <div style={{
       width: size, height: size, borderRadius: size * 0.4,
-      background: 'color-mix(in srgb, var(--blue) 18%, transparent)',
-      color: 'var(--blue)',
+      background: drenched ? 'rgba(255,255,255,0.2)' : 'color-mix(in srgb, var(--blue) 18%, transparent)',
+      color: drenched ? '#fff' : 'var(--blue)',
       display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
     }}>
       <Icon name="sparkle" size={size * 0.55} />
@@ -74,6 +76,83 @@ function TypingIndicator() {
   )
 }
 
+const MemoizedMessageItem = memo(({ msg, isAi, showDate, nextSame, prevSame, br }: any) => {
+  return (
+    <div key={msg.id}>
+      {showDate && (
+        <div style={{ textAlign: 'center', margin: '14px 0 10px', fontSize: 11, fontWeight: 700,
+          color: 'var(--ink-faint)', fontFamily: 'var(--font-ui)',
+          textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+          {fmtDateLabel(msg.created_at)}
+        </div>
+      )}
+      <div style={{
+        display: 'flex', flexDirection: isAi ? 'row' : 'row-reverse',
+        alignItems: 'flex-end', gap: 7,
+        marginBottom: nextSame ? 2 : 10,
+        marginTop: !prevSame && !showDate ? 4 : 0,
+      }}>
+        {isAi && (
+          <div style={{ width: 30, flexShrink: 0, alignSelf: 'flex-end' }}>
+            {!nextSame && <AiAvatar />}
+          </div>
+        )}
+
+        <div style={{ display: 'flex', flexDirection: 'column',
+          alignItems: isAi ? 'flex-start' : 'flex-end', maxWidth: '78%' }}>
+          <div style={{
+            padding: '10px 14px',
+            borderRadius: br,
+            background: isAi ? 'var(--card)' : 'var(--orange)',
+            color: isAi ? 'var(--ink)' : '#fff',
+            boxShadow: isAi ? 'var(--sh-sm)' : 'none',
+            border: isAi ? '1px solid color-mix(in srgb, var(--blue) 25%, transparent)' : 'none',
+            fontSize: 15, lineHeight: 1.45,
+            wordBreak: 'break-word', whiteSpace: 'pre-wrap',
+          }}>
+            {isAi ? (
+              <div className="md-chat-content">
+                <ReactMarkdown 
+                  components={{
+                    a: ({ node, ...props }) => {
+                      if (props.href?.startsWith('map:')) {
+                        const place = decodeURIComponent(props.href.replace('map:', '')).trim()
+                        return (
+                          <a href={`https://maps.google.com/?q=${encodeURIComponent(place)}`} target="_blank" rel="noopener noreferrer" style={{ display: 'block', marginTop: 12, marginBottom: 8, borderRadius: 16, border: '1px solid var(--line)', background: 'var(--paper)', textDecoration: 'none', color: 'inherit', boxShadow: 'var(--sh-sm)' }}>
+                            <div style={{ padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
+                              <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--blue)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                <Icon name="sparkle" size={20} />
+                              </div>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontSize: 15, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{place}</div>
+                                <div style={{ fontSize: 13, color: 'var(--blue)', marginTop: 2 }}>Abrir en Mapas</div>
+                              </div>
+                            </div>
+                          </a>
+                        )
+                      }
+                      return <a {...props} style={{ color: 'var(--blue)', textDecoration: 'underline' }} target="_blank" rel="noopener noreferrer" />
+                    }
+                  }}
+                >
+                  {msg.text}
+                </ReactMarkdown>
+              </div>
+            ) : (
+              msg.text
+            )}
+          </div>
+          {!nextSame && (
+            <div style={{ fontSize: 10.5, color: 'var(--ink-faint)', marginTop: 3 }}>
+              {fmtTime(msg.created_at)}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+})
+
 interface Props {
   storyName?: string
   onBack: () => void
@@ -91,7 +170,10 @@ export default function Chat({ storyName, onBack }: Props) {
   const tempSeq = useRef(0)
 
   const mounted = useRef(true)
-  useEffect(() => { return () => { mounted.current = false } }, [])
+  useEffect(() => { 
+    mounted.current = true
+    return () => { mounted.current = false } 
+  }, [])
 
   const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior }), 50)
@@ -99,9 +181,12 @@ export default function Chat({ storyName, onBack }: Props) {
 
   useEffect(() => {
     if (!activeStoryId) return
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true)
     setMessages([])
+    
+    // Iniciar búsqueda de GPS en segundo plano al montar el chat
+    getCachedLocation()
+
     supabase.from('messages').select('*')
       .eq('story_id', activeStoryId)
       .order('created_at', { ascending: true })
@@ -130,8 +215,11 @@ export default function Chat({ storyName, onBack }: Props) {
     setMessages(prev => [...prev, optimistic])
     scrollToBottom()
 
+    // ── Obtener ubicación del caché sin bloquear la UI ──
+    const locationContext = await getCachedLocation()
+
     const { data, error } = await supabase.functions.invoke('ai-chat', {
-      body: { text: trimmed, story_id: activeStoryId },
+      body: { text: trimmed, story_id: activeStoryId, location: locationContext },
     })
 
     if (!mounted.current) return
@@ -177,30 +265,30 @@ export default function Chat({ storyName, onBack }: Props) {
       {/* ── Header ── */}
       <div style={{
         flexShrink: 0,
-        padding: 'calc(env(safe-area-inset-top, 0px) + 12px) 14px 12px',
-        background: 'var(--card)',
-        borderBottom: '1px solid var(--line)',
-        display: 'flex', alignItems: 'center', gap: 10,
-        boxShadow: 'var(--sh-sm)',
+        padding: 'calc(env(safe-area-inset-top, 0px) + 12px) 14px 16px',
+        background: 'var(--blue)',
+        color: '#fff',
+        display: 'flex', alignItems: 'center', gap: 12,
+        boxShadow: 'var(--sh-md)',
+        borderBottomLeftRadius: 28, borderBottomRightRadius: 28,
+        position: 'relative', zIndex: 11,
       }}>
         <button onClick={onBack} style={{
           width: 38, height: 38, borderRadius: '50%', border: 'none',
-          background: 'var(--card-2)', cursor: 'pointer', color: 'var(--ink)',
+          background: 'rgba(255,255,255,0.2)', cursor: 'pointer', color: '#fff',
           display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
         }}>
           <Icon name="chevL" size={20} />
         </button>
 
-        <AiAvatar size={40} />
+        <AiAvatar size={42} drenched />
 
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{
-            fontWeight: 700, fontSize: 15.5, lineHeight: 1.1,
+          <div className="display" style={{
+            fontSize: 22, lineHeight: 1.1, color: '#fff',
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-          }}>Asistente OurTime</div>
-          <div style={{ fontSize: 11.5, color: 'var(--ink-soft)', fontWeight: 500, marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {storyName ? `Ideas de planes para ${storyName}` : 'Ideas de planes'}
-          </div>
+          }}>Asistente IA</div>
+          {storyName && <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', marginTop: 2 }}>{storyName}</div>}
         </div>
       </div>
 
@@ -237,7 +325,18 @@ export default function Chat({ storyName, onBack }: Props) {
             <div style={{ fontSize: 13, textAlign: 'center', maxWidth: 230, lineHeight: 1.5 }}>
               Pídeme ideas de citas, planes y actividades para compartir.
             </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center', marginTop: 8, maxWidth: 320 }}>
+            
+            <button onClick={async () => {
+              const ok = await requestLocationPermission()
+              if (ok) {
+                await getCachedLocation()
+                confirm({ title: 'GPS Activado', body: 'Ahora la IA usará tu ubicación para sugerir lugares reales cercanos a ti.', cancelLabel: 'Cerrar', danger: false })
+              }
+            }} style={{ background: 'transparent', border: '1px solid var(--line)', padding: '6px 14px', borderRadius: 99, fontSize: 12, fontWeight: 600, color: 'var(--ink-soft)', marginTop: 4, cursor: 'pointer' }}>
+              📍 Activar sugerencias locales
+            </button>
+
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center', marginTop: 12, maxWidth: 320 }}>
               {QUICK_PROMPTS.map(p => (
                 <button key={p} onClick={() => send(p)} disabled={sending} style={{
                   border: '1.5px solid var(--line)', borderRadius: 999, padding: '8px 14px',
@@ -265,48 +364,15 @@ export default function Chat({ storyName, onBack }: Props) {
             : (nextSame ? '6px 18px 18px 6px' : '6px 18px 18px 18px')
 
           return (
-            <div key={msg.id}>
-              {showDate && (
-                <div style={{ textAlign: 'center', margin: '14px 0 10px', fontSize: 11, fontWeight: 700,
-                  color: 'var(--ink-faint)', fontFamily: 'var(--font-ui)',
-                  textTransform: 'uppercase', letterSpacing: '0.07em' }}>
-                  {fmtDateLabel(msg.created_at)}
-                </div>
-              )}
-              <div style={{
-                display: 'flex', flexDirection: isAi ? 'row' : 'row-reverse',
-                alignItems: 'flex-end', gap: 7,
-                marginBottom: nextSame ? 2 : 10,
-                marginTop: !prevSame && !showDate && idx > 0 ? 4 : 0,
-              }}>
-                {isAi && (
-                  <div style={{ width: 30, flexShrink: 0, alignSelf: 'flex-end' }}>
-                    {!nextSame && <AiAvatar />}
-                  </div>
-                )}
-
-                <div style={{ display: 'flex', flexDirection: 'column',
-                  alignItems: isAi ? 'flex-start' : 'flex-end', maxWidth: '78%' }}>
-                  <div style={{
-                    padding: '10px 14px',
-                    borderRadius: br,
-                    background: isAi ? 'var(--card)' : 'var(--orange)',
-                    color: isAi ? 'var(--ink)' : '#fff',
-                    boxShadow: isAi ? 'var(--sh-sm)' : 'none',
-                    border: isAi ? '1px solid color-mix(in srgb, var(--blue) 25%, transparent)' : 'none',
-                    fontSize: 15, lineHeight: 1.45,
-                    wordBreak: 'break-word', whiteSpace: 'pre-wrap',
-                  }}>
-                    {msg.text}
-                  </div>
-                  {!nextSame && (
-                    <div style={{ fontSize: 10.5, color: 'var(--ink-faint)', marginTop: 3 }}>
-                      {fmtTime(msg.created_at)}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+            <MemoizedMessageItem
+              key={msg.id}
+              msg={msg}
+              isAi={isAi}
+              showDate={showDate}
+              nextSame={nextSame}
+              prevSame={prevSame}
+              br={br}
+            />
           )
         })}
 

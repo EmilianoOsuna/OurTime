@@ -147,7 +147,8 @@ export default function Finances({ onPlanClick, refreshKey = 0 }: { onPlanClick?
       {/* Header */}
       <div style={{ padding: '0 22px 0' }}>
         <div className="eyebrow" style={{ marginBottom: 7 }}>Fondo común</div>
-        <h1 className="display" style={{ fontSize: 32, margin: 0 }}>Presupuesto</h1>
+        <h1 className="display" style={{ fontSize: 44, margin: 0 }}>Presupuesto</h1>
+        <span className="squiggle" aria-hidden="true" style={{ color: 'var(--orange)', width: 92, marginTop: 12 }} />
       </div>
 
       {/* Hero card */}
@@ -290,10 +291,13 @@ export default function Finances({ onPlanClick, refreshKey = 0 }: { onPlanClick?
         <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
           {listRows.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--ink-faint)' }}>
-              <Icon name="wallet" size={40} style={{ opacity: 0.3, marginBottom: 12 }} />
-              <div style={{ fontSize: 16, fontWeight: 600 }}>Sin movimientos ni estimados</div>
-              <div style={{ fontSize: 13, marginTop: 6, lineHeight: 1.5 }}>
-                Añade un monto estimado a tus momentos o registra un gasto para que aparezcan aquí
+              <div style={{ width: 72, height: 72, borderRadius: 22, background: 'var(--orange-tint)',
+                color: 'var(--orange)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                <Icon name="wallet" size={34} />
+              </div>
+              <div className="display" style={{ fontSize: 24, marginBottom: 6 }}>¡Cero movimientos!</div>
+              <div style={{ fontSize: 13.5, color: 'var(--ink-soft)' }}>
+                Añade un estimado a tus planes o registra un gasto. La cartera está en paz... por ahora.
               </div>
             </div>
           ) : (

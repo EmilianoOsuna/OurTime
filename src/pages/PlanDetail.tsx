@@ -326,14 +326,13 @@ export function PlanDetail({ plan: initialPlan, onClose, onUpdated }: {
 
       {/* Hero */}
       <div
-        className={coverUrl ? '' : ('ph' + (blue ? ' blue' : ''))}
         onPointerDown={startCoverDrag}
         onPointerMove={moveCover}
         onPointerUp={endCoverDrag}
         onPointerCancel={endCoverDrag}
         style={{
           height: 250, position: 'relative', flexShrink: 0, overflow: 'hidden',
-          background: coverUrl ? '#111' : undefined,
+          background: coverUrl ? '#111' : (blue ? 'var(--blue)' : 'var(--orange)'),
           borderRadius: '0 0 var(--r-md) var(--r-md)',
           cursor: (editing && coverUrl) ? 'grab' : 'default',
           touchAction: (editing && coverUrl) ? 'none' : 'auto',
@@ -511,7 +510,7 @@ export function PlanDetail({ plan: initialPlan, onClose, onUpdated }: {
               </div>
             ) : (
               <>
-                <h1 className="display" style={{ fontSize: 27, margin: '10px 0 0', lineHeight: 1.04 }}>
+                <h1 className="display" style={{ fontSize: 34, margin: '10px 0 0', lineHeight: 0.98 }}>
                   {plan.title}
                 </h1>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 16px', marginTop: 14, fontSize: 13.5, color: 'var(--ink-soft)' }}>
@@ -551,9 +550,9 @@ export function PlanDetail({ plan: initialPlan, onClose, onUpdated }: {
                 <Icon name="sparkle" size={18} />
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 700, fontSize: 14.5, marginBottom: 3 }}>¿Ya vivieron este momento?</div>
+                <div style={{ fontWeight: 700, fontSize: 14.5, marginBottom: 3 }}>¿Qué tal estuvo?</div>
                 <div style={{ fontSize: 13, color: 'var(--ink-soft)', lineHeight: 1.4 }}>
-                  Este momento fue el <strong>{fmtDate(plan.plan_date)}</strong>. Si ya lo vivieron, máquenlo como completado para que aparezca en su historia.
+                  Este momento ya pasó el <strong>{fmtDate(plan.plan_date)}</strong>. Si ya lo vivieron, confírmalo para guardarlo en la historia.
                 </div>
               </div>
             </div>

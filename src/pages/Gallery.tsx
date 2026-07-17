@@ -329,7 +329,8 @@ export default function Gallery({ memories, setMemories, onImageClick, me }: {
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
           <div>
             <div className="eyebrow" style={{ marginBottom: 7 }}>Sus momentos</div>
-            <h1 className="display" style={{ fontSize: 32, margin: 0 }}>Recuerdos</h1>
+            <h1 className="display" style={{ fontSize: 44, margin: 0 }}>Recuerdos</h1>
+            <span className="squiggle" aria-hidden="true" style={{ color: 'var(--orange)', width: 92, marginTop: 12 }} />
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             {view === 'all' && (
@@ -395,8 +396,8 @@ export default function Gallery({ memories, setMemories, onImageClick, me }: {
                 color: 'var(--orange)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                 <Icon name="image" size={34} />
               </div>
-              <div className="display" style={{ fontSize: 20, marginBottom: 6 }}>Sin álbumes aún</div>
-              <div style={{ fontSize: 13.5, color: 'var(--ink-soft)' }}>Crea un álbum para organizar sus recuerdos</div>
+              <div className="display" style={{ fontSize: 24, marginBottom: 6 }}>¡Cero álbumes!</div>
+              <div style={{ fontSize: 13.5, color: 'var(--ink-soft)' }}>Agrupa sus mejores fotos en colecciones y no pierdas ni un solo detalle.</div>
             </div>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -432,13 +433,13 @@ export default function Gallery({ memories, setMemories, onImageClick, me }: {
               color: 'var(--orange)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
               <Icon name={q ? 'search' : 'image'} size={36} />
             </div>
-            <div className="display" style={{ fontSize: 22, marginBottom: 6 }}>
-              {q ? 'Sin coincidencias' : 'Aún no hay recuerdos'}
+            <div className="display" style={{ fontSize: 26, marginBottom: 6 }}>
+              {q ? '¡Ups, no está aquí!' : '¡Qué silencio visual!'}
             </div>
             <div style={{ fontSize: 14, color: 'var(--ink-soft)' }}>
               {q
-                ? `No encontramos nada para "${q}". Prueba otra palabra.`
-                : 'Cada foto que suban aparecerá aquí, ordenada por momentos.'}
+                ? `No encontramos nada para "${q}". Intenta con otra palabra mágica.`
+                : 'Es hora de documentar sus aventuras. Pulsa el botón + y sube la primera.'}
             </div>
           </div>
         )

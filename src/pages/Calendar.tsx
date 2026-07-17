@@ -74,7 +74,8 @@ export default function Calendar({ plans, onOpenPlan }: { plans: CalendarPlan[];
       {/* Header */}
       <div style={{ padding: '0 22px 0' }}>
         <div className="eyebrow" style={{ marginBottom: 7 }}>Su agenda</div>
-        <h1 className="display" style={{ fontSize: 32, margin: 0 }}>Calendario</h1>
+        <h1 className="display" style={{ fontSize: 44, margin: 0 }}>Calendario</h1>
+        <span className="squiggle" aria-hidden="true" style={{ color: 'var(--orange)', width: 92, marginTop: 12 }} />
       </div>
 
       {/* Month switcher */}
@@ -167,9 +168,9 @@ export default function Calendar({ plans, onOpenPlan }: { plans: CalendarPlan[];
         )) : (
           <div className="card" style={{ padding: '24px', textAlign: 'center', color: 'var(--ink-soft)' }}>
             <div className="serif-i" style={{ fontSize: 18, color: 'var(--ink)', marginBottom: 4 }}>
-              Un día en blanco
+              ¡Día libre!
             </div>
-            <div style={{ fontSize: 13.5 }}>Sin planes todavía. ¿Escriben uno?</div>
+            <div style={{ fontSize: 13.5 }}>Ningún plan a la vista. Es un buen momento para improvisar algo divertido.</div>
           </div>
         )}
       </div>
