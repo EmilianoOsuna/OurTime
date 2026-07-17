@@ -134,6 +134,8 @@ export default function Chat({ storyName, onBack }: Props) {
 
     if (!mounted.current) return
     if (error || data?.error || !data?.aiMessage) {
+      console.error('Edge function error:', error, data)
+      alert('Error en la IA: ' + (data?.error || error?.message || 'Error desconocido'))
       // Revertir el optimista y devolver el texto al input
       setMessages(prev => prev.filter(m => m.id !== tempId))
       setText(trimmed)

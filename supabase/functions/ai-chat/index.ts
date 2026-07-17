@@ -18,9 +18,9 @@ const OPENAI_KEY = Deno.env.get('OPENAI_API_KEY')
 type Provider = 'google' | 'anthropic' | 'openai'
 
 const DEFAULT_MODEL: Record<Provider, string> = {
-  google: 'gemini-2.5-flash',
-  anthropic: 'claude-opus-4-8',
-  openai: 'gpt-5-mini',
+  google: 'gemini-1.5-flash',
+  anthropic: 'claude-3-5-sonnet-20240620',
+  openai: 'gpt-4o-mini',
 }
 
 function resolveProvider(): Provider | null {
