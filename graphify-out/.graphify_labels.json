@@ -187,5 +187,16 @@
   "185": "supabase",
   "186": "index.ts",
   "187": "@capacitor/app",
-  "188": "20260717000000_ai_chat.sql"
+  "188": "20260717000000_ai_chat.sql",
+  "189": "Payments",
+  "190": "2026-07-17T19-23-53Z__all.md",
+  "191": "Billing / Subscriptions",
+  "192": "Treasury / Financial Accounts",
+  "193": "SKILL.md",
+  "194": "@capacitor/camera",
+  "195": "@capacitor/core",
+  "196": "react-markdown",
+  "197": "NotificationsPanel.tsx",
+  "198": "pushSubscriptions.ts",
+  "199": "@capacitor/clipboard"
 }

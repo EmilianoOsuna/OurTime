@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Icon } from '../components/ui/Icon'
 import { useConfirm } from '../components/ui/ConfirmDialog'
-import ReactMarkdown from 'react-markdown'
+import ReactMarkdown, { defaultUrlTransform } from 'react-markdown'
 import { getCachedLocation, requestLocationPermission } from '../lib/native'
 import type { MessageType } from '../lib/supabase'
 
@@ -76,9 +76,31 @@ function TypingIndicator() {
   )
 }
 
-const MemoizedMessageItem = memo(({ msg, isAi, showDate, nextSame, prevSame, br }: any) => {
+interface MessageItemProps {
+  msg: MessageType
+  isAi: boolean
+  showDate: boolean
+  nextSame: boolean
+  prevSame: boolean
+  br: string
+}
+
+// Los links map: del modelo traen espacios ("map:Pujol, CDMX") y CommonMark no
+// acepta destinos con espacios, así que el link no se parseaba y salía como
+// texto plano. Se codifica el destino para que ReactMarkdown lo convierta en <a>.
+function encodeMapLinks(text: string): string {
+  return text.replace(/\]\(map:([^)]*)\)/g, (_m, place: string) => `](map:${encodeURIComponent(place.trim())})`)
+}
+
+// react-markdown descarta protocolos desconocidos como map: por seguridad;
+// se permite explícitamente solo ese y el resto pasa por el filtro estándar.
+function mapUrlTransform(url: string): string {
+  return url.startsWith('map:') ? url : defaultUrlTransform(url)
+}
+
+const MemoizedMessageItem = memo(function MessageItem({ msg, isAi, showDate, nextSame, prevSame, br }: MessageItemProps) {
   return (
-    <div key={msg.id}>
+    <div>
       {showDate && (
         <div style={{ textAlign: 'center', margin: '14px 0 10px', fontSize: 11, fontWeight: 700,
           color: 'var(--ink-faint)', fontFamily: 'var(--font-ui)',
@@ -112,8 +134,10 @@ const MemoizedMessageItem = memo(({ msg, isAi, showDate, nextSame, prevSame, br 
           }}>
             {isAi ? (
               <div className="md-chat-content">
-                <ReactMarkdown 
+                <ReactMarkdown
+                  urlTransform={mapUrlTransform}
                   components={{
+                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
                     a: ({ node, ...props }) => {
                       if (props.href?.startsWith('map:')) {
                         const place = decodeURIComponent(props.href.replace('map:', '')).trim()
@@ -135,7 +159,7 @@ const MemoizedMessageItem = memo(({ msg, isAi, showDate, nextSame, prevSame, br 
                     }
                   }}
                 >
-                  {msg.text}
+                  {encodeMapLinks(msg.text)}
                 </ReactMarkdown>
               </div>
             ) : (
@@ -179,24 +203,33 @@ export default function Chat({ storyName, onBack }: Props) {
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior }), 50)
   }, [])
 
+  // Reset al cambiar de historia: durante el render, no dentro del efecto
+  // (evita los renders en cascada que marca react-hooks/set-state-in-effect)
+  const [loadedStoryId, setLoadedStoryId] = useState(activeStoryId)
+  if (loadedStoryId !== activeStoryId) {
+    setLoadedStoryId(activeStoryId)
+    setMessages([])
+    setLoading(true)
+  }
+
   useEffect(() => {
     if (!activeStoryId) return
-    setLoading(true)
-    setMessages([])
-    
+
     // Iniciar búsqueda de GPS en segundo plano al montar el chat
     getCachedLocation()
 
+    let cancelled = false
     supabase.from('messages').select('*')
       .eq('story_id', activeStoryId)
       .order('created_at', { ascending: true })
       .limit(50)
       .then(({ data }) => {
-        if (!mounted.current) return
+        if (cancelled) return
         if (data) setMessages(data as MessageType[])
         setLoading(false)
         scrollToBottom('instant' as ScrollBehavior)
       })
+    return () => { cancelled = true }
   }, [activeStoryId, scrollToBottom])
 
   const send = async (raw?: string) => {
@@ -225,8 +258,17 @@ export default function Chat({ storyName, onBack }: Props) {
     if (!mounted.current) return
     if (error || data?.error || !data?.aiMessage) {
       console.error('Edge function error:', error, data)
-      const err = data?.error || error?.message || 'Error desconocido'
-      
+      let err: string = data?.error || error?.message || 'Error desconocido'
+      if (!data?.error && error) {
+        // FunctionsHttpError trae la respuesta original en context; leerla para
+        // mostrar el mensaje real (p.ej. el aviso de límite por hora del 429)
+        // en lugar de "non-2xx status code".
+        try {
+          const body = await (error as { context?: Response }).context?.json()
+          if (body?.error) err = body.error
+        } catch { /* respuesta sin JSON: se queda error.message */ }
+      }
+
       // Mostrar el error usando el diseño de la app en lugar de un feo alert() nativo
       confirm({
         title: 'Error de Conexión',
@@ -235,10 +277,16 @@ export default function Chat({ storyName, onBack }: Props) {
         cancelLabel: 'Cerrar',
         danger: true
       })
-      
-      // Revertir el optimista y devolver el texto al input
-      setMessages(prev => prev.filter(m => m.id !== tempId))
-      setText(trimmed)
+
+      if (data?.userMessage) {
+        // El mensaje sí quedó guardado y solo falló la IA: conservarlo para
+        // no perderlo ni duplicarlo si el usuario reintenta.
+        setMessages(prev => prev.map(m => (m.id === tempId ? data.userMessage as MessageType : m)))
+      } else {
+        // No llegó a guardarse: revertir el optimista y devolver el texto al input
+        setMessages(prev => prev.filter(m => m.id !== tempId))
+        setText(trimmed)
+      }
     } else {
       setMessages(prev => [
         ...prev.filter(m => m.id !== tempId),
@@ -265,30 +313,32 @@ export default function Chat({ storyName, onBack }: Props) {
       {/* ── Header ── */}
       <div style={{
         flexShrink: 0,
-        padding: 'calc(env(safe-area-inset-top, 0px) + 12px) 14px 16px',
-        background: 'var(--blue)',
-        color: '#fff',
+        padding: 'calc(max(env(safe-area-inset-top), 32px) + 4px) 14px 16px',
+        background: 'var(--hero-bg)',
+        color: 'var(--hero-text)',
         display: 'flex', alignItems: 'center', gap: 12,
-        boxShadow: 'var(--sh-md)',
-        borderBottomLeftRadius: 28, borderBottomRightRadius: 28,
+        borderRadius: '0 0 34px 34px',
         position: 'relative', zIndex: 11,
       }}>
         <button onClick={onBack} style={{
           width: 38, height: 38, borderRadius: '50%', border: 'none',
-          background: 'rgba(255,255,255,0.2)', cursor: 'pointer', color: '#fff',
+          background: 'var(--card)', cursor: 'pointer', color: 'var(--ink)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+          boxShadow: 'var(--sh-sm)',
         }}>
           <Icon name="chevL" size={20} />
         </button>
 
-        <AiAvatar size={42} drenched />
+        <div style={{ width: 42, height: 42, borderRadius: 16, background: 'var(--card)', color: 'var(--hero-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: 'var(--sh-sm)' }}>
+          <Icon name="sparkle" size={24} />
+        </div>
 
         <div style={{ flex: 1, minWidth: 0 }}>
           <div className="display" style={{
-            fontSize: 22, lineHeight: 1.1, color: '#fff',
+            fontSize: 22, lineHeight: 1.1, color: 'var(--hero-text)',
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
           }}>Asistente IA</div>
-          {storyName && <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', marginTop: 2 }}>{storyName}</div>}
+          {storyName && <div style={{ fontSize: 13, color: 'var(--hero-soft)', marginTop: 2 }}>{storyName}</div>}
         </div>
       </div>
 

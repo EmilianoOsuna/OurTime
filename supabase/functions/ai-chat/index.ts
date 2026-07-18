@@ -20,9 +20,14 @@ type Provider = 'google' | 'anthropic' | 'openai' | 'groq'
 
 const DEFAULT_MODEL: Record<Provider, string> = {
   google: 'gemini-3-flash-preview',
-  anthropic: 'claude-3-5-sonnet-20240620',
+  anthropic: 'claude-sonnet-5',
   openai: 'gpt-4o-mini',
-  groq: 'llama-3.1-8b-instant',
+  // groq/compound-mini: sistema agéntico con búsqueda web integrada (server-side,
+  // ~$5/1000 búsquedas) sobre gpt-oss-120b, limitado a una búsqueda por request.
+  // El compound completo excede el límite TPM del tier gratuito (413) porque sus
+  // búsquedas server-side cuentan como tokens de entrada. Los llama-3.x de Groq
+  // se apagan el 2026-08-16. Alternativa sin búsqueda: 'openai/gpt-oss-120b'.
+  groq: 'groq/compound-mini',
 }
 
 function resolveProvider(): Provider | null {
@@ -110,7 +115,10 @@ async function callGroq(model: string, system: string, turns: ChatTurn[]): Promi
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${GROQ_KEY!}` },
     body: JSON.stringify({
       model,
-      max_tokens: MAX_OUTPUT_TOKENS,
+      // compound es un sistema agéntico que gestiona su propio presupuesto de tokens
+      ...(model.includes('compound') ? {} : { max_tokens: MAX_OUTPUT_TOKENS }),
+      // gpt-oss son modelos razonadores: razonamiento corto y fuera de la respuesta
+      ...(model.includes('gpt-oss') ? { reasoning_effort: 'low', include_reasoning: false } : {}),
       messages: [{ role: 'system', content: system }, ...turns],
     }),
   })
@@ -215,8 +223,10 @@ Deno.serve(async req => {
       memberNames.length ? `Miembros: ${memberNames.join(', ')}.` : '',
       location?.lat && location?.lng ? `📍 ATENCIÓN: El usuario se encuentra AHORA MISMO en las coordenadas GPS: Latitud ${location.lat}, Longitud ${location.lng}. Usa esta ubicación para recomendar restaurantes, parques o actividades locales reales CERCANAS a él.` : '',
       'Tu objetivo es sugerir planes, citas y actividades: ideas creativas para hacer juntos, restaurantes o lugares locales si te dicen dónde están, e ideas de citas virtuales o juegos si están a distancia.',
+      model.includes('compound') ? 'Tienes búsqueda web integrada: úsala cuando recomiendes lugares o eventos para verificar que existen y están abiertos, y para dar datos actuales (horarios, precios aproximados, eventos de esta semana). No inventes lugares.' : '',
       upcomingPlans ? `Planes próximos que ya tienen (evita repetirlos, puedes complementarlos):\n${upcomingPlans}` : '',
       'Responde siempre en español, con calidez y cercanía. Sé concreto: propón 2 o 3 ideas accionables como máximo.',
+      'Formato: usa listas y **negritas** si ayudan, pero NUNCA tablas Markdown (la app no las renderiza).',
       '✨ INTERFAZ RICA (ARTIFACTS): Nuestra app puede renderizar componentes nativos. SIEMPRE que recomiendes un lugar, restaurante o destino físico específico, DEBES incluir este link especial en tu respuesta para que mostremos un mapa interactivo:',
       '`[MAP: Nombre exacto del lugar, Ciudad](map:Nombre exacto del lugar, Ciudad)`',
       'Ejemplo: "Te recomiendo ir a cenar a Pujol. [MAP: Pujol, CDMX](map:Pujol, CDMX)". NO inventes otras URLs, usa exactamente map:Nombre.',
@@ -229,22 +239,30 @@ Deno.serve(async req => {
     while (history.length && history[0].role === 'assistant') history.shift()
     const turns: ChatTurn[] = [...history, { role: 'user', content: trimmed }]
 
-    // ── GUARDAR MENSAJE DEL USUARIO INMEDIATAMENTE ──
-    const { data: insertedUserMsg, error: insertError } = await admin.from('messages')
+    // ── GUARDAR MENSAJE DEL USUARIO ANTES DE LLAMAR AL LLM ──
+    // Así el mensaje queda persistido aunque el modelo falle; en ese caso se
+    // devuelve junto al error para que el cliente lo conserve y no lo duplique.
+    const { data: userMessage, error: insertError } = await admin.from('messages')
       .insert({ story_id, sender_id: user.id, text: trimmed, role: 'user' })
       .select().single()
     if (insertError) throw insertError
 
-    const reply = (await CALLERS[provider](model, system, turns))
-      || 'Lo siento, no pude generar una respuesta. Inténtalo de nuevo.'
+    try {
+      const reply = (await CALLERS[provider](model, system, turns))
+        || 'Lo siento, no pude generar una respuesta. Inténtalo de nuevo.'
 
-    // ── GUARDAR MENSAJE DE LA IA ──
-    const { data: aiMessage, error: aiInsertError } = await admin.from('messages')
-      .insert({ story_id, sender_id: null, text: reply, role: 'ai' })
-      .select().single()
-    if (aiInsertError) throw aiInsertError
+      // ── GUARDAR MENSAJE DE LA IA ──
+      const { data: aiMessage, error: aiInsertError } = await admin.from('messages')
+        .insert({ story_id, sender_id: null, text: reply, role: 'ai' })
+        .select().single()
+      if (aiInsertError) throw aiInsertError
 
-    return json({ userMessage: insertedUserMsg, aiMessage })
+      return json({ userMessage, aiMessage })
+    } catch (llmError) {
+      console.error('ai-chat LLM error:', llmError)
+      const message = llmError instanceof Error ? llmError.message : 'Error inesperado'
+      return json({ error: message, userMessage }, 200)
+    }
   } catch (error) {
     console.error('ai-chat error:', error)
     const message = error instanceof Error ? error.message : 'Error inesperado'

@@ -144,11 +144,17 @@ export default function Finances({ onPlanClick, refreshKey = 0 }: { onPlanClick?
 
   return (
     <div className="ot-scroll page-enter" style={{ paddingBottom: 130, paddingTop: 'max(env(safe-area-inset-top), 32px)' }}>
-      {/* Header */}
-      <div style={{ padding: '0 22px 0' }}>
-        <div className="eyebrow" style={{ marginBottom: 7 }}>Fondo común</div>
+      {/* Header - Drenched Block */}
+      <div style={{ 
+        margin: 'calc(-1 * max(env(safe-area-inset-top), 32px)) 0 24px 0',
+        padding: 'max(env(safe-area-inset-top), 32px) 22px 28px',
+        background: 'var(--hero-bg)',
+        color: 'var(--hero-text)',
+        borderRadius: '0 0 34px 34px'
+      }}>
+        <div className="eyebrow" style={{ marginBottom: 7, color: 'var(--hero-soft)' }}>Fondo común</div>
         <h1 className="display" style={{ fontSize: 44, margin: 0 }}>Presupuesto</h1>
-        <span className="squiggle" aria-hidden="true" style={{ color: 'var(--orange)', width: 92, marginTop: 12 }} />
+        <span className="squiggle" aria-hidden="true" style={{ color: 'currentColor', width: 92, marginTop: 12 }} />
       </div>
 
       {/* Hero card */}
@@ -174,7 +180,7 @@ export default function Finances({ onPlanClick, refreshKey = 0 }: { onPlanClick?
 
           {editingBudget ? (
             <div style={{ marginTop: 14 }}>
-              <input value={budgetInput} onChange={e => setBudgetInput(e.target.value.replace(/[^0-9.]/g, ''))}
+              <input value={budgetInput} onChange={e => setBudgetInput(e.target.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1'))}
                 placeholder="Importe…" inputMode="decimal" autoFocus
                 style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1.5px solid var(--line)',
                   background: 'var(--card-2)', color: 'var(--hero-text)', fontSize: 18, boxSizing: 'border-box',
@@ -296,9 +302,12 @@ export default function Finances({ onPlanClick, refreshKey = 0 }: { onPlanClick?
                 <Icon name="wallet" size={34} />
               </div>
               <div className="display" style={{ fontSize: 24, marginBottom: 6 }}>¡Cero movimientos!</div>
-              <div style={{ fontSize: 13.5, color: 'var(--ink-soft)' }}>
+              <div style={{ fontSize: 13.5, color: 'var(--ink-soft)', marginBottom: 20 }}>
                 Añade un estimado a tus planes o registra un gasto. La cartera está en paz... por ahora.
               </div>
+              <button onClick={() => { setBudgetInput(''); setEditingBudget(true); }} className="btn btn-orange" style={{ padding: '12px 20px' }}>
+                Configurar presupuesto
+              </button>
             </div>
           ) : (
             listRows.map(row => row.plan

@@ -231,7 +231,7 @@ function LinkStep({ onPick, loading, error }: {
         </div>
       )}
       {error && (
-        <div style={{ fontSize: 13, color: '#c0392b', background: 'rgba(192,57,43,0.08)',
+        <div style={{ fontSize: 13, color: 'var(--error)', background: 'var(--error-tint)',
           padding: '10px 14px', borderRadius: 10, fontWeight: 500, marginTop: 12 }}>{error}</div>
       )}
       <div style={{ flex: 1 }} />
@@ -256,7 +256,7 @@ function CreateStep({ storyName, setStoryName, category, loading, error, onNext 
       <input className="field" placeholder={defaultName} value={storyName} autoFocus
         onChange={e => setStoryName(e.target.value)} />
       {error && (
-        <div style={{ fontSize: 13, color: '#c0392b', background: 'rgba(192,57,43,0.08)',
+        <div style={{ fontSize: 13, color: 'var(--error)', background: 'var(--error-tint)',
           padding: '10px 14px', borderRadius: 10, fontWeight: 500, marginTop: 12 }}>{error}</div>
       )}
       <div style={{ flex: 1 }} />
@@ -345,7 +345,7 @@ function JoinStep({ code, setCode, error, loading, onNext }: {
         style={{ fontFamily: 'var(--font-display)', fontSize: 24, letterSpacing: '0.06em', textAlign: 'center' }}
         onChange={e => setCode(e.target.value.toUpperCase())} />
       {error && (
-        <div style={{ fontSize: 13, color: '#c0392b', background: 'rgba(192,57,43,0.08)',
+        <div style={{ fontSize: 13, color: 'var(--error)', background: 'var(--error-tint)',
           padding: '10px 14px', borderRadius: 10, fontWeight: 500, marginTop: 12 }}>{error}</div>
       )}
       <div style={{ flex: 1 }} />

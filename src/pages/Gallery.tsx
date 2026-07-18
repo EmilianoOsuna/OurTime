@@ -324,13 +324,19 @@ export default function Gallery({ memories, setMemories, onImageClick, me }: {
   // ── Main view ──
   return (
     <div className="page-enter" style={{ paddingBottom: 130, paddingTop: 'max(env(safe-area-inset-top), 32px)' }}>
-      {/* Header */}
-      <div style={{ padding: '0 22px 0' }}>
+      {/* Header - Drenched Block */}
+      <div style={{ 
+        margin: 'calc(-1 * max(env(safe-area-inset-top), 32px)) 0 24px 0',
+        padding: 'max(env(safe-area-inset-top), 32px) 22px 28px',
+        background: 'var(--hero-bg)',
+        color: 'var(--hero-text)',
+        borderRadius: '0 0 34px 34px'
+      }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
           <div>
-            <div className="eyebrow" style={{ marginBottom: 7 }}>Sus momentos</div>
+            <div className="eyebrow" style={{ marginBottom: 7, color: 'var(--hero-soft)' }}>Sus momentos</div>
             <h1 className="display" style={{ fontSize: 44, margin: 0 }}>Recuerdos</h1>
-            <span className="squiggle" aria-hidden="true" style={{ color: 'var(--orange)', width: 92, marginTop: 12 }} />
+            <span className="squiggle" aria-hidden="true" style={{ color: 'currentColor', width: 92, marginTop: 12 }} />
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             {view === 'all' && (
@@ -341,6 +347,9 @@ export default function Gallery({ memories, setMemories, onImageClick, me }: {
             )}
           </div>
         </div>
+      </div>
+
+      <div style={{ padding: '0 22px 0' }}>
 
         {searchOpen && view === 'all' && (
           <div className="anim-up" style={{ marginTop: 14, position: 'relative' }}>

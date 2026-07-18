@@ -263,7 +263,7 @@ export default function Auth({ onAuth }: { onAuth: () => void }) {
                   />
                 )}
                 {error && (
-                  <div style={{ fontSize: 13, color: '#c0392b', background: 'rgba(192,57,43,0.08)',
+                  <div style={{ fontSize: 13, color: 'var(--error)', background: 'var(--error-tint)',
                     padding: '10px 14px', borderRadius: 10, fontWeight: 500, marginTop: 12 }}>{error}</div>
                 )}
               </div>
@@ -338,7 +338,7 @@ export default function Auth({ onAuth }: { onAuth: () => void }) {
               )}
 
               {error && (
-                <div style={{ fontSize: 13, color: '#c0392b', background: 'rgba(192,57,43,0.08)',
+                <div style={{ fontSize: 13, color: 'var(--error)', background: 'var(--error-tint)',
                   padding: '10px 14px', borderRadius: 10, fontWeight: 500, marginTop: 12 }}>{error}</div>
               )}
 
@@ -415,7 +415,7 @@ export default function Auth({ onAuth }: { onAuth: () => void }) {
               </button>
 
               {error && (
-                <div style={{ fontSize: 13, color: '#c0392b', background: 'rgba(192,57,43,0.08)',
+                <div style={{ fontSize: 13, color: 'var(--error)', background: 'var(--error-tint)',
                   padding: '10px 14px', borderRadius: 10, fontWeight: 500, marginTop: 8 }}>{error}</div>
               )}
 

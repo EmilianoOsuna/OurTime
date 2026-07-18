@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import type { ProfileType } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { buildPerson, type PersonDisplay, type StoryType, type PlanType, type MemoryType, type NotificationType } from '../lib/supabase'
-import { consumeNativeNavigationUrl, setBackHandler, isNative } from '../lib/native'
+import { consumeNativeNavigationUrl, setBackHandler, isNative, isAndroid } from '../lib/native'
 import { invokeTopBack, consumeIgnorePop } from '../lib/backStack'
 import { recoverNextClickAfterDrag } from '../lib/recoverClickAfterDrag'
 
@@ -398,6 +398,18 @@ export default function AppShell() {
       root.style.removeProperty('--orange-tint')
       root.style.removeProperty('--hero-text')
       root.style.removeProperty('--hero-soft')
+    }
+
+    // Sync theme-color for the status bar
+    // Safest to read --orange directly since --hero-bg might resolve to a 'var(--orange)' literal
+    const heroBg = getComputedStyle(root).getPropertyValue('--orange').trim() || '#F17720'
+    document.querySelectorAll('meta[name="theme-color"]').forEach(el => el.setAttribute('content', heroBg))
+    
+    // Also sync Capacitor StatusBar if available (only for Android, iOS handles it via safe-area)
+    if (isAndroid) {
+      import('../lib/native').then(({ StatusBar }) => {
+        StatusBar.setBackgroundColor({ color: heroBg }).catch(() => {})
+      }).catch(() => {})
     }
   }, [activeStoryId, stories])
 

@@ -71,11 +71,17 @@ export default function Calendar({ plans, onOpenPlan }: { plans: CalendarPlan[];
 
   return (
     <div className="page-enter" style={{ paddingBottom: 130, paddingTop: 'max(env(safe-area-inset-top), 32px)' }}>
-      {/* Header */}
-      <div style={{ padding: '0 22px 0' }}>
-        <div className="eyebrow" style={{ marginBottom: 7 }}>Su agenda</div>
+      {/* Header - Drenched Block */}
+      <div style={{ 
+        margin: 'calc(-1 * max(env(safe-area-inset-top), 32px)) 0 24px 0',
+        padding: 'max(env(safe-area-inset-top), 32px) 22px 28px',
+        background: 'var(--hero-bg)',
+        color: 'var(--hero-text)',
+        borderRadius: '0 0 34px 34px'
+      }}>
+        <div className="eyebrow" style={{ marginBottom: 7, color: 'var(--hero-soft)' }}>Su agenda</div>
         <h1 className="display" style={{ fontSize: 44, margin: 0 }}>Calendario</h1>
-        <span className="squiggle" aria-hidden="true" style={{ color: 'var(--orange)', width: 92, marginTop: 12 }} />
+        <span className="squiggle" aria-hidden="true" style={{ color: 'currentColor', width: 92, marginTop: 12 }} />
       </div>
 
       {/* Month switcher */}

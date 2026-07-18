@@ -13,13 +13,21 @@ async function upsertFromSubscription(sub: Stripe.Subscription) {
   const priceId = sub.items.data[0]?.price?.id
   const plan = mapStatus(sub.status) === 'canceled' ? 'free' : planForPrice(priceId)
 
+  // `current_period_end` vive en la Subscription en API <= 2024, pero desde
+  // 2025 (basil/dahlia) se movió a cada SubscriptionItem. Leemos ambos.
+  const asAny = sub as unknown as {
+    current_period_end?: number
+    items?: { data?: Array<{ current_period_end?: number }> }
+  }
+  const periodEndTs = asAny.current_period_end ?? asAny.items?.data?.[0]?.current_period_end ?? null
+
   const row = {
     plan,
     status: mapStatus(sub.status),
     payer_user_id: sub.metadata?.payer_user_id ?? null,
     stripe_customer_id: typeof sub.customer === 'string' ? sub.customer : sub.customer.id,
     stripe_subscription_id: sub.id,
-    current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
+    current_period_end: periodEndTs ? new Date(periodEndTs * 1000).toISOString() : null,
     cancel_at_period_end: sub.cancel_at_period_end,
     updated_at: new Date().toISOString(),
   }

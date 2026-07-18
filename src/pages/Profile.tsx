@@ -303,25 +303,25 @@ export function ProfileScreen({ plans, onClose, onGoToFinance, storyCode, isAdmi
     }}>
       {/* Header — bloque drenched masivo */}
       <div style={{
-        paddingTop: 56, paddingBottom: 60, paddingLeft: 22, paddingRight: 22,
+        paddingTop: 'max(env(safe-area-inset-top), 40px)', paddingBottom: 60, paddingLeft: 22, paddingRight: 22,
         position: 'relative', flexShrink: 0,
-        background: 'var(--blue)', color: '#fff',
-        borderBottomLeftRadius: 36, borderBottomRightRadius: 36,
+        background: 'var(--hero-bg)', color: 'var(--hero-text)',
+        borderRadius: '0 0 34px 34px',
         textAlign: 'center',
       }}>
         <div style={{ position: 'relative', zIndex: 1 }}>
-          <h1 className="display" style={{ fontSize: 44, margin: '0 0 6px', color: '#fff', lineHeight: 1 }}>
+          <h1 className="display" style={{ fontSize: 44, margin: '0 0 6px', color: 'var(--hero-text)', lineHeight: 1 }}>
             {me.name}
           </h1>
-          <div style={{ fontSize: 16, fontWeight: 600, color: 'rgba(255,255,255,0.85)' }}>
+          <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--hero-soft)' }}>
             {profile?.nickname || 'Explorador'}
           </div>
         </div>
 
         <button data-testid="profile-close-btn" onClick={onClose} style={{
-          position: 'absolute', top: 56, right: 18, width: 42, height: 42,
-          borderRadius: '50%', border: 'none', background: 'rgba(255,255,255,0.2)',
-          cursor: 'pointer', color: '#fff', display: 'flex', alignItems: 'center',
+          position: 'absolute', top: 'max(env(safe-area-inset-top), 40px)', right: 18, width: 42, height: 42,
+          borderRadius: '50%', border: 'none', background: 'var(--card)', boxShadow: 'var(--sh-sm)',
+          cursor: 'pointer', color: 'var(--ink)', display: 'flex', alignItems: 'center',
           justifyContent: 'center', zIndex: 10,
         }}>
           <Icon name="chevD" size={22} />

@@ -23,6 +23,7 @@ import { SocialLogin } from '@capgo/capacitor-social-login'
 
 export const isNative = Capacitor.isNativePlatform()
 export const isWeb = !isNative
+export const isAndroid = isNative && Capacitor.getPlatform() === 'android'
 
 let onBackPress: (() => boolean) | null = null
 const PUSH_TOKEN_KEY = 'ourtime_push_token'
@@ -300,38 +301,74 @@ export async function enableNativePushNotifications(): Promise<boolean> {
 
 let cachedLocation: { lat: number; lng: number } | null = null
 let lastLocationTime = 0
+let locationFetch: Promise<{ lat: number; lng: number } | null> | null = null
 
-export async function requestLocationPermission(): Promise<boolean> {
+const LOCATION_TTL = 300_000
+
+async function hasLocationPermission(): Promise<boolean> {
   try {
     const status = await Geolocation.checkPermissions()
-    if (status.location !== 'granted') {
-      const request = await Geolocation.requestPermissions()
-      return request.location === 'granted'
-    }
-    return true
+    return status.location === 'granted'
   } catch (e) {
-    console.warn('Geolocation permission error:', e)
+    console.warn('Geolocation permission check failed:', e)
     return false
   }
 }
 
-export async function getCachedLocation(): Promise<{ lat: number; lng: number } | null> {
-  const now = Date.now()
-  if (cachedLocation && (now - lastLocationTime) < 300000) {
-    return cachedLocation
+export async function requestLocationPermission(): Promise<boolean> {
+  if (await hasLocationPermission()) return true
+  if (isNative) {
+    try {
+      const request = await Geolocation.requestPermissions()
+      return request.location === 'granted'
+    } catch (e) {
+      console.warn('Geolocation permission error:', e)
+      return false
+    }
   }
-  
-  try {
-    const status = await Geolocation.checkPermissions()
-    if (status.location !== 'granted') return cachedLocation
+  // En web requestPermissions() no está implementado: el prompt del navegador
+  // solo aparece al pedir la posición, así que la pedimos y de paso la cacheamos.
+  return new Promise(resolve => {
+    if (!('geolocation' in navigator)) return resolve(false)
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        cachedLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude }
+        lastLocationTime = Date.now()
+        resolve(true)
+      },
+      () => resolve(false),
+      { enableHighAccuracy: false, timeout: 10_000 },
+    )
+  })
+}
 
-    const pos = await Geolocation.getCurrentPosition({ enableHighAccuracy: false, timeout: 4000 })
-    cachedLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude }
-    lastLocationTime = now
-  } catch (e) {
-    console.warn('Failed to get location:', e)
+function refreshLocation(): Promise<{ lat: number; lng: number } | null> {
+  // Deduplicar: si ya hay una petición GPS en vuelo (prewarm del chat, doble
+  // efecto de StrictMode, un envío simultáneo…) se reutiliza esa promesa.
+  if (!locationFetch) {
+    locationFetch = (async () => {
+      try {
+        if (!(await hasLocationPermission())) return cachedLocation
+        const pos = await Geolocation.getCurrentPosition({ enableHighAccuracy: false, timeout: 4000 })
+        cachedLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude }
+        lastLocationTime = Date.now()
+      } catch (e) {
+        console.warn('Failed to get location:', e)
+      } finally {
+        locationFetch = null
+      }
+      return cachedLocation
+    })()
   }
-  return cachedLocation
+  return locationFetch
+}
+
+export async function getCachedLocation(): Promise<{ lat: number; lng: number } | null> {
+  if (cachedLocation && Date.now() - lastLocationTime < LOCATION_TTL) return cachedLocation
+  const fetching = refreshLocation()
+  // Con caché rancio se devuelve al instante y el refresh sigue en segundo
+  // plano; solo se espera al GPS cuando no hay ninguna posición previa.
+  return cachedLocation ?? fetching
 }
 
 export {
