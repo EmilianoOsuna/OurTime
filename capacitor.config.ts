@@ -21,9 +21,10 @@ const config: CapacitorConfig = {
       presentationOptions: ['badge', 'sound', 'alert'],
     },
     StatusBar: {
-      overlaysWebView: false,
-      backgroundColor: '#f4eee4',
-      style: 'dark',
+      // El webview corre bajo la barra y el header accent la pinta;
+      // los iconos se ajustan en runtime según la tinta del acento (AppShell).
+      overlaysWebView: true,
+      style: 'LIGHT',
     },
     SocialLogin: {
       providers: {

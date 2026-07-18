@@ -5,7 +5,7 @@ import { CatMedallion } from '../components/ui/CatMedallion'
 import { CatTag } from '../components/ui/CatTag'
 import { CoupleAvatars } from '../components/ui/Avatar'
 import { Icon } from '../components/ui/Icon'
-import { fmtDate, fmtDateShort, countdown, CAT_META } from '../lib/chapterUtils'
+import { fmtDate, fmtDateShort, countdown } from '../lib/chapterUtils'
 import type { PlanType, PersonDisplay } from '../lib/supabase'
 import type { Tab } from '../components/AppShell'
 
@@ -51,12 +51,12 @@ export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpe
 
   return (
     <div className="animate-fade-up"
-      style={{ padding: 'max(env(safe-area-inset-top), 32px) 22px 150px' }}>
+      style={{ padding: 'var(--page-top) 22px 150px' }}>
 
       {/* Header - Drenched Block */}
-      <div style={{ 
-        margin: 'calc(-1 * max(env(safe-area-inset-top), 32px)) -22px 24px -22px',
-        padding: 'max(env(safe-area-inset-top), 32px) 22px 28px',
+      <div style={{
+        margin: 'calc(-1 * var(--page-top)) -22px 24px -22px',
+        padding: 'var(--page-top) 22px 28px',
         background: 'var(--hero-bg)',
         color: 'var(--hero-text)',
         borderRadius: '0 0 34px 34px'
@@ -123,7 +123,7 @@ export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpe
             {days !== null && (
               <div style={{ textAlign: 'right' }}>
                 <div className="display" style={{ fontSize: 44, fontWeight: 800, color: 'var(--ink)', lineHeight: 0.95 }}>{days}</div>
-                <div className="eyebrow" style={{ fontSize: 11, color: 'var(--orange)' }}>días juntos</div>
+                <div className="eyebrow" style={{ fontSize: 11, color: 'var(--accent-ink)' }}>días juntos</div>
               </div>
             )}
           </motion.button>
@@ -168,7 +168,7 @@ export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpe
       {past.length > 0 && (
         <div style={{ position: 'relative', marginTop: 14 }}>
           <div style={{ position: 'absolute', left: 22, top: 24, bottom: 30, width: 2,
-            background: 'linear-gradient(var(--orange), var(--blue))', opacity: 0.5,
+            background: 'linear-gradient(var(--orange), color-mix(in srgb, var(--orange) 25%, transparent))', opacity: 0.5,
             transformOrigin: 'top', animation: 'drawLine .9s cubic-bezier(.4,0,.2,1) both' }} />
           {past.map((p, i) => (
             <TimelineRow key={p.id} plan={p} onPlanClick={onPlanClick} index={i} />
@@ -227,14 +227,12 @@ export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpe
 }
 
 const NextHero = memo(function NextHero({ plan, onPlanClick }: { plan: PlanType; onPlanClick: (p: PlanType) => void }) {
-  const meta = CAT_META[plan.type] || { tone: 'orange' as const }
-  const blue = meta.tone === 'blue'
   return (
     <motion.button whileTap={{ scale: 0.98 }} data-testid="plan-card" onClick={() => onPlanClick(plan)} className="ot-card anim-up" style={{
       width: '100%', textAlign: 'left', border: 'none', cursor: 'pointer', overflow: 'hidden',
       padding: 0, boxShadow: 'var(--sh-md)',
     }}>
-      <div className={plan.cover_url ? '' : ('ph' + (blue ? ' blue' : ''))}
+      <div className={plan.cover_url ? '' : 'ph'}
         style={{ height: 150, position: 'relative', background: plan.cover_url ? '#111' : undefined, overflow: 'hidden' }}>
         {plan.cover_url
           ? <img src={plan.cover_url} alt="" loading="lazy" decoding="async"

@@ -7,6 +7,7 @@ import { Icon } from '../ui/Icon'
 import { imageUrl, type StoryType } from '../../lib/supabase'
 import { useToast } from '../../context/ToastContext'
 import { HexColorPicker } from 'react-colorful'
+import { heroInk, accentInk, isHexColor } from '../../lib/color'
 
 const CAT_OPTIONS: { id: StoryType['category']; label: string; icon: string; color: string }[] = [
   { id: 'pareja',  label: 'Pareja',   icon: 'heartFill', color: 'var(--cat-pareja)' },
@@ -59,7 +60,7 @@ export const EditStorySheet: React.FC<Props> = ({ story, onClose, onUpdated, isA
     || coverFile !== null
     || coverPosition.x !== (story.cover_position_x ?? 50)
     || coverPosition.y !== (story.cover_position_y ?? 50)
-  const ok = name.trim().length > 0 && hasChanges
+  const ok = name.trim().length > 0 && hasChanges && isHexColor(themeColor)
 
   const handleCoverFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0]
@@ -211,13 +212,25 @@ export const EditStorySheet: React.FC<Props> = ({ story, onClose, onUpdated, isA
             <input className="field" value={name} onChange={e => setName(e.target.value)}
               placeholder="Nombre de la historia" autoFocus />
 
-            <style>{`
-              #app-root {
-                --orange: ${themeColor} !important;
-                --orange-deep: color-mix(in srgb, ${themeColor} 85%, black) !important;
-                --orange-tint: color-mix(in srgb, ${themeColor} 15%, transparent) !important;
-              }
-            `}</style>
+            {/* Vista previa en vivo del acento: incluye la tinta del hero y el
+                acento-texto para que los títulos sigan legibles con colores claros */}
+            {isHexColor(themeColor) && (() => {
+              const ink = heroInk(themeColor)
+              const dark = window.matchMedia('(prefers-color-scheme: dark)').matches
+              return (
+                <style>{`
+                  #app-root {
+                    --orange: ${themeColor} !important;
+                    --orange-deep: color-mix(in srgb, ${themeColor} 85%, black) !important;
+                    --orange-tint: color-mix(in srgb, ${themeColor} 15%, transparent) !important;
+                    --hero-bg: ${themeColor} !important;
+                    --hero-text: ${ink.text} !important;
+                    --hero-soft: ${ink.soft} !important;
+                    --accent-ink: ${accentInk(themeColor, dark)} !important;
+                  }
+                `}</style>
+              )
+            })()}
             <label className="field-label" style={{ marginTop: 20 }}>Color de acento</label>
             <div className="ot-scroll" style={{ 
               display: 'flex', gap: 12, marginTop: -4, marginBottom: showHex ? 2 : 10, 

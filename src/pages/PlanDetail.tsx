@@ -7,7 +7,7 @@ import { Confetti } from '../components/ui/Confetti'
 import { DatePicker } from '../components/ui/DatePicker'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
-import { fmtDate, fmtDateShort, countdown, CAT_META } from '../lib/chapterUtils'
+import { fmtDate, fmtDateShort, countdown } from '../lib/chapterUtils'
 import { compressToWebP } from '../lib/imageUtils'
 import { NewPlanSheet } from '../components/sheets/NewPlanSheet'
 import type { PlanType } from '../lib/supabase'
@@ -152,8 +152,6 @@ export function PlanDetail({ plan: initialPlan, onClose, onUpdated }: {
   const [uploadingMemory, setUploadingMemory] = useState(false)
   const memoryInputRef = useRef<HTMLInputElement>(null)
 
-  const meta = CAT_META[plan.type] || { tone: 'orange' as const }
-  const blue = meta.tone === 'blue'
   const now = new Date()
   const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
   const isFuture = plan.plan_date > todayStr
@@ -332,7 +330,7 @@ export function PlanDetail({ plan: initialPlan, onClose, onUpdated }: {
         onPointerCancel={endCoverDrag}
         style={{
           height: 250, position: 'relative', flexShrink: 0, overflow: 'hidden',
-          background: coverUrl ? '#111' : (blue ? 'var(--blue)' : 'var(--orange)'),
+          background: coverUrl ? '#111' : 'var(--orange)',
           borderRadius: '0 0 var(--r-md) var(--r-md)',
           cursor: (editing && coverUrl) ? 'grab' : 'default',
           touchAction: (editing && coverUrl) ? 'none' : 'auto',
@@ -377,7 +375,7 @@ export function PlanDetail({ plan: initialPlan, onClose, onUpdated }: {
 
         {/* Close */}
         <button onClick={onClose} style={{
-          position: 'absolute', top: 56, left: 18, width: 42, height: 42,
+          position: 'absolute', top: 'max(calc(var(--sat) + 10px), 44px)', left: 18, width: 42, height: 42,
           borderRadius: '50%', border: 'none', background: 'var(--card)',
           cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
           boxShadow: 'var(--sh-sm)', color: 'var(--ink)', zIndex: 3,
@@ -386,7 +384,7 @@ export function PlanDetail({ plan: initialPlan, onClose, onUpdated }: {
         </button>
 
         {/* Top-right: camera + edit */}
-        <div style={{ position: 'absolute', top: 56, right: 18, display: 'flex', gap: 8, zIndex: 3 }}>
+        <div style={{ position: 'absolute', top: 'max(calc(var(--sat) + 10px), 44px)', right: 18, display: 'flex', gap: 8, zIndex: 3 }}>
           <RoundBtn icon="camera" onClick={() => coverInputRef.current?.click()} />
           {!editing && <RoundBtn icon="edit" onClick={startEdit} />}
         </div>
@@ -402,11 +400,11 @@ export function PlanDetail({ plan: initialPlan, onClose, onUpdated }: {
         <div style={{ marginTop: 14, position: 'relative' }}>
           <div className="card" style={{ padding: '20px 18px 22px', boxShadow: 'var(--sh-md)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span className="eyebrow" style={{ color: blue ? 'var(--blue-deep)' : 'var(--orange-deep)' }}>
+              <span className="eyebrow" style={{ color: 'var(--accent-ink)' }}>
                 · El momento ·
               </span>
               {editing
-                ? <span className="chip-tag" style={{ background: 'var(--blue-tint)', color: 'var(--blue-deep)' }}>Editando</span>
+                ? <span className="chip-tag" style={{ background: 'color-mix(in srgb, var(--orange) 14%, var(--card))', color: 'var(--accent-ink)' }}>Editando</span>
                 : done
                   ? <span className="chip-tag" style={{ background: 'var(--done-tint)', color: 'var(--done)', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
                       <Icon name="check" size={12} stroke={3} />Vivido

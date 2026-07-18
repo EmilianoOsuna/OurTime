@@ -143,11 +143,11 @@ export default function Finances({ onPlanClick, refreshKey = 0 }: { onPlanClick?
   }
 
   return (
-    <div className="ot-scroll page-enter" style={{ paddingBottom: 130, paddingTop: 'max(env(safe-area-inset-top), 32px)' }}>
+    <div className="ot-scroll page-enter" style={{ paddingBottom: 130, paddingTop: 'var(--page-top)' }}>
       {/* Header - Drenched Block */}
-      <div style={{ 
-        margin: 'calc(-1 * max(env(safe-area-inset-top), 32px)) 0 24px 0',
-        padding: 'max(env(safe-area-inset-top), 32px) 22px 28px',
+      <div style={{
+        margin: 'calc(-1 * var(--page-top)) 0 24px 0',
+        padding: 'var(--page-top) 22px 28px',
         background: 'var(--hero-bg)',
         color: 'var(--hero-text)',
         borderRadius: '0 0 34px 34px'

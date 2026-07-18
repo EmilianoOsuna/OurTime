@@ -1,7 +1,7 @@
 
 export function DashboardSkeleton() {
   return (
-    <div className="anim-up" style={{ padding: '8px 22px 150px' }}>
+    <div className="anim-up" style={{ padding: 'var(--page-top) 22px 150px' }}>
       {/* Header Skeleton */}
       <div style={{ padding: '8px 0 6px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
         <div style={{ width: '60%' }}>
@@ -102,7 +102,7 @@ export function DashboardSkeleton() {
 
 export function CalendarSkeleton() {
   return (
-    <div style={{ padding: '8px 22px 130px' }}>
+    <div style={{ padding: 'var(--page-top) 22px 130px' }}>
       {/* Header Skeleton */}
       <div style={{ padding: '8px 0 6px' }}>
         <div className="skeleton" style={{ width: 80, height: 10, marginBottom: 10 }} />
@@ -151,7 +151,7 @@ export function CalendarSkeleton() {
 
 export function GallerySkeleton() {
   return (
-    <div style={{ padding: '8px 22px 130px' }}>
+    <div style={{ padding: 'var(--page-top) 22px 130px' }}>
       {/* Header Skeleton */}
       <div style={{ padding: '8px 0 6px' }}>
         <div className="skeleton" style={{ width: 80, height: 10, marginBottom: 10 }} />
@@ -170,7 +170,7 @@ export function GallerySkeleton() {
 
 export function FinancesSkeleton() {
   return (
-    <div style={{ padding: '8px 22px 130px' }}>
+    <div style={{ padding: 'var(--page-top) 22px 130px' }}>
       {/* Header Skeleton */}
       <div style={{ padding: '8px 0 6px' }}>
         <div className="skeleton" style={{ width: 100, height: 10, marginBottom: 10 }} />
@@ -214,7 +214,7 @@ export function ChatSkeleton() {
   return (
     <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: 'var(--paper)' }}>
       {/* Header skeleton */}
-      <div style={{ padding: '12px 18px', display: 'flex', alignItems: 'center', gap: 12, borderBottom: '1px solid var(--line)' }}>
+      <div style={{ padding: 'var(--page-top) 18px 12px', display: 'flex', alignItems: 'center', gap: 12, borderBottom: '1px solid var(--line)' }}>
         <div className="skeleton" style={{ width: 24, height: 24, borderRadius: 6 }} />
         <div className="skeleton" style={{ width: 36, height: 36, borderRadius: '50%' }} />
         <div style={{ flex: 1 }}>

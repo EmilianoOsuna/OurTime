@@ -11,14 +11,14 @@ export function CatMedallion({ cat, size = 46, active = true }: { cat: string; s
   const c = CAT_META[cat]
   if (!c) return null
   const icon = CAT_ICON[cat] || 'tag'
-  const blue = c.tone === 'blue'
+  // Todos los medallones van en el acento de la historia (homologado, sin azules sueltos)
   return (
     <div style={{
       width: size, height: size, borderRadius: '50%',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: active ? (blue ? 'var(--blue)' : 'var(--orange)') : 'var(--card-2)',
-      color: active ? '#fff' : 'var(--ink-faint)',
-      boxShadow: active ? (blue ? '0 4px 12px color-mix(in srgb, var(--blue) 30%, transparent)' : '0 4px 12px color-mix(in srgb, var(--orange) 30%, transparent)') : 'inset 0 0 0 1.5px var(--line)',
+      background: active ? 'var(--orange)' : 'var(--card-2)',
+      color: active ? 'var(--hero-text)' : 'var(--ink-faint)',
+      boxShadow: active ? '0 4px 12px color-mix(in srgb, var(--orange) 30%, transparent)' : 'inset 0 0 0 1.5px var(--line)',
       flexShrink: 0,
     }}>
       <Icon name={icon} size={size * 0.45} />

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { BottomSheet } from './ui/BottomSheet'
+import { Segmented } from './ui/Segmented'
 import { Icon } from './ui/Icon'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
@@ -39,6 +40,7 @@ const TIERS: TierCard[] = [
     name: 'Familia',
     tagline: 'Todo Duo, para toda la familia',
     priceMonthly: '$6.99',
+    priceYearly: '$59.99',
     features: [
       'Todo lo de Duo',
       'Hasta 6 miembros por Historia',
@@ -62,11 +64,9 @@ export const Paywall: React.FC<Props> = ({ onClose, reason = 'generic' }) => {
 
   const onSubscribe = async (plan: 'duo' | 'familia') => {
     if (!activeStoryId) { push({ icon: 'x', title: 'Selecciona una Historia primero' }); return }
-    // Familia solo mensual en v1; Duo respeta el toggle.
-    const chosen: CheckoutInterval = plan === 'familia' ? 'month' : interval
     setBusy(plan)
     try {
-      await startCheckout({ storyId: activeStoryId, plan, interval: chosen })
+      await startCheckout({ storyId: activeStoryId, plan, interval })
     } catch (e) {
       push({ icon: 'x', title: 'No se pudo iniciar el pago', body: e instanceof Error ? e.message : undefined })
     } finally {
@@ -115,28 +115,25 @@ export const Paywall: React.FC<Props> = ({ onClose, reason = 'generic' }) => {
           </div>
         ) : (
           <>
-            {/* Toggle mensual / anual (aplica a Duo) */}
-            <div style={{ display: 'flex', gap: 4, background: 'var(--paper-2, var(--card))',
-              border: '1px solid var(--line)', borderRadius: 999, padding: 4, marginBottom: 16 }}>
-              {(['month', 'year'] as CheckoutInterval[]).map(i => (
-                <button key={i} onClick={() => setInterval(i)} style={{
-                  flex: 1, border: 'none', borderRadius: 999, padding: '9px 12px', cursor: 'pointer',
-                  fontFamily: 'var(--font-ui)', fontSize: 14, fontWeight: 600,
-                  background: interval === i ? 'var(--ink)' : 'transparent',
-                  color: interval === i ? 'var(--paper)' : 'var(--ink-soft)',
-                }}>
-                  {i === 'month' ? 'Mensual' : 'Anual · ahorra 27%'}
-                </button>
-              ))}
-            </div>
+            {/* Toggle mensual / anual (misma pill animada que los filtros) */}
+            <Segmented
+              labels={['Mensual', 'Anual · ahorra 27%']}
+              selected={interval === 'month' ? 0 : 1}
+              onChange={(i) => setInterval(i === 0 ? 'month' : 'year')}
+              layoutId="paywall-interval"
+              style={{ marginBottom: 16 }}
+            />
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {TIERS.map(t => {
-                const price = t.plan === 'duo' && interval === 'year' && t.priceYearly ? t.priceYearly : t.priceMonthly
-                const per = t.plan === 'duo' && interval === 'year' ? '/año' : '/mes'
+                const price = interval === 'year' && t.priceYearly ? t.priceYearly : t.priceMonthly
+                const per = interval === 'year' && t.priceYearly ? '/año' : '/mes'
                 return (
                   <div key={t.plan} className="ot-card" style={{
                     padding: 18, position: 'relative',
+                    // `content-visibility: auto` (en .ot-card) recorta el badge que
+                    // sobresale en top:-10, así que lo desactivamos en estas cards.
+                    contentVisibility: 'visible',
                     border: t.highlight ? '1.5px solid var(--orange)' : '1px solid var(--line)',
                   }}>
                     {t.highlight && (

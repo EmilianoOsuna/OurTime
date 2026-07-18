@@ -58,6 +58,12 @@ Deno.serve(async (req) => {
       subscription_data: { metadata: { story_id, plan, payer_user_id: user.id } },
       metadata: { story_id, plan, payer_user_id: user.id },
       allow_promotion_codes: true,
+      // `automatic_tax` exige que el customer tenga una dirección válida. Como el
+      // customer se crea sin dirección, dejamos que Checkout la pida y la guarde
+      // en el customer (si no, Stripe rechaza la sesión con "customer needs a
+      // valid address"). Ver create-portal-session para actualizarla luego.
+      billing_address_collection: 'required',
+      customer_update: { address: 'auto' },
       automatic_tax: { enabled: true },
     })
 

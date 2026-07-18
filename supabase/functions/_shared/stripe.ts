@@ -40,6 +40,7 @@ export function priceIdFor(plan: PlanTier, interval: Interval): string {
     'duo:month': Deno.env.get('STRIPE_PRICE_DUO_MONTHLY'),
     'duo:year': Deno.env.get('STRIPE_PRICE_DUO_YEARLY'),
     'familia:month': Deno.env.get('STRIPE_PRICE_FAMILIA_MONTHLY'),
+    'familia:year': Deno.env.get('STRIPE_PRICE_FAMILIA_YEARLY'),
   }
   const priceId = map[`${plan}:${interval}`]
   if (!priceId) throw new Error(`No hay price configurado para ${plan}/${interval}`)
@@ -49,7 +50,10 @@ export function priceIdFor(plan: PlanTier, interval: Interval): string {
 /** Reverso: dado un price_id de un evento de Stripe, deduce el plan. */
 export function planForPrice(priceId: string | null | undefined): PlanTier {
   if (!priceId) return 'free'
-  if (priceId === Deno.env.get('STRIPE_PRICE_FAMILIA_MONTHLY')) return 'familia'
+  if (
+    priceId === Deno.env.get('STRIPE_PRICE_FAMILIA_MONTHLY') ||
+    priceId === Deno.env.get('STRIPE_PRICE_FAMILIA_YEARLY')
+  ) return 'familia'
   if (
     priceId === Deno.env.get('STRIPE_PRICE_DUO_MONTHLY') ||
     priceId === Deno.env.get('STRIPE_PRICE_DUO_YEARLY')

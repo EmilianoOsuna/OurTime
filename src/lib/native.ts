@@ -73,6 +73,10 @@ export async function setupNativeApp() {
     const cacheNames = await caches.keys().catch(() => [])
     await Promise.all(cacheNames.map(cacheName => caches.delete(cacheName)))
   }
+  // Barra de estado: el webview se extiende bajo ella para que el header
+  // drenched (color de acento) la pinte. En Android 15+ el edge-to-edge ya es
+  // obligatorio y esta llamada rebota (catch); en versiones anteriores lo activa.
+  if (isAndroid) StatusBar.setOverlaysWebView({ overlay: true }).catch(() => {})
   setTimeout(() => SplashScreen.hide(), 500)
   setupPushListeners().catch(console.error)
   App.addListener('appStateChange', ({ isActive }) => {

@@ -2,13 +2,15 @@ import { motion } from 'framer-motion'
 
 interface SegOpt { value: string; label: string }
 
-export function Segmented({ labels, selected, onChange, options, value, style = {} }: {
+export function Segmented({ labels, selected, onChange, options, value, style = {}, layoutId = 'seg-pill' }: {
   labels?: string[]
   selected?: number
   onChange: (i: number) => void
   options?: SegOpt[]
   value?: string
   style?: React.CSSProperties
+  /** Único por instancia visible a la vez; evita que la pill "salte" entre dos Segmented montados juntos. */
+  layoutId?: string
 }) {
   const items = options
     ? options.map(o => ({ label: o.label, active: o.value === value, idx: -1 }))
@@ -33,7 +35,7 @@ export function Segmented({ labels, selected, onChange, options, value, style = 
             WebkitTapHighlightColor: 'transparent',
           }}>
             {on && (
-              <motion.div layoutId="seg-pill" style={{
+              <motion.div layoutId={layoutId} style={{
                 position: 'absolute', inset: 0, background: 'var(--card)',
                 borderRadius: 999, boxShadow: 'var(--sh-sm)', zIndex: -1
               }} transition={{ type: 'spring', bounce: 0.2, duration: 0.5 }} />

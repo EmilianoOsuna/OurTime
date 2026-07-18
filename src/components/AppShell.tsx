@@ -4,7 +4,8 @@ import { useAuth } from '../context/AuthContext'
 import type { ProfileType } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { buildPerson, type PersonDisplay, type StoryType, type PlanType, type MemoryType, type NotificationType } from '../lib/supabase'
-import { consumeNativeNavigationUrl, setBackHandler, isNative, isAndroid } from '../lib/native'
+import { consumeNativeNavigationUrl, setBackHandler, isNative } from '../lib/native'
+import { heroInk, accentInk, isHexColor } from '../lib/color'
 import { invokeTopBack, consumeIgnorePop } from '../lib/backStack'
 import { recoverNextClickAfterDrag } from '../lib/recoverClickAfterDrag'
 
@@ -33,22 +34,6 @@ import { useToast } from '../context/ToastContext'
 import { Lightbox } from './ui/Lightbox'
 import { DashboardSkeleton, CalendarSkeleton, GallerySkeleton, FinancesSkeleton, ChatSkeleton } from './ui/Skeletons'
 
-
-// Tinta del hero drenched: elige oscuro o claro según cuál contrasta más con el acento
-function heroInk(hex: string): { text: string; soft: string } {
-  const raw = hex.replace('#', '')
-  const full = raw.length === 3 ? raw.split('').map(c => c + c).join('') : raw
-  const [r, g, b] = [0, 2, 4].map(i => {
-    const v = parseInt(full.slice(i, i + 2), 16) / 255
-    return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)
-  })
-  const L = 0.2126 * (r ?? 0) + 0.7152 * (g ?? 0) + 0.0722 * (b ?? 0)
-  const contrastDark = (L + 0.05) / 0.0631   // vs #2A1505
-  const contrastWhite = 1.05 / (L + 0.05)    // vs blanco cálido
-  return contrastDark >= contrastWhite
-    ? { text: '#2A1505', soft: 'rgba(42,21,5,0.66)' }
-    : { text: '#FFF9F4', soft: 'rgba(255,249,244,0.85)' }
-}
 
 // Stable colors that never get overridden by the accent-switching effect
 const CAT_COLOR_STABLE: Record<string, string> = {
@@ -361,11 +346,20 @@ export default function AppShell() {
     }
   }, [handleNavigationUrl])
 
+  // Modo oscuro reactivo: el acento y la barra de estado dependen de él
+  const [prefersDark, setPrefersDark] = useState(() => window.matchMedia('(prefers-color-scheme: dark)').matches)
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-color-scheme: dark)')
+    const onChange = (e: MediaQueryListEvent) => setPrefersDark(e.matches)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
+
   // Accent color — override --orange* based on active story category
   useEffect(() => {
     const story = stories.find(s => s.id === activeStoryId)
     const cat = story?.category ?? 'pareja'
-    const dark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    const dark = prefersDark
     type Triad = { o: string; od: string; ot: string }
     const OVERRIDES: Record<string, { light: Triad; dark: Triad } | null> = {
       pareja: null,
@@ -382,7 +376,8 @@ export default function AppShell() {
         dark:  { o: '#64748B', od: '#475569', ot: '#1E293B' },
       },
     }
-    const override = OVERRIDES[cat]
+    const custom = isHexColor(story?.theme_color) ? story!.theme_color! : null
+    const override = custom ? null : OVERRIDES[cat]
     const root = document.documentElement
     if (override) {
       const c = dark ? override.dark : override.light
@@ -400,18 +395,25 @@ export default function AppShell() {
       root.style.removeProperty('--hero-soft')
     }
 
-    // Sync theme-color for the status bar
-    // Safest to read --orange directly since --hero-bg might resolve to a 'var(--orange)' literal
-    const heroBg = getComputedStyle(root).getPropertyValue('--orange').trim() || '#F17720'
-    document.querySelectorAll('meta[name="theme-color"]').forEach(el => el.setAttribute('content', heroBg))
-    
-    // Also sync Capacitor StatusBar if available (only for Android, iOS handles it via safe-area)
-    if (isAndroid) {
-      import('../lib/native').then(({ StatusBar }) => {
-        StatusBar.setBackgroundColor({ color: heroBg }).catch(() => {})
+    // Acento efectivo: el theme_color de la historia se aplica inline en #app-root,
+    // así que aquí se resuelve a mano (leer --orange computado en :root lo ignoraría).
+    const accent = custom
+      ?? (override ? (dark ? override.dark.o : override.light.o) : (dark ? '#F98130' : '#F17720'))
+
+    // Acento legible como texto sobre papel/tarjeta
+    root.style.setProperty('--accent-ink', accentInk(accent, dark))
+
+    // Barra de estado del mismo color que el acento:
+    // PWA vía <meta theme-color>; nativo vía estilo de iconos (el fondo lo pinta
+    // el header drenched al extenderse bajo la barra en edge-to-edge).
+    document.querySelectorAll('meta[name="theme-color"]').forEach(el => el.setAttribute('content', accent))
+    if (isNative) {
+      import('../lib/native').then(({ StatusBar, Style }) => {
+        const darkText = heroInk(accent).text === '#2A1505'
+        StatusBar.setStyle({ style: darkText ? Style.Light : Style.Dark }).catch(() => {})
       }).catch(() => {})
     }
-  }, [activeStoryId, stories])
+  }, [activeStoryId, stories, prefersDark])
 
   const openPlan = (p: PlanType) => setOverlay({ type: 'plan', data: p })
 
@@ -539,8 +541,8 @@ export default function AppShell() {
   }
 
   const activeStory = stories.find(s => s.id === activeStoryId)
-  const storyHeroInk = activeStory?.theme_color ? heroInk(activeStory.theme_color) : null
-  const customStyles = activeStory?.theme_color ? {
+  const storyHeroInk = isHexColor(activeStory?.theme_color) ? heroInk(activeStory.theme_color) : null
+  const customStyles = storyHeroInk && activeStory?.theme_color ? {
     '--orange': activeStory.theme_color,
     '--orange-deep': `color-mix(in srgb, ${activeStory.theme_color} 85%, black)`,
     '--orange-tint': `color-mix(in srgb, ${activeStory.theme_color} 15%, transparent)`,
@@ -694,7 +696,7 @@ function NavBar({ tab, setTab, onFab, me, onProfileOpen }: {
 
   return (
     <nav style={{
-      position: 'fixed', bottom: 'max(20px, env(safe-area-inset-bottom, 20px))',
+      position: 'fixed', bottom: 'max(20px, calc(var(--sab) + 10px))',
       left: 0, right: 0, zIndex: 70,
       display: 'flex', flexDirection: 'column', alignItems: 'center',
       pointerEvents: 'none', padding: '0 16px',
@@ -726,7 +728,7 @@ function NavBar({ tab, setTab, onFab, me, onProfileOpen }: {
 
         <button data-testid="fab-btn" aria-label="Nuevo momento" onClick={onFab} style={{
           width: 48, height: 48, borderRadius: '50%', border: 'none',
-          background: 'var(--orange)', color: 'var(--paper)', cursor: 'pointer', margin: '0 4px',
+          background: 'var(--orange)', color: 'var(--hero-text)', cursor: 'pointer', margin: '0 4px',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           boxShadow: `0 4px 16px color-mix(in srgb, var(--orange) 55%, transparent)`,
           transition: 'background .3s, transform .15s', flexShrink: 0,
@@ -816,7 +818,9 @@ function StorySwitcherSheet({ stories, activeStoryId, adminStoryIds, onSelect, o
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
           {stories.map(s => {
-            const color = CAT_COLOR_STABLE[s.category] || 'var(--cat-otro)'
+            // El acento elegido por la historia manda; el color de categoría es solo fallback
+            const color = isHexColor(s.theme_color) ? s.theme_color : (CAT_COLOR_STABLE[s.category] || 'var(--cat-otro)')
+            const iconInk = isHexColor(s.theme_color) ? heroInk(s.theme_color).text : '#FFF9F4'
             const active = s.id === activeStoryId
             return (
               <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -831,7 +835,7 @@ function StorySwitcherSheet({ stories, activeStoryId, adminStoryIds, onSelect, o
                     backgroundImage: s.cover_url ? `url(${s.cover_url})` : undefined,
                     backgroundSize: 'cover',
                     backgroundPosition: `${s.cover_position_x ?? 50}% ${s.cover_position_y ?? 50}%` }}>
-                    {!s.cover_url && <Icon name={s.category === 'pareja' ? 'heartFill' : s.category === 'amigos' ? 'users' : s.category === 'familia' ? 'home' : 'tag'} size={18} style={{ color: 'var(--paper)' }} />}
+                    {!s.cover_url && <Icon name={s.category === 'pareja' ? 'heartFill' : s.category === 'amigos' ? 'users' : s.category === 'familia' ? 'home' : 'tag'} size={18} style={{ color: iconInk }} />}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontWeight: 700, fontSize: 15.5, color: 'var(--ink)',

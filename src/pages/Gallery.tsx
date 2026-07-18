@@ -202,7 +202,7 @@ export default function Gallery({ memories, setMemories, onImageClick, me }: {
     const availableForPicker = memories.filter(m => m.album_id !== activeAlbumId)
     const pickerCols = makeCols(availableForPicker)
     return (
-      <div className="page-enter" style={{ paddingBottom: 130, paddingTop: 'max(env(safe-area-inset-top), 32px)' }}>
+      <div className="page-enter" style={{ paddingBottom: 130, paddingTop: 'var(--page-top)' }}>
         <div style={{ padding: '0 22px 0' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
             <button onClick={() => setActiveAlbumId(null)} style={{
@@ -323,11 +323,11 @@ export default function Gallery({ memories, setMemories, onImageClick, me }: {
 
   // ── Main view ──
   return (
-    <div className="page-enter" style={{ paddingBottom: 130, paddingTop: 'max(env(safe-area-inset-top), 32px)' }}>
+    <div className="page-enter" style={{ paddingBottom: 130, paddingTop: 'var(--page-top)' }}>
       {/* Header - Drenched Block */}
-      <div style={{ 
-        margin: 'calc(-1 * max(env(safe-area-inset-top), 32px)) 0 24px 0',
-        padding: 'max(env(safe-area-inset-top), 32px) 22px 28px',
+      <div style={{
+        margin: 'calc(-1 * var(--page-top)) 0 24px 0',
+        padding: 'var(--page-top) 22px 28px',
         background: 'var(--hero-bg)',
         color: 'var(--hero-text)',
         borderRadius: '0 0 34px 34px'

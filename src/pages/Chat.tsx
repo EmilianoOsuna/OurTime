@@ -47,8 +47,8 @@ function AiAvatar({ size = 30, drenched = false }: { size?: number; drenched?: b
   return (
     <div style={{
       width: size, height: size, borderRadius: size * 0.4,
-      background: drenched ? 'rgba(255,255,255,0.2)' : 'color-mix(in srgb, var(--blue) 18%, transparent)',
-      color: drenched ? '#fff' : 'var(--blue)',
+      background: drenched ? 'rgba(255,255,255,0.2)' : 'color-mix(in srgb, var(--orange) 16%, transparent)',
+      color: drenched ? '#fff' : 'var(--accent-ink)',
       display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
     }}>
       <Icon name="sparkle" size={size * 0.55} />
@@ -67,7 +67,7 @@ function TypingIndicator() {
       }}>
         {[0, 1, 2].map(i => (
           <span key={i} style={{
-            width: 7, height: 7, borderRadius: '50%', background: 'var(--blue)',
+            width: 7, height: 7, borderRadius: '50%', background: 'var(--orange)',
             opacity: 0.6, animation: `pulse 1s ease-in-out ${i * 0.18}s infinite alternate`,
           }} />
         ))}
@@ -126,9 +126,9 @@ const MemoizedMessageItem = memo(function MessageItem({ msg, isAi, showDate, nex
             padding: '10px 14px',
             borderRadius: br,
             background: isAi ? 'var(--card)' : 'var(--orange)',
-            color: isAi ? 'var(--ink)' : '#fff',
+            color: isAi ? 'var(--ink)' : 'var(--hero-text)',
             boxShadow: isAi ? 'var(--sh-sm)' : 'none',
-            border: isAi ? '1px solid color-mix(in srgb, var(--blue) 25%, transparent)' : 'none',
+            border: isAi ? '1px solid color-mix(in srgb, var(--orange) 25%, transparent)' : 'none',
             fontSize: 15, lineHeight: 1.45,
             wordBreak: 'break-word', whiteSpace: 'pre-wrap',
           }}>
@@ -144,18 +144,18 @@ const MemoizedMessageItem = memo(function MessageItem({ msg, isAi, showDate, nex
                         return (
                           <a href={`https://maps.google.com/?q=${encodeURIComponent(place)}`} target="_blank" rel="noopener noreferrer" style={{ display: 'block', marginTop: 12, marginBottom: 8, borderRadius: 16, border: '1px solid var(--line)', background: 'var(--paper)', textDecoration: 'none', color: 'inherit', boxShadow: 'var(--sh-sm)' }}>
                             <div style={{ padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
-                              <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--blue)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                <Icon name="sparkle" size={20} />
+                              <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--orange)', color: 'var(--hero-text)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                <Icon name="pin" size={20} />
                               </div>
                               <div style={{ flex: 1, minWidth: 0 }}>
                                 <div style={{ fontSize: 15, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{place}</div>
-                                <div style={{ fontSize: 13, color: 'var(--blue)', marginTop: 2 }}>Abrir en Mapas</div>
+                                <div style={{ fontSize: 13, color: 'var(--accent-ink)', marginTop: 2 }}>Abrir en Mapas</div>
                               </div>
                             </div>
                           </a>
                         )
                       }
-                      return <a {...props} style={{ color: 'var(--blue)', textDecoration: 'underline' }} target="_blank" rel="noopener noreferrer" />
+                      return <a {...props} style={{ color: 'var(--accent-ink)', textDecoration: 'underline' }} target="_blank" rel="noopener noreferrer" />
                     }
                   }}
                 >
@@ -313,7 +313,7 @@ export default function Chat({ storyName, onBack }: Props) {
       {/* ── Header ── */}
       <div style={{
         flexShrink: 0,
-        padding: 'calc(max(env(safe-area-inset-top), 32px) + 4px) 14px 16px',
+        padding: 'calc(var(--page-top) + 2px) 14px 16px',
         background: 'var(--hero-bg)',
         color: 'var(--hero-text)',
         display: 'flex', alignItems: 'center', gap: 12,
@@ -365,8 +365,8 @@ export default function Chat({ storyName, onBack }: Props) {
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
             justifyContent: 'center', gap: 10, color: 'var(--ink-faint)', paddingBottom: 24 }}>
             <div style={{ width: 64, height: 64, borderRadius: 22,
-              background: 'color-mix(in srgb, var(--blue) 15%, transparent)',
-              color: 'var(--blue)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              background: 'color-mix(in srgb, var(--orange) 15%, transparent)',
+              color: 'var(--accent-ink)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Icon name="sparkle" size={30} />
             </div>
             <div style={{ fontSize: 15.5, fontWeight: 700, color: 'var(--ink-soft)', marginTop: 4 }}>
@@ -434,7 +434,7 @@ export default function Chat({ storyName, onBack }: Props) {
       <div style={{
         flexShrink: 0,
         padding: '10px 12px',
-        paddingBottom: 'calc(10px + env(safe-area-inset-bottom, 0px))',
+        paddingBottom: 'calc(10px + var(--sab))',
         borderTop: '1px solid var(--line)',
         background: 'var(--card)',
         display: 'flex', alignItems: 'flex-end', gap: 10,
@@ -463,7 +463,7 @@ export default function Chat({ storyName, onBack }: Props) {
         <button onClick={() => send()} disabled={!text.trim() || sending} style={{
           width: 44, height: 44, borderRadius: '50%', border: 'none', flexShrink: 0,
           background: text.trim() && !sending ? 'var(--orange)' : 'var(--card-2)',
-          color: text.trim() && !sending ? '#fff' : 'var(--ink-faint)',
+          color: text.trim() && !sending ? 'var(--hero-text)' : 'var(--ink-faint)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           cursor: text.trim() && !sending ? 'pointer' : 'default',
           transition: 'all .18s',

@@ -115,7 +115,7 @@
     "semantic_hash": "c8a66780bcc9ba2f8bdd21a797cdd679"
   },
   "android/app/capacitor.build.gradle": {
-    "mtime": 1784337124.6636627,
+    "mtime": 1781310669.1679182,
     "ast_hash": "268af3b4d396d4c04f0913c460c9be54",
     "semantic_hash": "268af3b4d396d4c04f0913c460c9be54"
   },
@@ -145,7 +145,7 @@
     "semantic_hash": "682315a426653617c6a74fc12bef55b6"
   },
   "android/capacitor.settings.gradle": {
-    "mtime": 1784337124.6636627,
+    "mtime": 1781310669.1679182,
     "ast_hash": "508103bab4fa368c221a1c676fda50d4",
     "semantic_hash": "508103bab4fa368c221a1c676fda50d4"
   },
@@ -325,8 +325,8 @@
     "semantic_hash": ""
   },
   "src/components/AppShell.tsx": {
-    "mtime": 1784350137.9838808,
-    "ast_hash": "b48d0f7f785889c2d68b33f6110cbabe",
+    "mtime": 1784336687.4484832,
+    "ast_hash": "c613117d563d77e7830d37dab56c1ac6",
     "semantic_hash": ""
   },
   "src/components/NotificationsPanel.tsx": {
@@ -375,14 +375,14 @@
     "semantic_hash": ""
   },
   "src/components/ui/CatMedallion.tsx": {
-    "mtime": 1784350174.552879,
-    "ast_hash": "e9086152b2c84624e1b16ca8164368e8",
-    "semantic_hash": ""
+    "mtime": 1780952398.37666,
+    "ast_hash": "40406272cfa07e732bb03bac5392a677",
+    "semantic_hash": "40406272cfa07e732bb03bac5392a677"
   },
   "src/components/ui/CatTag.tsx": {
-    "mtime": 1784350187.7568772,
-    "ast_hash": "2c7b48a3d8b7fbe14b496aef0e9585e9",
-    "semantic_hash": ""
+    "mtime": 1780824781.996855,
+    "ast_hash": "a05acd7905cbe746eccf830d9eb9052d",
+    "semantic_hash": "a05acd7905cbe746eccf830d9eb9052d"
   },
   "src/components/ui/Confetti.tsx": {
     "mtime": 1780823482.9788775,
@@ -435,8 +435,8 @@
     "semantic_hash": "775c2d204f71463f5f586f1e44260210"
   },
   "src/components/ui/Segmented.tsx": {
-    "mtime": 1784350211.838872,
-    "ast_hash": "890d9819c3d3bd915ab42adff3d7da80",
+    "mtime": 1784098673.804411,
+    "ast_hash": "367423910fed74c793c45a73959ec619",
     "semantic_hash": ""
   },
   "src/components/ui/Sheet.tsx": {
@@ -565,13 +565,13 @@
     "semantic_hash": ""
   },
   "src/pages/Chat.tsx": {
-    "mtime": 1784350164.63788,
-    "ast_hash": "c43cacebdc919d47ee6a77a10842f1fd",
+    "mtime": 1784328655.513062,
+    "ast_hash": "fec4b9aa2b5592b460a233cbeba644d6",
     "semantic_hash": ""
   },
   "src/pages/Dashboard.tsx": {
-    "mtime": 1784350210.0978725,
-    "ast_hash": "5a73839adccc9ed88bb5a8455a11bcb7",
+    "mtime": 1784310333.9085176,
+    "ast_hash": "3e81a61e77079c86ce17f0d8f76b3e90",
     "semantic_hash": ""
   },
   "src/pages/Finances.tsx": {
@@ -595,13 +595,13 @@
     "semantic_hash": ""
   },
   "src/pages/PlanDetail.tsx": {
-    "mtime": 1784350233.5578654,
-    "ast_hash": "3a19dd92f51bfcc8f6eb0ed3b74ccd76",
+    "mtime": 1784317031.744675,
+    "ast_hash": "9bbe76efeac54b3b13d5f28891f33e12",
     "semantic_hash": ""
   },
   "src/pages/Profile.tsx": {
-    "mtime": 1784350244.3278615,
-    "ast_hash": "4daae7649be494f8c678bfef0af2b09c",
+    "mtime": 1784326231.4629827,
+    "ast_hash": "caae94bb5567abf1a6f392ae2ad8dd8a",
     "semantic_hash": ""
   },
   "src/sw.ts": {
@@ -1550,8 +1550,8 @@
     "semantic_hash": ""
   },
   "src/components/Paywall.tsx": {
-    "mtime": 1784350217.6638703,
-    "ast_hash": "39a1bae8f13b72ed44bb5e84f44748ee",
+    "mtime": 1784147696.6993206,
+    "ast_hash": "a811225f8179904983cd3bce0e23acbf",
     "semantic_hash": ""
   },
   "src/lib/__tests__/useEntitlement.test.ts": {
@@ -1575,13 +1575,13 @@
     "semantic_hash": ""
   },
   "supabase/functions/_shared/stripe.ts": {
-    "mtime": 1784350001.500832,
-    "ast_hash": "27a777c81ade0dbb58f7e0c933dde629",
+    "mtime": 1784147305.2695475,
+    "ast_hash": "649e0822c155525bde1a06e2bbd829fd",
     "semantic_hash": ""
   },
   "supabase/functions/create-checkout-session/index.ts": {
-    "mtime": 1784349939.9757774,
-    "ast_hash": "df86e52208458e8107eb2097a2a9be3f",
+    "mtime": 1784147317.3184063,
+    "ast_hash": "34a5d7911240894be7b9ab03a348f4c5",
     "semantic_hash": ""
   },
   "supabase/functions/create-portal-session/index.ts": {
@@ -1682,11 +1682,6 @@
   "PLAYSTORE_PLAN.md": {
     "mtime": 1784305759.931784,
     "ast_hash": "484c69ac65e1487b50f1db4cb04b8b56",
-    "semantic_hash": ""
-  },
-  "src/lib/color.ts": {
-    "mtime": 1784350056.5128627,
-    "ast_hash": "4ed8e33775baf74fbc1fc04c6212a15f",
     "semantic_hash": ""
   }
 }

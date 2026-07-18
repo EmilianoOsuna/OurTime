@@ -8,11 +8,16 @@
    ─────────────────────────────────────────────────────────── */
 
 :root {
-  /* Safe area (notches, status bar, nav bar) */
-  --sat: env(safe-area-inset-top, 0px);
-  --sar: env(safe-area-inset-right, 0px);
-  --sab: env(safe-area-inset-bottom, 0px);
-  --sal: env(safe-area-inset-left, 0px);
+  /* Safe area (notches, status bar, nav bar).
+     En Android nativo (Capacitor 8, edge-to-edge) env() devuelve 0 y el bridge
+     inyecta --safe-area-inset-* en <html>: se usa como primera fuente. */
+  --sat: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
+  --sar: var(--safe-area-inset-right, env(safe-area-inset-right, 0px));
+  --sab: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
+  --sal: var(--safe-area-inset-left, env(safe-area-inset-left, 0px));
+
+  /* Padding superior de página: barra de estado + un respiro, adaptable a notch */
+  --page-top: max(calc(var(--sat) + 12px), 30px);
 
   /* Type — una sola familia, el display se distingue por peso + tracking */
   --font-display: 'Hanken Grotesk', system-ui, sans-serif;
@@ -28,6 +33,7 @@
   --ink-faint:  #A99F90;
   --line:       rgba(33,29,24,0.10);
   --line-soft:  rgba(33,29,24,0.06);
+  --line-strong: rgba(33,29,24,0.22);
 
   /* Brand */
   --orange:      #F17720;
@@ -36,6 +42,10 @@
   --blue:        #0474BA;
   --blue-deep:   #045E96;
   --blue-tint:   #D7E9F4;
+
+  /* Acento legible como texto sobre papel/tarjeta (≥4.5:1).
+     AppShell lo recalcula cuando la historia cambia de acento. */
+  --accent-ink:  #9A4C0F;
 
   /* Sun — amarillo de bloques de apoyo (estilo mindmarket). La tinta
      es fija porque el amarillo es claro en ambos modos. */
@@ -102,7 +112,9 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
 
 body {
   margin: 0;
-  padding: var(--sat) var(--sar) var(--sab) var(--sal);
+  /* Solo insets laterales: el superior lo maneja cada página con --page-top
+     (los headers drenched pintan bajo la barra de estado) y el inferior la nav. */
+  padding: 0 var(--sar) 0 var(--sal);
   min-height: 100dvh; /* Prefer dynamic viewport height */
   background: var(--paper);
   color: var(--ink);
@@ -186,7 +198,7 @@ input, textarea {
   transition-duration: .1s;
 }
 .btn-primary { background: var(--ink); color: var(--paper); box-shadow: var(--sh-md); }
-.btn-orange  { background: var(--orange); color: #fff; box-shadow: 0 4px 14px color-mix(in srgb, var(--orange) 40%, transparent); }
+.btn-orange  { background: var(--orange); color: var(--hero-text); box-shadow: 0 4px 14px color-mix(in srgb, var(--orange) 40%, transparent); }
 .btn-blue    { background: var(--blue); color: #fff; box-shadow: 0 4px 14px rgba(4,116,186,0.30); }
 .btn-ghost   { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--line); }
 .btn-soft    { background: var(--card); color: var(--ink); box-shadow: var(--sh-sm); }
@@ -393,6 +405,7 @@ html {
     --ink-faint:   #71717A;
     --line:        rgba(255,255,255,0.09);
     --line-soft:   rgba(255,255,255,0.04);
+    --line-strong: rgba(255,255,255,0.20);
 
     --orange:      #F98130;
     --orange-deep: #F17720;
@@ -400,6 +413,8 @@ html {
     --blue:        #3B9EDF;
     --blue-deep:   #2D8AC9;
     --blue-tint:   rgba(59, 158, 223, 0.12);
+
+    --accent-ink:  #F98130;
 
     --sun:      #E9B53B;
     --sun-deep: #F3BC3F;

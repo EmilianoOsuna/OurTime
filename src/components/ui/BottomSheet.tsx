@@ -82,7 +82,7 @@ export const BottomSheet: React.FC<Props> = ({ onClose, children, maxHeight = '9
         style={{ y, position: 'relative', pointerEvents: 'auto', background: 'var(--paper)',
           borderRadius: '28px 28px 0 0', boxShadow: '0 -10px 40px rgba(33,29,24,0.2)',
           maxHeight, display: 'flex', flexDirection: 'column',
-          paddingBottom: 'max(24px, env(safe-area-inset-bottom))',
+          paddingBottom: 'max(24px, calc(var(--sab) + 10px))',
           willChange: 'transform' }}
       >
         <div

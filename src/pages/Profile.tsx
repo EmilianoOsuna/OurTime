@@ -13,6 +13,7 @@ import { Browser, isNative } from '../lib/native'
 import type { PlanType, PersonDisplay, StoryType } from '../lib/supabase'
 import { useToast } from '../context/ToastContext'
 import { useConfirm } from '../components/ui/ConfirmDialog'
+import { heroInk, accentInk, isHexColor } from '../lib/color'
 import { connectGoogleCalendarWithCode, sendTestPushNotification, testGoogleCalendarConnection, usePushNotifications } from '../lib/usePushNotifications'
 import { requestGoogleCalendarCode } from '../lib/googleWeb'
 import { useEntitlement } from '../lib/useEntitlement'
@@ -293,7 +294,16 @@ export function ProfileScreen({ plans, onClose, onGoToFinance, storyCode, isAdmi
     }
   }
 
-  const storyColor = activeStory ? (CAT_COLOR[activeStory.category] || 'var(--orange)') : 'var(--orange)'
+  // El acento elegido por la historia manda; el color de categoría es solo fallback
+  const storyThemeHex = isHexColor(activeStory?.theme_color) ? activeStory.theme_color : null
+  const storyColor = storyThemeHex ?? (activeStory ? (CAT_COLOR[activeStory.category] || 'var(--orange)') : 'var(--orange)')
+  const storyIconInk = storyThemeHex ? heroInk(storyThemeHex).text : 'var(--paper)'
+  const storyCodeColor = storyThemeHex
+    ? accentInk(storyThemeHex, window.matchMedia('(prefers-color-scheme: dark)').matches)
+    : storyColor
+
+  // Vista previa en vivo del accesorio mientras se edita el perfil
+  const mePreview: PersonDisplay = editing ? { ...me, accessory: editAccessory || null } : me
 
   return (
     <div style={{
@@ -303,7 +313,7 @@ export function ProfileScreen({ plans, onClose, onGoToFinance, storyCode, isAdmi
     }}>
       {/* Header — bloque drenched masivo */}
       <div style={{
-        paddingTop: 'max(env(safe-area-inset-top), 40px)', paddingBottom: 60, paddingLeft: 22, paddingRight: 22,
+        paddingTop: 'calc(var(--page-top) + 6px)', paddingBottom: 60, paddingLeft: 22, paddingRight: 22,
         position: 'relative', flexShrink: 0,
         background: 'var(--hero-bg)', color: 'var(--hero-text)',
         borderRadius: '0 0 34px 34px',
@@ -319,7 +329,7 @@ export function ProfileScreen({ plans, onClose, onGoToFinance, storyCode, isAdmi
         </div>
 
         <button data-testid="profile-close-btn" onClick={onClose} style={{
-          position: 'absolute', top: 'max(env(safe-area-inset-top), 40px)', right: 18, width: 42, height: 42,
+          position: 'absolute', top: 'calc(var(--page-top) + 2px)', right: 18, width: 42, height: 42,
           borderRadius: '50%', border: 'none', background: 'var(--card)', boxShadow: 'var(--sh-sm)',
           cursor: 'pointer', color: 'var(--ink)', display: 'flex', alignItems: 'center',
           justifyContent: 'center', zIndex: 10,
@@ -333,7 +343,7 @@ export function ProfileScreen({ plans, onClose, onGoToFinance, storyCode, isAdmi
           <button onClick={() => document.getElementById('avatar-file')?.click()}
             style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer', position: 'relative', display: 'block' }}>
             <div style={{ borderRadius: '50%', padding: 4, background: 'var(--paper)', boxShadow: 'var(--sh-md)' }}>
-              <Avatar person={me} size={92} />
+              <Avatar person={mePreview} size={92} />
             </div>
             <div style={{
               position: 'absolute', inset: 4, borderRadius: '50%',
@@ -373,7 +383,7 @@ export function ProfileScreen({ plans, onClose, onGoToFinance, storyCode, isAdmi
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
                 <div style={{ width: 46, height: 46, borderRadius: 14, background: storyColor,
                   display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <Icon name={CAT_ICON[activeStory.category] || 'tag'} size={22} style={{ color: 'var(--paper)' }} />
+                  <Icon name={CAT_ICON[activeStory.category] || 'tag'} size={22} style={{ color: storyIconInk }} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 700, fontSize: 17, lineHeight: 1.2, overflow: 'hidden',
@@ -485,7 +495,7 @@ export function ProfileScreen({ plans, onClose, onGoToFinance, storyCode, isAdmi
                   <div style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--ink-faint)', fontFamily: 'var(--font-ui)',
                     textTransform: 'uppercase', letterSpacing: '0.05em' }}>Código de invitación</div>
                   <div style={{ fontFamily: 'monospace', fontSize: 15, fontWeight: 700, letterSpacing: '0.12em',
-                    color: codeCopied ? 'var(--done)' : storyColor, marginTop: 1 }}>
+                    color: codeCopied ? 'var(--done)' : storyCodeColor, marginTop: 1 }}>
                     {codeCopied ? '¡Copiado!' : (storyCode || activeStory.invite_code).toUpperCase()}
                   </div>
                 </div>

@@ -11,9 +11,9 @@ export function CatTag({ cat, subtle = false, style = {} }: { cat: string; subtl
   const c = CAT_META[cat]
   if (!c) return null
   const icon = CAT_ICON[cat] || 'tag'
-  const tone = c.tone === 'blue'
-    ? { bg: 'var(--blue-tint)', fg: 'var(--blue-deep)' }
-    : { bg: 'var(--orange-tint)', fg: 'var(--orange-deep)' }
+  // Homologado al acento de la historia; fondo opaco (el tag vive también sobre fotos)
+  // y --accent-ink garantiza lectura encima
+  const tone = { bg: 'color-mix(in srgb, var(--orange) 14%, var(--card))', fg: 'var(--accent-ink)' }
   return (
     <span className="chip-tag" style={{
       background: subtle ? 'transparent' : tone.bg, color: tone.fg,
