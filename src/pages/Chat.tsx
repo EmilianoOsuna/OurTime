@@ -121,16 +121,23 @@ const MemoizedMessageItem = memo(function MessageItem({ msg, isAi, showDate, nex
         )}
 
         <div style={{ display: 'flex', flexDirection: 'column',
-          alignItems: isAi ? 'flex-start' : 'flex-end', maxWidth: '78%' }}>
+          alignItems: isAi ? 'flex-start' : 'flex-end', maxWidth: '78%',
+          /* minWidth 0: sin él, un token largo (URLs de la IA) fija el min-content
+             del flex item y la burbuja se desborda por la derecha */
+          minWidth: 0 }}>
           <div style={{
             padding: '10px 14px',
             borderRadius: br,
+            maxWidth: '100%',
             background: isAi ? 'var(--card)' : 'var(--orange)',
             color: isAi ? 'var(--ink)' : 'var(--hero-text)',
             boxShadow: isAi ? 'var(--sh-sm)' : 'none',
             border: isAi ? '1px solid color-mix(in srgb, var(--orange) 25%, transparent)' : 'none',
             fontSize: 15, lineHeight: 1.45,
-            wordBreak: 'break-word', whiteSpace: 'pre-wrap',
+            wordBreak: 'break-word',
+            /* pre-wrap solo en texto plano del usuario; el markdown de la IA ya
+               maneja sus propios saltos */
+            whiteSpace: isAi ? 'normal' : 'pre-wrap',
           }}>
             {isAi ? (
               <div className="md-chat-content">

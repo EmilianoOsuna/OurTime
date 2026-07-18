@@ -198,5 +198,6 @@
   "196": "react-markdown",
   "197": "NotificationsPanel.tsx",
   "198": "pushSubscriptions.ts",
-  "199": "@capacitor/clipboard"
+  "199": "@capacitor/clipboard",
+  "200": "@types/node"
 }

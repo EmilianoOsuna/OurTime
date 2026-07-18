@@ -43,13 +43,15 @@ interface StoryMember {
   permissionLevel: string
 }
 
-export function ProfileScreen({ plans, onClose, onGoToFinance, storyCode, isAdmin = false, onEditStory }: {
+export function ProfileScreen({ plans, onClose, onGoToFinance, storyCode, isAdmin = false, onEditStory, closing = false }: {
   plans: PlanType[]
   onClose: () => void
   onGoToFinance: () => void
   storyCode: string | null
   isAdmin?: boolean
   onEditStory?: (s: StoryType) => void
+  /* AppShell lo activa durante el cierre en dos fases: reproduce sheetDown antes de desmontar */
+  closing?: boolean
 }) {
   const { profile, user, signOut, refreshProfile, refreshStories, stories, activeStoryId, setActiveStoryId } = useAuth()
   const entitlement = useEntitlement(activeStoryId)
@@ -309,7 +311,10 @@ export function ProfileScreen({ plans, onClose, onGoToFinance, storyCode, isAdmi
     <div style={{
       position: 'fixed', inset: 0, zIndex: 95, background: 'var(--paper)',
       display: 'flex', flexDirection: 'column',
-      animation: 'sheetUp .42s cubic-bezier(.2,.9,.2,1) both',
+      animation: closing
+        ? 'sheetDown .32s cubic-bezier(.2,.9,.2,1) both'
+        : 'sheetUp .42s cubic-bezier(.2,.9,.2,1) both',
+      pointerEvents: closing ? 'none' : undefined,
     }}>
       {/* Header — bloque drenched masivo */}
       <div style={{

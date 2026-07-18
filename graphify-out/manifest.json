@@ -5,8 +5,8 @@
     "semantic_hash": ""
   },
   ".opencode/pilot-state.json": {
-    "mtime": 1784336203.0694299,
-    "ast_hash": "90da6b27a0c57382893804af448b18d2",
+    "mtime": 1784391579.6042216,
+    "ast_hash": "b9be3d9ca557fcc2519893490dcd46e3",
     "semantic_hash": ""
   },
   ".specify/extensions/agent-context/scripts/bash/update-agent-context.sh": {
@@ -115,7 +115,7 @@
     "semantic_hash": "c8a66780bcc9ba2f8bdd21a797cdd679"
   },
   "android/app/capacitor.build.gradle": {
-    "mtime": 1784337124.6636627,
+    "mtime": 1784351122.6467092,
     "ast_hash": "268af3b4d396d4c04f0913c460c9be54",
     "semantic_hash": "268af3b4d396d4c04f0913c460c9be54"
   },
@@ -145,7 +145,7 @@
     "semantic_hash": "682315a426653617c6a74fc12bef55b6"
   },
   "android/capacitor.settings.gradle": {
-    "mtime": 1784337124.6636627,
+    "mtime": 1784351122.645709,
     "ast_hash": "508103bab4fa368c221a1c676fda50d4",
     "semantic_hash": "508103bab4fa368c221a1c676fda50d4"
   },
@@ -165,12 +165,12 @@
     "semantic_hash": "4b3fce8ea2a515a9d2e47e74757172ec"
   },
   "capacitor.config.ts": {
-    "mtime": 1781310174.5782535,
-    "ast_hash": "6d81939f0073facf9cb4673636f9bef1",
-    "semantic_hash": "6d81939f0073facf9cb4673636f9bef1"
+    "mtime": 1784350309.11783,
+    "ast_hash": "17522bfc95570906f5965057de03bdf3",
+    "semantic_hash": ""
   },
   "dev-dist/registerSW.js": {
-    "mtime": 1784325610.7762916,
+    "mtime": 1784392445.4741914,
     "ast_hash": "b2999fa3193e9ce6a83fa7d0681b1d1b",
     "semantic_hash": "b2999fa3193e9ce6a83fa7d0681b1d1b"
   },
@@ -325,8 +325,8 @@
     "semantic_hash": ""
   },
   "src/components/AppShell.tsx": {
-    "mtime": 1784350137.9838808,
-    "ast_hash": "b48d0f7f785889c2d68b33f6110cbabe",
+    "mtime": 1784392840.1469405,
+    "ast_hash": "be034818395c83bb149298f730c0dbb0",
     "semantic_hash": ""
   },
   "src/components/NotificationsPanel.tsx": {
@@ -335,8 +335,8 @@
     "semantic_hash": "1826b99386aba18b8061e496fbe7f305"
   },
   "src/components/sheets/EditStorySheet.tsx": {
-    "mtime": 1784306491.8607512,
-    "ast_hash": "c63c50fb747ad6c688f15ccefa34a5aa",
+    "mtime": 1784350274.1778488,
+    "ast_hash": "23c733f9f3be010daa91429084407cb5",
     "semantic_hash": ""
   },
   "src/components/sheets/GlobalActionSheet.tsx": {
@@ -370,8 +370,8 @@
     "semantic_hash": ""
   },
   "src/components/ui/BottomSheet.tsx": {
-    "mtime": 1784306383.5485363,
-    "ast_hash": "bdc6c6b5c7678448c05d52c3c7efef5d",
+    "mtime": 1784350331.640816,
+    "ast_hash": "f7eebcb0b49f1f80a827a6942df1030d",
     "semantic_hash": ""
   },
   "src/components/ui/CatMedallion.tsx": {
@@ -445,8 +445,8 @@
     "semantic_hash": "ee32cf3b2a900b02665146c672743359"
   },
   "src/components/ui/Skeletons.tsx": {
-    "mtime": 1784098673.8044643,
-    "ast_hash": "c3d7f9ac7f6eacb24734dbbf41daa78d",
+    "mtime": 1784350358.4797971,
+    "ast_hash": "b7d79cd53902ac4310dad1fadad5ce51",
     "semantic_hash": ""
   },
   "src/components/ui/__tests__/ErrorBoundary.test.tsx": {
@@ -520,8 +520,8 @@
     "semantic_hash": "c86e2ec54730cc9708e47fb2667ac8b9"
   },
   "src/lib/native.ts": {
-    "mtime": 1784336682.2025795,
-    "ast_hash": "2585f3e8b017c24e2a1765e14722a065",
+    "mtime": 1784350306.6688313,
+    "ast_hash": "f438693650307a84d47667799ec1111a",
     "semantic_hash": ""
   },
   "src/lib/pushSubscriptions.ts": {
@@ -560,28 +560,28 @@
     "semantic_hash": ""
   },
   "src/pages/Calendar.tsx": {
-    "mtime": 1784328688.461128,
-    "ast_hash": "3501c3623008990823cf164e9679bf30",
+    "mtime": 1784393121.9734092,
+    "ast_hash": "210a56e9a281f97efce2b803e5053ef2",
     "semantic_hash": ""
   },
   "src/pages/Chat.tsx": {
-    "mtime": 1784350164.63788,
-    "ast_hash": "c43cacebdc919d47ee6a77a10842f1fd",
+    "mtime": 1784392715.7320118,
+    "ast_hash": "a67020385a2891f4a0738e2771b9c4f7",
     "semantic_hash": ""
   },
   "src/pages/Dashboard.tsx": {
-    "mtime": 1784350210.0978725,
-    "ast_hash": "5a73839adccc9ed88bb5a8455a11bcb7",
+    "mtime": 1784392725.649832,
+    "ast_hash": "063457b1895e298670f7433fd1e93abe",
     "semantic_hash": ""
   },
   "src/pages/Finances.tsx": {
-    "mtime": 1784328698.4894516,
-    "ast_hash": "6cb384c09eab04d308e335f74a917764",
+    "mtime": 1784392754.210329,
+    "ast_hash": "df78fa9a5ddd0974b9d0ffe0501182f4",
     "semantic_hash": ""
   },
   "src/pages/Gallery.tsx": {
-    "mtime": 1784328688.4681282,
-    "ast_hash": "013226db88f84d343c052eb8d349e0bd",
+    "mtime": 1784350293.8818386,
+    "ast_hash": "1d68a2b7215fe0265a64b4b3f5682200",
     "semantic_hash": ""
   },
   "src/pages/Landing.tsx": {
@@ -590,8 +590,8 @@
     "semantic_hash": ""
   },
   "src/pages/Onboarding.tsx": {
-    "mtime": 1784328725.9383357,
-    "ast_hash": "dd8beac317ca3bf26eab3a7944b19a0a",
+    "mtime": 1784350338.2928114,
+    "ast_hash": "71c880d2599205933f81be8e1b858ad2",
     "semantic_hash": ""
   },
   "src/pages/PlanDetail.tsx": {
@@ -600,8 +600,8 @@
     "semantic_hash": ""
   },
   "src/pages/Profile.tsx": {
-    "mtime": 1784350244.3278615,
-    "ast_hash": "4daae7649be494f8c678bfef0af2b09c",
+    "mtime": 1784392806.1724682,
+    "ast_hash": "5a3ff67d05fe68833050ab8587876128",
     "semantic_hash": ""
   },
   "src/sw.ts": {
@@ -815,8 +815,8 @@
     "semantic_hash": ""
   },
   ".opencode/pilot-banner.txt": {
-    "mtime": 1784336203.0784292,
-    "ast_hash": "bb1163d0e40ada86d4f4fdc60f1cd18a",
+    "mtime": 1784391579.6122217,
+    "ast_hash": "ffeaef365c7909b195dbc1280cf5bdc1",
     "semantic_hash": ""
   },
   ".playwright-mcp/page-2026-06-10T23-44-42-195Z.yml": {
@@ -995,8 +995,8 @@
     "semantic_hash": ""
   },
   "index.html": {
-    "mtime": 1784305652.1675801,
-    "ast_hash": "51a71b6547e8c8902ff5ba4d14719384",
+    "mtime": 1784350324.6788204,
+    "ast_hash": "11bc585ae6d0a2f90de6e84233848d08",
     "semantic_hash": ""
   },
   "playwright-review/index.html": {
@@ -1687,6 +1687,11 @@
   "src/lib/color.ts": {
     "mtime": 1784350056.5128627,
     "ast_hash": "4ed8e33775baf74fbc1fc04c6212a15f",
+    "semantic_hash": ""
+  },
+  "src/lib/__tests__/color.test.ts": {
+    "mtime": 1784350380.3977804,
+    "ast_hash": "58ce560fa9bd52454920c62cc2e9bbc5",
     "semantic_hash": ""
   }
 }

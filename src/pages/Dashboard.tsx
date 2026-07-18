@@ -93,7 +93,7 @@ export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpe
                 <span style={{
                   position: 'absolute', top: 6, right: 6,
                   width: 9, height: 9, borderRadius: '50%',
-                  background: 'var(--orange)',
+                  background: 'var(--accent-ink)',
                   border: '2px solid var(--card)',
                 }} />
               )}
@@ -105,7 +105,7 @@ export default function Dashboard({ plans, go, onBell, onPlanClick, onProfileOpe
         {since && (
           <motion.button whileTap={{ scale: 0.96 }} onClick={onProfileOpen} className="ot-card" style={{
             marginTop: 22, padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 13,
-            border: 'none', cursor: 'pointer', textAlign: 'left', width: '100%', boxShadow: 'var(--sh-lg)',
+            border: 'none', cursor: 'pointer', textAlign: 'left', width: '100%', boxShadow: 'var(--sh-md)',
             background: 'var(--card)'
           }}>
             <div style={{ position: 'relative' }}>

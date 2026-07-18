@@ -60,7 +60,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
 <div class="container">
 
 <h1>OurTime — Complete Call Flow &amp; Architecture Documentation</h1>
-<p class="subtitle">Generated from graphify knowledge graph: 1586 nodes, 2260 edges, 200 communities. Commit: f85f810</p>
+<p class="subtitle">Generated from graphify knowledge graph: 1589 nodes, 2276 edges, 201 communities. Commit: eab7083</p>
 
 <div class="nav">
     <a href="#overview">Architecture Overview</a>
@@ -74,8 +74,8 @@ hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
     <a href="#security-global">Security &amp; Global Graph</a>
     <a href="#tests-fixtures">Tests &amp; Fixtures</a>
     <a href="#workbox-1e60b829-js">workbox-1e60b829.js</a>
-    <a href="#appshell-tsx">AppShell.tsx</a>
     <a href="#useauth">useAuth</a>
+    <a href="#appshell-tsx">AppShell.tsx</a>
     <a href="#authcontext-tsx">AuthContext.tsx</a>
     <a href="#errorboundary">ErrorBoundary</a>
     <a href="#other">Other</a>
@@ -96,7 +96,7 @@ flowchart LR
     class ANALYSIS_CLUSTERING_C79796DA module;
     OUTPUTS_DOCS_ED82387C("Outputs &amp; Docs<br/><small>12 nodes</small>")
     class OUTPUTS_DOCS_ED82387C module;
-    CLI_SKILLS_9964CBB8("CLI &amp; Skill Installers<br/><small>217 nodes</small>")
+    CLI_SKILLS_9964CBB8("CLI &amp; Skill Installers<br/><small>214 nodes</small>")
     class CLI_SKILLS_9964CBB8 module;
     INGEST_CACHE_UPDATE_FF457338("Ingestion &amp; Updates<br/><small>20 nodes</small>")
     class INGEST_CACHE_UPDATE_FF457338 module;
@@ -104,32 +104,32 @@ flowchart LR
     class SERVE_API_35EC8E86 module;
     SECURITY_GLOBAL_5B9C6A04("Security &amp; Global Graph<br/><small>35 nodes</small>")
     class SECURITY_GLOBAL_5B9C6A04 module;
-    TESTS_FIXTURES_B84B1DCC("Tests &amp; Fixtures<br/><small>143 nodes</small>")
+    TESTS_FIXTURES_B84B1DCC("Tests &amp; Fixtures<br/><small>146 nodes</small>")
     class TESTS_FIXTURES_B84B1DCC module;
     WORKBOX_1E60B829_JS_440AE050("workbox-1e60b829.js<br/><small>40 nodes</small>")
     class WORKBOX_1E60B829_JS_440AE050 module;
+    USEAUTH_3AD7D98F("useAuth<br/><small>29 nodes</small>")
+    class USEAUTH_3AD7D98F module;
     APPSHELL_TSX_23583311("AppShell.tsx<br/><small>28 nodes</small>")
     class APPSHELL_TSX_23583311 module;
-    USEAUTH_3AD7D98F("useAuth<br/><small>28 nodes</small>")
-    class USEAUTH_3AD7D98F module;
-    AUTHCONTEXT_TSX_0CA872AD("AuthContext.tsx<br/><small>25 nodes</small>")
+    AUTHCONTEXT_TSX_0CA872AD("AuthContext.tsx<br/><small>27 nodes</small>")
     class AUTHCONTEXT_TSX_0CA872AD module;
-    ERRORBOUNDARY_AA8CE3C7("ErrorBoundary<br/><small>22 nodes</small>")
+    ERRORBOUNDARY_AA8CE3C7("ErrorBoundary<br/><small>24 nodes</small>")
     class ERRORBOUNDARY_AA8CE3C7 module;
-    OTHER_D0941E68("Other<br/><small>611 nodes</small>")
+    OTHER_D0941E68("Other<br/><small>609 nodes</small>")
     class OTHER_D0941E68 module;
-    TESTS_FIXTURES_B84B1DCC -->|imports x37| OTHER_D0941E68
-    AUTHCONTEXT_TSX_0CA872AD -->|imports x28| OTHER_D0941E68
+    AUTHCONTEXT_TSX_0CA872AD -->|imports x27| OTHER_D0941E68
+    OTHER_D0941E68 -->|imports x25| TESTS_FIXTURES_B84B1DCC
+    OTHER_D0941E68 -->|imports x24| USEAUTH_3AD7D98F
     WORKBOX_1E60B829_JS_440AE050 -->|contains x23| OTHER_D0941E68
-    APPSHELL_TSX_23583311 -->|imports x23| OTHER_D0941E68
-    AUTHCONTEXT_TSX_0CA872AD -->|imports x22| TESTS_FIXTURES_B84B1DCC
-    USEAUTH_3AD7D98F -->|calls x21| OTHER_D0941E68
-    USEAUTH_3AD7D98F -->|imports x18| TESTS_FIXTURES_B84B1DCC
+    OTHER_D0941E68 -->|imports x23| ERRORBOUNDARY_AA8CE3C7
+    TESTS_FIXTURES_B84B1DCC -->|imports x21| OTHER_D0941E68
+    OTHER_D0941E68 -->|imports x20| AUTHCONTEXT_TSX_0CA872AD
+    AUTHCONTEXT_TSX_0CA872AD -->|imports x20| TESTS_FIXTURES_B84B1DCC
+    APPSHELL_TSX_23583311 -->|imports x19| OTHER_D0941E68
     WORKBOX_1E60B829_JS_440AE050 -->|contains x17| SERVE_API_35EC8E86
-    OTHER_D0941E68 -->|imports x17| ERRORBOUNDARY_AA8CE3C7
-    OTHER_D0941E68 -->|imports x16| TESTS_FIXTURES_B84B1DCC
-    TESTS_FIXTURES_B84B1DCC -->|calls x15| USEAUTH_3AD7D98F
-    AUTHCONTEXT_TSX_0CA872AD -->|imports x15| USEAUTH_3AD7D98F
+    TESTS_FIXTURES_B84B1DCC -->|calls x17| USEAUTH_3AD7D98F
+    USEAUTH_3AD7D98F -->|imports x17| OTHER_D0941E68
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
     classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
@@ -146,19 +146,19 @@ flowchart LR
     <h4>Architecture Layers</h4>
     <table style="width:100%;font-size:0.85rem;">
       <tr><th>Layer</th><th>Nodes</th><th>Communities</th></tr>
-      <tr><td>Extraction Pipeline</td><td>62</td><td><code>5, 80, 163, 47, 102, 103</code></td></tr><tr><td>Graph Build</td><td>261</td><td><code>4, 37, 10, 12, 32, 72, 36, 21, 64, 157, 160, 165, 60, 101, 104, 105, 107, 170, 171, 183, 184, 185, 187, 194, 195, 199, 62, 67, 68, 70, 71, 73, 74, 75, 76, 77, 78, 79, 81, 82, 84, 85, 86, 87, 89, 90, 92, 93, 96, 97, 98, 99, 115, 116, 117</code></td></tr><tr><td>Analysis &amp; Clustering</td><td>26</td><td><code>61</code></td></tr><tr><td>Outputs &amp; Docs</td><td>12</td><td><code>106</code></td></tr><tr><td>CLI &amp; Skill Installers</td><td>217</td><td><code>100, 65, 69, 132, 133, 134, 137, 169, 141, 144, 146, 147, 148, 149, 150, 151, 152, 158, 159, 162, 164, 193, 57, 108</code></td></tr><tr><td>Ingestion &amp; Updates</td><td>20</td><td><code>42, 155, 46, 196</code></td></tr><tr><td>Serving API</td><td>56</td><td><code>1, 182, 27</code></td></tr><tr><td>Security &amp; Global Graph</td><td>35</td><td><code>20, 95, 59, 110, 175</code></td></tr><tr><td>Tests &amp; Fixtures</td><td>143</td><td><code>3, 17, 13, 26, 197, 41, 50, 51, 91, 127</code></td></tr><tr><td>workbox-1e60b829.js</td><td>40</td><td><code>8</code></td></tr><tr><td>AppShell.tsx</td><td>28</td><td><code>0</code></td></tr><tr><td>useAuth</td><td>28</td><td><code>7</code></td></tr><tr><td>AuthContext.tsx</td><td>25</td><td><code>145</code></td></tr><tr><td>ErrorBoundary</td><td>22</td><td><code>6</code></td></tr><tr><td>Other</td><td>611</td><td><code>63, 83, 11, 15, 9, 14, 16, 18, 2, 186, 44, 19, 23, 88, 24, 25, 94, 131, 135, 136, 22, 28, 138, 139, 189, 29, 30, 31, 140, 142, 143, 190, 33, 34, 35, 191, 38, 39, 40, 43, 153, 154, 156, 52, 161, 181, 192, 45, 48, 49, 166, 198, 53, 54, 55, 56, 58, 109, 111, 112, 113, 114, 167, 168, 172, 173, 174, 188, 66, 118, 119, 120, 121, 122, 123, 124, 125, 126, 128, 129, 130, 176, 177, 178, 179, 180</code></td></tr>
+      <tr><td>Extraction Pipeline</td><td>62</td><td><code>5, 80, 163, 47, 102, 103</code></td></tr><tr><td>Graph Build</td><td>261</td><td><code>4, 37, 10, 12, 32, 72, 36, 21, 64, 157, 160, 165, 60, 101, 104, 105, 107, 170, 171, 183, 184, 185, 187, 194, 195, 199, 200, 62, 67, 68, 70, 71, 73, 74, 75, 76, 77, 78, 79, 81, 82, 84, 86, 87, 89, 90, 92, 93, 96, 97, 98, 99, 115, 116, 117</code></td></tr><tr><td>Analysis &amp; Clustering</td><td>26</td><td><code>61</code></td></tr><tr><td>Outputs &amp; Docs</td><td>12</td><td><code>106</code></td></tr><tr><td>CLI &amp; Skill Installers</td><td>214</td><td><code>100, 65, 69, 132, 133, 134, 137, 169, 141, 144, 146, 147, 148, 149, 150, 151, 152, 158, 159, 162, 164, 193, 57, 108</code></td></tr><tr><td>Ingestion &amp; Updates</td><td>20</td><td><code>42, 155, 46, 196</code></td></tr><tr><td>Serving API</td><td>56</td><td><code>1, 182, 27</code></td></tr><tr><td>Security &amp; Global Graph</td><td>35</td><td><code>20, 95, 59, 110, 175</code></td></tr><tr><td>Tests &amp; Fixtures</td><td>146</td><td><code>3, 17, 13, 16, 26, 197, 41, 50, 51, 91, 127</code></td></tr><tr><td>workbox-1e60b829.js</td><td>40</td><td><code>8</code></td></tr><tr><td>useAuth</td><td>29</td><td><code>7</code></td></tr><tr><td>AppShell.tsx</td><td>28</td><td><code>0</code></td></tr><tr><td>AuthContext.tsx</td><td>27</td><td><code>145</code></td></tr><tr><td>ErrorBoundary</td><td>24</td><td><code>6</code></td></tr><tr><td>Other</td><td>609</td><td><code>63, 83, 11, 15, 85, 14, 9, 18, 186, 2, 19, 23, 44, 88, 24, 25, 94, 131, 135, 136, 22, 28, 138, 139, 189, 29, 30, 31, 140, 142, 143, 190, 33, 34, 35, 191, 38, 39, 40, 43, 153, 154, 156, 52, 161, 181, 192, 45, 48, 49, 166, 198, 53, 54, 55, 56, 58, 109, 111, 112, 113, 114, 167, 168, 172, 173, 174, 188, 66, 118, 119, 120, 121, 122, 123, 124, 125, 126, 128, 129, 130, 176, 177, 178, 179, 180</code></td></tr>
     </table>
   </div>
   <div class="card">
     <h4>Core Flow</h4>
-    <div class="arrow-chain">Graph Build -&gt; Other -&gt; ErrorBoundary -&gt; useAuth -&gt; Tests &amp; Fixtures -&gt; AuthContext.tsx -&gt; CLI &amp; Skill Installers</div>
+    <div class="arrow-chain">Graph Build -&gt; Other -&gt; Tests &amp; Fixtures -&gt; useAuth -&gt; ErrorBoundary -&gt; AuthContext.tsx -&gt; CLI &amp; Skill Installers</div>
   </div>
 </div>
 <div class="grid">
   <div class="card">
     <h4>Graph Report Highlights</h4>
     <ul>
-      <li>1586 nodes · 2260 edges · 200 communities (125 shown, 75 thin omitted)</li>
+      <li>1589 nodes · 2276 edges · 201 communities (126 shown, 75 thin omitted)</li>
       <li>Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 54 edges (avg confidence: 0.51)</li>
       <li>Token cost: 0 input · 0 output</li>
       <li>1. `useAuth()` - 38 edges</li>
@@ -1351,12 +1351,12 @@ flowchart LR
 
 <!-- ====== 6. CLI & Skill Installers ====== -->
 <h2 id="cli-skills">6. CLI &amp; Skill Installers</h2>
-<p>CLI &amp; Skill Installers groups implementation around commands, opencode, stripe, agents, mostly in skills/upgrade-stripe/SKILL.md, stripe-best-practices/references/tax.md, src/pages/Chat.tsx. This section covers 217 nodes and 216 internal edges; the diagram shows only representative relationships to stay readable.</p>
+<p>CLI &amp; Skill Installers groups implementation around commands, opencode, stripe, agents, mostly in skills/upgrade-stripe/SKILL.md, stripe-best-practices/references/tax.md, src/pages/Chat.tsx. This section covers 214 nodes and 211 internal edges; the diagram shows only representative relationships to stay readable.</p>
 
 <div class="mermaid">
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: CLI &amp; Skill Installers (217 nodes, 216 edges)
+    %% Section: CLI &amp; Skill Installers (214 nodes, 211 edges)
     subgraph cli_skills_src_lib_native_ts_bb2a4216["src/lib/native.ts"]
         src_lib_native_b5cf93e9("native.ts")
         src_lib_native_savepushtoken_98916436("savePushToken()<br/><small>src/lib/native.ts</small>")
@@ -1374,13 +1374,13 @@ flowchart LR
         src_lib_pushsubscriptions_savepushsubscription_d9ca35f1("savePushSubscription()<br/><small>src/lib/pushSubscriptions.ts</small>")
         src_lib_pushsubscriptions_normalizepushsubscript_b246b8b7("normalizePushSubscriptions()<br/><small>src/lib/pushSubscriptions.ts</small>")
         src_lib_pushsubscriptions_subscriptionkey_ca2bb211("subscriptionKey()<br/><small>src/lib/pushSubscriptions.ts</small>")
+        src_lib_pushsubscriptions_70164e93("pushSubscriptions.ts")
     end
-    subgraph cli_skills_src_lib_usePushNotifications_ts_27de2e3f["src/lib/usePushNotifications.ts"]
-        src_lib_usepushnotifications_usepushnotification_d9da399c("usePushNotifications()<br/><small>src/lib/usePushNotifications.ts</small>")
-        src_lib_usepushnotifications_urlbase64touint8arr_6c20385b("urlBase64ToUint8Array()<br/><small>src/lib/usePushNotifications.ts</small>")
-        src_lib_usepushnotifications_sameapplicationserv_31e10144("sameApplicationServerKey()<br/><small>src/lib/usePushNotifications.ts</small>")
+    subgraph cli_skills_src_pages_Chat_tsx_8ff935df["src/pages/Chat.tsx"]
+        src_pages_chat_chat_4028203a("Chat()<br/><small>src/pages/Chat.tsx</small>")
+        src_pages_chat_shouldshowdate_f37079c5("shouldShowDate()<br/><small>src/pages/Chat.tsx</small>")
     end
-    src_pages_chat_chat_4028203a("Chat()<br/><small>src/pages/Chat.tsx</small>")
+    src_main_3231ff52("main.tsx")
     src_lib_native_dispatchnavigation_6bb94fef -->|calls| src_lib_native_setupnativeapp_1b9d79b5
     src_lib_native_dispatchnavigation_6bb94fef -->|calls| src_lib_native_setuppushlisteners_abcd156f
     src_lib_native_setupnativeapp_1b9d79b5 -->|calls| src_lib_native_setuppushlisteners_abcd156f
@@ -1389,8 +1389,6 @@ flowchart LR
     src_lib_native_savepushtoken_98916436 -->|calls| src_lib_native_syncnativepushtoken_10b3c717
     src_lib_native_setuppushlisteners_abcd156f -->|calls| src_lib_native_enablenativepushnotifications_d4707fd2
     src_lib_native_setuppushlisteners_abcd156f -->|calls| src_lib_native_syncnativepushtoken_10b3c717
-    src_lib_native_syncnativepushtoken_10b3c717 -->|calls| src_lib_usepushnotifications_usepushnotification_d9da399c
-    src_lib_native_enablenativepushnotifications_d4707fd2 -->|calls| src_lib_usepushnotifications_usepushnotification_d9da399c
     src_lib_native_haslocationpermission_8556a041 -->|calls| src_lib_native_refreshlocation_c34a8016
     src_lib_native_haslocationpermission_8556a041 -->|calls| src_lib_native_requestlocationpermission_1e6bebe6
     src_lib_native_requestlocationpermission_1e6bebe6 -->|calls| src_pages_chat_chat_4028203a
@@ -1398,11 +1396,12 @@ flowchart LR
     src_lib_native_getcachedlocation_ce2e2de3 -->|calls| src_pages_chat_chat_4028203a
     src_lib_pushsubscriptions_normalizepushsubscript_b246b8b7 -->|calls| src_lib_pushsubscriptions_savepushsubscription_d9ca35f1
     src_lib_pushsubscriptions_subscriptionkey_ca2bb211 -->|calls| src_lib_pushsubscriptions_savepushsubscription_d9ca35f1
-    src_lib_pushsubscriptions_savepushsubscription_d9ca35f1 -->|calls| src_lib_usepushnotifications_usepushnotification_d9da399c
-    src_lib_usepushnotifications_urlbase64touint8arr_6c20385b -->|calls| src_lib_usepushnotifications_usepushnotification_d9da399c
-    src_lib_usepushnotifications_sameapplicationserv_31e10144 -->|calls| src_lib_usepushnotifications_usepushnotification_d9da399c
+    src_pages_chat_shouldshowdate_f37079c5 -->|calls| src_pages_chat_chat_4028203a
+    src_lib_native_b5cf93e9 -->|imports| src_lib_pushsubscriptions_70164e93
     src_lib_native_b5cf93e9 -->|imports| src_lib_pushsubscriptions_savepushsubscription_d9ca35f1
-    %% Omitted for readability: 199 nodes, 0 edges
+    src_lib_native_b5cf93e9 -->|imports| src_main_3231ff52
+    src_lib_native_setupnativeapp_1b9d79b5 -->|imports| src_main_3231ff52
+    %% Omitted for readability: 196 nodes, 0 edges
     class src_lib_native_b5cf93e9 module;
     class src_lib_native_savepushtoken_98916436 function;
     class src_lib_native_dispatchnavigation_6bb94fef function;
@@ -1417,10 +1416,10 @@ flowchart LR
     class src_lib_pushsubscriptions_savepushsubscription_d9ca35f1 function;
     class src_lib_pushsubscriptions_normalizepushsubscript_b246b8b7 function;
     class src_lib_pushsubscriptions_subscriptionkey_ca2bb211 function;
-    class src_lib_usepushnotifications_usepushnotification_d9da399c ui;
-    class src_lib_usepushnotifications_urlbase64touint8arr_6c20385b function;
-    class src_lib_usepushnotifications_sameapplicationserv_31e10144 function;
+    class src_lib_pushsubscriptions_70164e93 module;
     class src_pages_chat_chat_4028203a ui;
+    class src_pages_chat_shouldshowdate_f37079c5 ui;
+    class src_main_3231ff52 ui;
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
     classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
@@ -1487,7 +1486,7 @@ flowchart LR
   <td><code>syncNativePushToken()</code><br><small style="color:var(--muted)">src/lib/native.ts</small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td><code>savePushToken()</code><br><small style="color:var(--muted)">src/lib/native.ts</small><br><code>setupPushListeners()</code><br><small style="color:var(--muted)">src/lib/native.ts</small></td>
-  <td><code>usePushNotifications()</code><br><small style="color:var(--muted)">src/lib/usePushNotifications.ts</small></td>
+  <td>No direct outbound edge</td>
   <td>syncNativePushToken() node in src/lib/native.ts.</td>
 </tr>
 <tr>
@@ -1495,7 +1494,7 @@ flowchart LR
   <td><code>enableNativePushNotifications()</code><br><small style="color:var(--muted)">src/lib/native.ts</small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td><code>setupPushListeners()</code><br><small style="color:var(--muted)">src/lib/native.ts</small></td>
-  <td><code>usePushNotifications()</code><br><small style="color:var(--muted)">src/lib/usePushNotifications.ts</small></td>
+  <td>No direct outbound edge</td>
   <td>enableNativePushNotifications() node in src/lib/native.ts.</td>
 </tr>
 <tr>
@@ -1575,7 +1574,7 @@ flowchart LR
   <td><code>savePushSubscription()</code><br><small style="color:var(--muted)">src/lib/pushSubscriptions.ts</small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td><code>native.ts</code><br><small style="color:var(--muted)">src/lib/native.ts</small><br><code>normalizePushSubscriptions()</code><br><small style="color:var(--muted)">src/lib/pushSubscriptions.ts</small><br><code>savePushToken()</code><br><small style="color:var(--muted)">src/lib/native.ts</small><br>+1 more</td>
-  <td><code>usePushNotifications()</code><br><small style="color:var(--muted)">src/lib/usePushNotifications.ts</small></td>
+  <td>No direct outbound edge</td>
   <td>savePushSubscription() node in src/lib/pushSubscriptions.ts.</td>
 </tr>
 <tr>
@@ -1588,30 +1587,6 @@ flowchart LR
 </tr>
 <tr>
   <td>19</td>
-  <td><code>urlBase64ToUint8Array()</code><br><small style="color:var(--muted)">src/lib/usePushNotifications.ts</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>usePushNotifications()</code><br><small style="color:var(--muted)">src/lib/usePushNotifications.ts</small></td>
-  <td>urlBase64ToUint8Array() node in src/lib/usePushNotifications.ts.</td>
-</tr>
-<tr>
-  <td>20</td>
-  <td><code>sameApplicationServerKey()</code><br><small style="color:var(--muted)">src/lib/usePushNotifications.ts</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>usePushNotifications()</code><br><small style="color:var(--muted)">src/lib/usePushNotifications.ts</small></td>
-  <td>sameApplicationServerKey() node in src/lib/usePushNotifications.ts.</td>
-</tr>
-<tr>
-  <td>21</td>
-  <td><code>usePushNotifications()</code><br><small style="color:var(--muted)">src/lib/usePushNotifications.ts</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td><code>enableNativePushNotifications()</code><br><small style="color:var(--muted)">src/lib/native.ts</small><br><code>sameApplicationServerKey()</code><br><small style="color:var(--muted)">src/lib/usePushNotifications.ts</small><br><code>savePushSubscription()</code><br><small style="color:var(--muted)">src/lib/pushSubscriptions.ts</small><br>+2 more</td>
-  <td>No direct outbound edge</td>
-  <td>usePushNotifications() node in src/lib/usePushNotifications.ts.</td>
-</tr>
-<tr>
-  <td>22</td>
   <td><code>main.tsx</code><br><small style="color:var(--muted)">src/main.tsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td><code>native.ts</code><br><small style="color:var(--muted)">src/lib/native.ts</small><br><code>setupNativeApp()</code><br><small style="color:var(--muted)">src/lib/native.ts</small></td>
@@ -1619,7 +1594,7 @@ flowchart LR
   <td>Module file in src/main.tsx.</td>
 </tr>
 <tr>
-  <td>23</td>
+  <td>20</td>
   <td><code>bridgeParams</code><br><small style="color:var(--muted)">src/main.tsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td>External entry / no inbound edge</td>
@@ -1627,7 +1602,7 @@ flowchart LR
   <td>bridgeParams node in src/main.tsx.</td>
 </tr>
 <tr>
-  <td>24</td>
+  <td>21</td>
   <td><code>Chat.tsx</code><br><small style="color:var(--muted)">src/pages/Chat.tsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td><code>getCachedLocation()</code><br><small style="color:var(--muted)">src/lib/native.ts</small><br><code>MessageType</code><br><small style="color:var(--muted)">src/lib/supabase.ts</small><br><code>native.ts</code><br><small style="color:var(--muted)">src/lib/native.ts</small><br>+1 more</td>
@@ -1635,7 +1610,7 @@ flowchart LR
   <td>Module file in src/pages/Chat.tsx.</td>
 </tr>
 <tr>
-  <td>25</td>
+  <td>22</td>
   <td><code>fmtTime()</code><br><small style="color:var(--muted)">src/pages/Chat.tsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td>External entry / no inbound edge</td>
@@ -1643,7 +1618,7 @@ flowchart LR
   <td>fmtTime() node in src/pages/Chat.tsx.</td>
 </tr>
 <tr>
-  <td>26</td>
+  <td>23</td>
   <td><code>shouldShowDate()</code><br><small style="color:var(--muted)">src/pages/Chat.tsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td>External entry / no inbound edge</td>
@@ -1651,7 +1626,7 @@ flowchart LR
   <td>shouldShowDate() node in src/pages/Chat.tsx.</td>
 </tr>
 <tr>
-  <td>27</td>
+  <td>24</td>
   <td><code>fmtDateLabel()</code><br><small style="color:var(--muted)">src/pages/Chat.tsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td>External entry / no inbound edge</td>
@@ -1659,7 +1634,7 @@ flowchart LR
   <td>fmtDateLabel() node in src/pages/Chat.tsx.</td>
 </tr>
 <tr>
-  <td>28</td>
+  <td>25</td>
   <td><code>QUICK_PROMPTS</code><br><small style="color:var(--muted)">src/pages/Chat.tsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td>External entry / no inbound edge</td>
@@ -1667,7 +1642,7 @@ flowchart LR
   <td>Builds structured prompts for model calls.</td>
 </tr>
 <tr>
-  <td>29</td>
+  <td>26</td>
   <td><code>AiAvatar()</code><br><small style="color:var(--muted)">src/pages/Chat.tsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td>External entry / no inbound edge</td>
@@ -1675,12 +1650,36 @@ flowchart LR
   <td>AiAvatar() node in src/pages/Chat.tsx.</td>
 </tr>
 <tr>
-  <td>30</td>
+  <td>27</td>
   <td><code>TypingIndicator()</code><br><small style="color:var(--muted)">src/pages/Chat.tsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
   <td>TypingIndicator() node in src/pages/Chat.tsx.</td>
+</tr>
+<tr>
+  <td>28</td>
+  <td><code>MessageItemProps</code><br><small style="color:var(--muted)">src/pages/Chat.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>MessageItemProps node in src/pages/Chat.tsx.</td>
+</tr>
+<tr>
+  <td>29</td>
+  <td><code>encodeMapLinks()</code><br><small style="color:var(--muted)">src/pages/Chat.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>encodeMapLinks() node in src/pages/Chat.tsx.</td>
+</tr>
+<tr>
+  <td>30</td>
+  <td><code>mapUrlTransform()</code><br><small style="color:var(--muted)">src/pages/Chat.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>mapUrlTransform() node in src/pages/Chat.tsx.</td>
 </tr>
 </table>
 
@@ -1701,7 +1700,7 @@ flowchart LR
   </div>
   <div class="card">
     <h4>Design Notes</h4>
-    <p>This section comes from graphify community clustering. Relationship summary: contains x185, calls x21, imports x5, imports x3. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x185, calls x16, imports x5, imports x3. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
   </div>
 </div>
 <hr>
@@ -2660,67 +2659,70 @@ flowchart LR
 
 <!-- ====== 10. Tests & Fixtures ====== -->
 <h2 id="tests-fixtures">10. Tests &amp; Fixtures</h2>
-<p>Tests &amp; Fixtures groups implementation around components, specify, tasks, templatemd, mostly in .specify/templates/tasks-template.md, src/pages/Calendar.tsx, src/lib/chapterUtils.ts. This section covers 143 nodes and 214 internal edges; the diagram shows only representative relationships to stay readable.</p>
+<p>Tests &amp; Fixtures groups implementation around specify, tasks, templatemd, templates, mostly in .specify/templates/tasks-template.md, src/lib/color.ts, src/pages/Calendar.tsx. This section covers 146 nodes and 216 internal edges; the diagram shows only representative relationships to stay readable.</p>
 
 <div class="mermaid">
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: Tests &amp; Fixtures (143 nodes, 214 edges)
+    %% Section: Tests &amp; Fixtures (146 nodes, 216 edges)
     subgraph tests_fixtures_components_ui_ErrorBoundary_tsx_d7122142["components/ui/ErrorBoundary.tsx"]
         src_components_ui_errorboundary_errorboundary_05af0797("ErrorBoundary<br/><small>components/ui/ErrorBoundary.tsx</small>")
         src_components_ui_errorboundary_errorboundary_co_ab674eb4("componentDidCatch()<br/><small>components/ui/ErrorBoundary.tsx</small>")
         src_components_ui_errorboundary_errorboundary_co_556bd2dc("constructor()<br/><small>components/ui/ErrorBoundary.tsx</small>")
         src_components_ui_errorboundary_errorboundary_ge_ab799595("getDerivedStateFromError()<br/><small>components/ui/ErrorBoundary.tsx</small>")
     end
-    subgraph tests_fixtures_components_sheets_NewStorySheet_t_c2f73d06["components/sheets/NewStorySheet.tsx"]
-        src_components_sheets_newstorysheet_ee7f3046("NewStorySheet.tsx")
-        src_components_sheets_newstorysheet_randomcode_bcd2d597("randomCode()<br/><small>components/sheets/NewStorySheet.tsx</small>")
-        src_components_sheets_newstorysheet_newstoryshee_aa91c0fe("NewStorySheet()<br/><small>components/sheets/NewStorySheet.tsx</small>")
+    subgraph tests_fixtures_src_lib_color_ts_0253a9c3["src/lib/color.ts"]
+        src_lib_color_heroink_a7608ea7("heroInk()<br/><small>src/lib/color.ts</small>")
+        src_lib_color_ishexcolor_d74191eb("isHexColor()<br/><small>src/lib/color.ts</small>")
+        src_lib_color_accentink_35db55dd("accentInk()<br/><small>src/lib/color.ts</small>")
     end
     subgraph tests_fixtures_scripts_powershell_git_common_ps1_5a9bf9c7["scripts/powershell/git-common.ps1"]
         specify_extensions_git_scripts_powershell_git_co_dd43e877("Get-SpecKitEffectiveBranchName()<br/><small>scripts/powershell/git-common.ps1</small>")
         specify_extensions_git_scripts_powershell_git_co_cf5b5207("Test-FeatureBranch()<br/><small>scripts/powershell/git-common.ps1</small>")
     end
-    src_components_ui_bottomsheet_bottomsheet_490d62f7("BottomSheet()<br/><small>components/ui/BottomSheet.tsx</small>")
-    src_components_ui_catmedallion_43f2a67e("CatMedallion.tsx")
-    src_components_ui_cattag_b6b3a908("CatTag.tsx")
+    src_components_sheets_editstorysheet_editstorysh_f2d655c3("EditStorySheet()<br/><small>components/sheets/EditStorySheet.tsx</small>")
     src_lib_tests_chapterutils_test_5adc6899("chapterUtils.test.ts")
+    src_lib_tests_color_test_11f5c30a("color.test.ts")
     src_lib_tests_dateutils_test_a41ef7fb("dateUtils.test.ts")
+    src_lib_tests_useentitlement_test_aa84b4eb("useEntitlement.test.ts")
+    src_app_46efd68e("App.tsx")
+    src_components_appshell_storyswitchersheet_b132e109("StorySwitcherSheet()<br/><small>src/components/AppShell.tsx</small>")
     src_lib_chapterutils_fmtdateshort_e7f598f8("fmtDateShort()<br/><small>src/lib/chapterUtils.ts</small>")
-    src_lib_paywall_openpaywall_0ccf4cc8("openPaywall()<br/><small>src/lib/paywall.ts</small>")
     src_lib_recoverclickafterdrag_recovernextclickaf_729f155b("recoverNextClickAfterDrag()<br/><small>src/lib/recoverClickAfterDrag.ts</small>")
-    src_lib_useentitlement_cancreatestory_1b6c8e29("canCreateStory()<br/><small>src/lib/useEntitlement.ts</small>")
     specify_extensions_git_scripts_powershell_git_co_dd43e877 -->|calls| specify_extensions_git_scripts_powershell_git_co_cf5b5207
-    src_components_sheets_newstorysheet_randomcode_bcd2d597 -->|calls| src_components_sheets_newstorysheet_newstoryshee_aa91c0fe
-    src_components_sheets_newstorysheet_newstoryshee_aa91c0fe -->|calls| src_lib_paywall_openpaywall_0ccf4cc8
-    src_components_sheets_newstorysheet_newstoryshee_aa91c0fe -->|calls| src_lib_useentitlement_cancreatestory_1b6c8e29
-    src_components_ui_bottomsheet_bottomsheet_490d62f7 -->|calls| src_lib_recoverclickafterdrag_recovernextclickaf_729f155b
+    src_components_appshell_storyswitchersheet_b132e109 -->|calls| src_lib_color_heroink_a7608ea7
+    src_components_appshell_storyswitchersheet_b132e109 -->|calls| src_lib_color_ishexcolor_d74191eb
+    src_components_appshell_storyswitchersheet_b132e109 -->|calls| src_lib_recoverclickafterdrag_recovernextclickaf_729f155b
+    src_components_sheets_editstorysheet_editstorysh_f2d655c3 -->|calls| src_lib_color_accentink_35db55dd
+    src_components_sheets_editstorysheet_editstorysh_f2d655c3 -->|calls| src_lib_color_heroink_a7608ea7
+    src_components_sheets_editstorysheet_editstorysh_f2d655c3 -->|calls| src_lib_color_ishexcolor_d74191eb
     src_components_ui_errorboundary_errorboundary_05af0797 -->|method| src_components_ui_errorboundary_errorboundary_co_ab674eb4
     src_components_ui_errorboundary_errorboundary_05af0797 -->|method| src_components_ui_errorboundary_errorboundary_co_556bd2dc
     src_components_ui_errorboundary_errorboundary_05af0797 -->|method| src_components_ui_errorboundary_errorboundary_ge_ab799595
-    src_components_sheets_newstorysheet_ee7f3046 -->|imports| src_components_ui_bottomsheet_bottomsheet_490d62f7
-    src_components_sheets_newstorysheet_ee7f3046 -->|imports| src_lib_paywall_openpaywall_0ccf4cc8
-    src_components_sheets_newstorysheet_ee7f3046 -->|imports| src_lib_useentitlement_cancreatestory_1b6c8e29
+    src_app_46efd68e -->|imports| src_components_ui_errorboundary_errorboundary_05af0797
     src_lib_tests_chapterutils_test_5adc6899 -->|imports| src_lib_chapterutils_fmtdateshort_e7f598f8
-    %% Omitted for readability: 125 nodes, 0 edges
+    src_lib_tests_color_test_11f5c30a -->|imports| src_lib_color_accentink_35db55dd
+    src_lib_tests_color_test_11f5c30a -->|imports| src_lib_color_heroink_a7608ea7
+    src_lib_tests_color_test_11f5c30a -->|imports| src_lib_color_ishexcolor_d74191eb
+    %% Omitted for readability: 128 nodes, 0 edges
     class src_components_ui_errorboundary_errorboundary_05af0797 ui;
     class src_components_ui_errorboundary_errorboundary_co_ab674eb4 ui;
     class src_components_ui_errorboundary_errorboundary_co_556bd2dc ui;
     class src_components_ui_errorboundary_errorboundary_ge_ab799595 ui;
-    class src_components_sheets_newstorysheet_ee7f3046 ui;
-    class src_components_sheets_newstorysheet_randomcode_bcd2d597 ui;
-    class src_components_sheets_newstorysheet_newstoryshee_aa91c0fe ui;
+    class src_lib_color_heroink_a7608ea7 function;
+    class src_lib_color_ishexcolor_d74191eb function;
+    class src_lib_color_accentink_35db55dd function;
     class specify_extensions_git_scripts_powershell_git_co_dd43e877 test;
     class specify_extensions_git_scripts_powershell_git_co_cf5b5207 test;
-    class src_components_ui_bottomsheet_bottomsheet_490d62f7 ui;
-    class src_components_ui_catmedallion_43f2a67e ui;
-    class src_components_ui_cattag_b6b3a908 ui;
+    class src_components_sheets_editstorysheet_editstorysh_f2d655c3 ui;
     class src_lib_tests_chapterutils_test_5adc6899 test;
+    class src_lib_tests_color_test_11f5c30a test;
     class src_lib_tests_dateutils_test_a41ef7fb test;
+    class src_lib_tests_useentitlement_test_aa84b4eb test;
+    class src_app_46efd68e ui;
+    class src_components_appshell_storyswitchersheet_b132e109 ui;
     class src_lib_chapterutils_fmtdateshort_e7f598f8 function;
-    class src_lib_paywall_openpaywall_0ccf4cc8 function;
     class src_lib_recoverclickafterdrag_recovernextclickaf_729f155b entry;
-    class src_lib_useentitlement_cancreatestory_1b6c8e29 function;
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
     classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
@@ -2747,7 +2749,7 @@ flowchart LR
   <td><code>CatMedallion.tsx</code><br><small style="color:var(--muted)">components/ui/CatMedallion.tsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td>External entry / no inbound edge</td>
-  <td><code>Calendar.tsx</code><br><small style="color:var(--muted)">src/pages/Calendar.tsx</small><br><code>CAT_META</code><br><small style="color:var(--muted)">src/lib/chapterUtils.ts</small><br><code>chapterUtils.ts</code><br><small style="color:var(--muted)">src/lib/chapterUtils.ts</small><br>+3 more</td>
+  <td><code>Calendar.tsx</code><br><small style="color:var(--muted)">src/pages/Calendar.tsx</small><br><code>CAT_META</code><br><small style="color:var(--muted)">src/lib/chapterUtils.ts</small><br><code>chapterUtils.ts</code><br><small style="color:var(--muted)">src/lib/chapterUtils.ts</small><br>+1 more</td>
   <td>Module file in components/ui/CatMedallion.tsx.</td>
 </tr>
 <tr>
@@ -2771,7 +2773,7 @@ flowchart LR
   <td><code>CatTag.tsx</code><br><small style="color:var(--muted)">components/ui/CatTag.tsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td>External entry / no inbound edge</td>
-  <td><code>Calendar.tsx</code><br><small style="color:var(--muted)">src/pages/Calendar.tsx</small><br><code>CAT_META</code><br><small style="color:var(--muted)">src/lib/chapterUtils.ts</small><br><code>chapterUtils.ts</code><br><small style="color:var(--muted)">src/lib/chapterUtils.ts</small><br>+3 more</td>
+  <td><code>Calendar.tsx</code><br><small style="color:var(--muted)">src/pages/Calendar.tsx</small><br><code>CAT_META</code><br><small style="color:var(--muted)">src/lib/chapterUtils.ts</small><br><code>chapterUtils.ts</code><br><small style="color:var(--muted)">src/lib/chapterUtils.ts</small><br>+1 more</td>
   <td>Module file in components/ui/CatTag.tsx.</td>
 </tr>
 <tr>
@@ -2792,62 +2794,6 @@ flowchart LR
 </tr>
 <tr>
   <td>7</td>
-  <td><code>EmptyState.tsx</code><br><small style="color:var(--muted)">components/ui/EmptyState.tsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>Icon()</code><br><small style="color:var(--muted)">components/ui/Icon.tsx</small><br><code>Icon.tsx</code><br><small style="color:var(--muted)">components/ui/Icon.tsx</small></td>
-  <td>Module file in components/ui/EmptyState.tsx.</td>
-</tr>
-<tr>
-  <td>8</td>
-  <td><code>EmptyState()</code><br><small style="color:var(--muted)">components/ui/EmptyState.tsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>EmptyState() node in components/ui/EmptyState.tsx.</td>
-</tr>
-<tr>
-  <td>9</td>
-  <td><code>Icon.tsx</code><br><small style="color:var(--muted)">components/ui/Icon.tsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td><code>CatMedallion.tsx</code><br><small style="color:var(--muted)">components/ui/CatMedallion.tsx</small><br><code>CatTag.tsx</code><br><small style="color:var(--muted)">components/ui/CatTag.tsx</small><br><code>ConfirmDialog.tsx</code><br><small style="color:var(--muted)">components/ui/ConfirmDialog.tsx</small><br>+4 more</td>
-  <td><code>Calendar.tsx</code><br><small style="color:var(--muted)">src/pages/Calendar.tsx</small><br><code>Dashboard.tsx</code><br><small style="color:var(--muted)">src/pages/Dashboard.tsx</small></td>
-  <td>Module file in components/ui/Icon.tsx.</td>
-</tr>
-<tr>
-  <td>10</td>
-  <td><code>IconComponent</code><br><small style="color:var(--muted)">components/ui/Icon.tsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>IconComponent node in components/ui/Icon.tsx.</td>
-</tr>
-<tr>
-  <td>11</td>
-  <td><code>ICONS</code><br><small style="color:var(--muted)">components/ui/Icon.tsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>ICONS node in components/ui/Icon.tsx.</td>
-</tr>
-<tr>
-  <td>12</td>
-  <td><code>GoogleCalIcon()</code><br><small style="color:var(--muted)">components/ui/Icon.tsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>GoogleCalIcon() node in components/ui/Icon.tsx.</td>
-</tr>
-<tr>
-  <td>13</td>
-  <td><code>Icon()</code><br><small style="color:var(--muted)">components/ui/Icon.tsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td><code>CatMedallion.tsx</code><br><small style="color:var(--muted)">components/ui/CatMedallion.tsx</small><br><code>CatTag.tsx</code><br><small style="color:var(--muted)">components/ui/CatTag.tsx</small><br><code>ConfirmDialog.tsx</code><br><small style="color:var(--muted)">components/ui/ConfirmDialog.tsx</small><br>+4 more</td>
-  <td><code>Calendar.tsx</code><br><small style="color:var(--muted)">src/pages/Calendar.tsx</small><br><code>Dashboard.tsx</code><br><small style="color:var(--muted)">src/pages/Dashboard.tsx</small></td>
-  <td>Icon() node in components/ui/Icon.tsx.</td>
-</tr>
-<tr>
-  <td>14</td>
   <td><code>chapterUtils.test.ts</code><br><small style="color:var(--muted)">lib/__tests__/chapterUtils.test.ts</small></td>
   <td><span class="tag tag-func">Test</span></td>
   <td>External entry / no inbound edge</td>
@@ -2855,7 +2801,7 @@ flowchart LR
   <td>Module file in lib/__tests__/chapterUtils.test.ts.</td>
 </tr>
 <tr>
-  <td>15</td>
+  <td>8</td>
   <td><code>chapterUtils.ts</code><br><small style="color:var(--muted)">src/lib/chapterUtils.ts</small></td>
   <td><span class="tag tag-class">Module</span></td>
   <td><code>CatMedallion.tsx</code><br><small style="color:var(--muted)">components/ui/CatMedallion.tsx</small><br><code>CatTag.tsx</code><br><small style="color:var(--muted)">components/ui/CatTag.tsx</small><br><code>chapterUtils.test.ts</code><br><small style="color:var(--muted)">lib/__tests__/chapterUtils.test.ts</small></td>
@@ -2863,7 +2809,7 @@ flowchart LR
   <td>Module file in src/lib/chapterUtils.ts.</td>
 </tr>
 <tr>
-  <td>16</td>
+  <td>9</td>
   <td><code>toRoman()</code><br><small style="color:var(--muted)">src/lib/chapterUtils.ts</small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td><code>chapterUtils.test.ts</code><br><small style="color:var(--muted)">lib/__tests__/chapterUtils.test.ts</small></td>
@@ -2871,7 +2817,7 @@ flowchart LR
   <td>toRoman() node in src/lib/chapterUtils.ts.</td>
 </tr>
 <tr>
-  <td>17</td>
+  <td>10</td>
   <td><code>CAT_META</code><br><small style="color:var(--muted)">src/lib/chapterUtils.ts</small></td>
   <td><span class="tag tag-class">Class</span></td>
   <td><code>CatMedallion.tsx</code><br><small style="color:var(--muted)">components/ui/CatMedallion.tsx</small><br><code>CatTag.tsx</code><br><small style="color:var(--muted)">components/ui/CatTag.tsx</small><br><code>chapterUtils.test.ts</code><br><small style="color:var(--muted)">lib/__tests__/chapterUtils.test.ts</small></td>
@@ -2879,7 +2825,7 @@ flowchart LR
   <td>CAT_META node in src/lib/chapterUtils.ts.</td>
 </tr>
 <tr>
-  <td>18</td>
+  <td>11</td>
   <td><code>MESES</code><br><small style="color:var(--muted)">src/lib/chapterUtils.ts</small></td>
   <td><span class="tag tag-class">Class</span></td>
   <td>External entry / no inbound edge</td>
@@ -2887,15 +2833,15 @@ flowchart LR
   <td>MESES node in src/lib/chapterUtils.ts.</td>
 </tr>
 <tr>
-  <td>19</td>
+  <td>12</td>
   <td><code>fmtDateShort()</code><br><small style="color:var(--muted)">src/lib/chapterUtils.ts</small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td><code>chapterUtils.test.ts</code><br><small style="color:var(--muted)">lib/__tests__/chapterUtils.test.ts</small></td>
-  <td><code>Calendar.tsx</code><br><small style="color:var(--muted)">src/pages/Calendar.tsx</small><br><code>ChapterRow()</code><br><small style="color:var(--muted)">src/pages/Calendar.tsx</small><br><code>Dashboard()</code><br><small style="color:var(--muted)">src/pages/Dashboard.tsx</small><br>+5 more</td>
+  <td><code>Calendar.tsx</code><br><small style="color:var(--muted)">src/pages/Calendar.tsx</small><br><code>ChapterRow()</code><br><small style="color:var(--muted)">src/pages/Calendar.tsx</small><br><code>Dashboard()</code><br><small style="color:var(--muted)">src/pages/Dashboard.tsx</small><br>+6 more</td>
   <td>fmtDateShort() node in src/lib/chapterUtils.ts.</td>
 </tr>
 <tr>
-  <td>20</td>
+  <td>13</td>
   <td><code>fmtDate()</code><br><small style="color:var(--muted)">src/lib/chapterUtils.ts</small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td><code>chapterUtils.test.ts</code><br><small style="color:var(--muted)">lib/__tests__/chapterUtils.test.ts</small></td>
@@ -2903,7 +2849,7 @@ flowchart LR
   <td>fmtDate() node in src/lib/chapterUtils.ts.</td>
 </tr>
 <tr>
-  <td>21</td>
+  <td>14</td>
   <td><code>countdown()</code><br><small style="color:var(--muted)">src/lib/chapterUtils.ts</small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td><code>chapterUtils.test.ts</code><br><small style="color:var(--muted)">lib/__tests__/chapterUtils.test.ts</small></td>
@@ -2911,7 +2857,7 @@ flowchart LR
   <td>countdown() node in src/lib/chapterUtils.ts.</td>
 </tr>
 <tr>
-  <td>22</td>
+  <td>15</td>
   <td><code>eur()</code><br><small style="color:var(--muted)">src/lib/chapterUtils.ts</small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td><code>chapterUtils.test.ts</code><br><small style="color:var(--muted)">lib/__tests__/chapterUtils.test.ts</small></td>
@@ -2919,15 +2865,15 @@ flowchart LR
   <td>eur() node in src/lib/chapterUtils.ts.</td>
 </tr>
 <tr>
-  <td>23</td>
+  <td>16</td>
   <td><code>Calendar.tsx</code><br><small style="color:var(--muted)">src/pages/Calendar.tsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
-  <td><code>CatMedallion()</code><br><small style="color:var(--muted)">components/ui/CatMedallion.tsx</small><br><code>CatMedallion.tsx</code><br><small style="color:var(--muted)">components/ui/CatMedallion.tsx</small><br><code>CatTag()</code><br><small style="color:var(--muted)">components/ui/CatTag.tsx</small><br>+8 more</td>
+  <td><code>CatMedallion()</code><br><small style="color:var(--muted)">components/ui/CatMedallion.tsx</small><br><code>CatMedallion.tsx</code><br><small style="color:var(--muted)">components/ui/CatMedallion.tsx</small><br><code>CatTag()</code><br><small style="color:var(--muted)">components/ui/CatTag.tsx</small><br>+6 more</td>
   <td>No direct outbound edge</td>
   <td>Module file in src/pages/Calendar.tsx.</td>
 </tr>
 <tr>
-  <td>24</td>
+  <td>17</td>
   <td><code>CalendarPlan</code><br><small style="color:var(--muted)">src/pages/Calendar.tsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td>External entry / no inbound edge</td>
@@ -2935,7 +2881,7 @@ flowchart LR
   <td>CalendarPlan node in src/pages/Calendar.tsx.</td>
 </tr>
 <tr>
-  <td>25</td>
+  <td>18</td>
   <td><code>DIAS</code><br><small style="color:var(--muted)">src/pages/Calendar.tsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td>External entry / no inbound edge</td>
@@ -2943,7 +2889,7 @@ flowchart LR
   <td>DIAS node in src/pages/Calendar.tsx.</td>
 </tr>
 <tr>
-  <td>26</td>
+  <td>19</td>
   <td><code>MESES_L</code><br><small style="color:var(--muted)">src/pages/Calendar.tsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td>External entry / no inbound edge</td>
@@ -2951,7 +2897,7 @@ flowchart LR
   <td>MESES_L node in src/pages/Calendar.tsx.</td>
 </tr>
 <tr>
-  <td>27</td>
+  <td>20</td>
   <td><code>now</code><br><small style="color:var(--muted)">src/pages/Calendar.tsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td>External entry / no inbound edge</td>
@@ -2959,7 +2905,7 @@ flowchart LR
   <td>now node in src/pages/Calendar.tsx.</td>
 </tr>
 <tr>
-  <td>28</td>
+  <td>21</td>
   <td><code>CAT_DOT</code><br><small style="color:var(--muted)">src/pages/Calendar.tsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td>External entry / no inbound edge</td>
@@ -2967,7 +2913,7 @@ flowchart LR
   <td>CAT_DOT node in src/pages/Calendar.tsx.</td>
 </tr>
 <tr>
-  <td>29</td>
+  <td>22</td>
   <td><code>CAT_ICON</code><br><small style="color:var(--muted)">src/pages/Calendar.tsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td>External entry / no inbound edge</td>
@@ -2975,12 +2921,68 @@ flowchart LR
   <td>CAT_ICON node in src/pages/Calendar.tsx.</td>
 </tr>
 <tr>
-  <td>30</td>
+  <td>23</td>
   <td><code>CircBtn()</code><br><small style="color:var(--muted)">src/pages/Calendar.tsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
   <td>CircBtn() node in src/pages/Calendar.tsx.</td>
+</tr>
+<tr>
+  <td>24</td>
+  <td><code>Calendar()</code><br><small style="color:var(--muted)">src/pages/Calendar.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>fmtDate()</code><br><small style="color:var(--muted)">src/lib/chapterUtils.ts</small></td>
+  <td>No direct outbound edge</td>
+  <td>Calendar() node in src/pages/Calendar.tsx.</td>
+</tr>
+<tr>
+  <td>25</td>
+  <td><code>StoryBadge()</code><br><small style="color:var(--muted)">src/pages/Calendar.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>StoryBadge() node in src/pages/Calendar.tsx.</td>
+</tr>
+<tr>
+  <td>26</td>
+  <td><code>ChapterList()</code><br><small style="color:var(--muted)">src/pages/Calendar.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>ChapterList() node in src/pages/Calendar.tsx.</td>
+</tr>
+<tr>
+  <td>27</td>
+  <td><code>ChapterRow()</code><br><small style="color:var(--muted)">src/pages/Calendar.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>countdown()</code><br><small style="color:var(--muted)">src/lib/chapterUtils.ts</small><br><code>fmtDateShort()</code><br><small style="color:var(--muted)">src/lib/chapterUtils.ts</small><br><code>toRoman()</code><br><small style="color:var(--muted)">src/lib/chapterUtils.ts</small></td>
+  <td>No direct outbound edge</td>
+  <td>ChapterRow() node in src/pages/Calendar.tsx.</td>
+</tr>
+<tr>
+  <td>28</td>
+  <td><code>Dashboard.tsx</code><br><small style="color:var(--muted)">src/pages/Dashboard.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>AuthContext.tsx</code><br><small style="color:var(--muted)">src/context/AuthContext.tsx</small><br><code>CatMedallion()</code><br><small style="color:var(--muted)">components/ui/CatMedallion.tsx</small><br><code>CatMedallion.tsx</code><br><small style="color:var(--muted)">components/ui/CatMedallion.tsx</small><br>+7 more</td>
+  <td>No direct outbound edge</td>
+  <td>Module file in src/pages/Dashboard.tsx.</td>
+</tr>
+<tr>
+  <td>29</td>
+  <td><code>daysTogether()</code><br><small style="color:var(--muted)">src/pages/Dashboard.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>Dashboard()</code><br><small style="color:var(--muted)">src/pages/Dashboard.tsx</small></td>
+  <td>daysTogether() node in src/pages/Dashboard.tsx.</td>
+</tr>
+<tr>
+  <td>30</td>
+  <td><code>Dashboard()</code><br><small style="color:var(--muted)">src/pages/Dashboard.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>daysTogether()</code><br><small style="color:var(--muted)">src/pages/Dashboard.tsx</small><br><code>fmtDate()</code><br><small style="color:var(--muted)">src/lib/chapterUtils.ts</small><br><code>fmtDateShort()</code><br><small style="color:var(--muted)">src/lib/chapterUtils.ts</small></td>
+  <td>No direct outbound edge</td>
+  <td>Dashboard() node in src/pages/Dashboard.tsx.</td>
 </tr>
 </table>
 
@@ -2990,18 +2992,18 @@ flowchart LR
     <table style="width:100%;font-size:0.85rem;">
       <tr><th>File</th><th>Coverage</th></tr>
       <tr><td><code>.specify/templates/tasks-template.md</code></td><td>27 nodes</td></tr>
+<tr><td><code>src/lib/color.ts</code></td><td>15 nodes</td></tr>
 <tr><td><code>src/pages/Calendar.tsx</code></td><td>12 nodes</td></tr>
 <tr><td><code>components/ui/ErrorBoundary.tsx</code></td><td>8 nodes</td></tr>
 <tr><td><code>src/lib/chapterUtils.ts</code></td><td>8 nodes</td></tr>
+<tr><td><code>src/lib/useEntitlement.ts</code></td><td>8 nodes</td></tr>
 <tr><td><code>src/App.tsx</code></td><td>7 nodes</td></tr>
-<tr><td><code>src/lib/useEntitlement.ts</code></td><td>7 nodes</td></tr>
 <tr><td><code>src/pages/Dashboard.tsx</code></td><td>7 nodes</td></tr>
-<tr><td><code>components/sheets/NewStorySheet.tsx</code></td><td>6 nodes</td></tr>
     </table>
   </div>
   <div class="card">
     <h4>Design Notes</h4>
-    <p>This section comes from graphify community clustering. Relationship summary: contains x104, imports x54, imports x31, calls x21. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x107, imports x48, calls x35, imports x21. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
   </div>
 </div>
 <hr>
@@ -3344,8 +3346,362 @@ flowchart LR
 </div>
 <hr>
 
-<!-- ====== 12. AppShell.tsx ====== -->
-<h2 id="appshell-tsx">12. AppShell.tsx</h2>
+<!-- ====== 12. useAuth ====== -->
+<h2 id="useauth">12. useAuth</h2>
+<p>useAuth groups implementation around context, currencycontexttsx, pages, components, mostly in src/context/CurrencyContext.tsx, src/pages/Finances.tsx, components/sheets/MoneySheet.tsx. This section covers 29 nodes and 55 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: useAuth (29 nodes, 55 edges)
+    subgraph useauth_src_context_CurrencyContext_tsx_8d7239b0["src/context/CurrencyContext.tsx"]
+        src_context_currencycontext_usecurrency_9b557b65("useCurrency()<br/><small>src/context/CurrencyContext.tsx</small>")
+        src_context_currencycontext_currencyprovider_949638ac("CurrencyProvider()<br/><small>src/context/CurrencyContext.tsx</small>")
+        src_context_currencycontext_storykey_a069bad4("storyKey()<br/><small>src/context/CurrencyContext.tsx</small>")
+    end
+    subgraph useauth_src_pages_Finances_tsx_0a59bc9d["src/pages/Finances.tsx"]
+        src_pages_finances_finances_82acb090("Finances()<br/><small>src/pages/Finances.tsx</small>")
+        src_pages_finances_getperiodbounds_7acca045("getPeriodBounds()<br/><small>src/pages/Finances.tsx</small>")
+        src_pages_finances_inperiod_85ab6935("inPeriod()<br/><small>src/pages/Finances.tsx</small>")
+    end
+    subgraph useauth_components_sheets_MoneySheet_tsx_3bcd1bc6["components/sheets/MoneySheet.tsx"]
+        src_components_sheets_moneysheet_2640df5b("MoneySheet.tsx")
+        src_components_sheets_moneysheet_moneysheet_12b50cbb("MoneySheet()<br/><small>components/sheets/MoneySheet.tsx</small>")
+    end
+    subgraph useauth_src_pages_Gallery_tsx_99e15bad["src/pages/Gallery.tsx"]
+        src_pages_gallery_gallery_667bc05a("Gallery()<br/><small>src/pages/Gallery.tsx</small>")
+        src_pages_gallery_usecolcount_7f1921c8("useColCount()<br/><small>src/pages/Gallery.tsx</small>")
+    end
+    src_components_sheets_newmemorysheet_newmemorysh_0cfa90ff("NewMemorySheet()<br/><small>components/sheets/NewMemorySheet.tsx</small>")
+    src_components_sheets_newplansheet_newplansheet_11363c80("NewPlanSheet()<br/><small>components/sheets/NewPlanSheet.tsx</small>")
+    src_components_ui_confirmdialog_useconfirm_f981923d("useConfirm()<br/><small>components/ui/ConfirmDialog.tsx</small>")
+    src_app_appinner_6d95665a("AppInner()<br/><small>src/App.tsx</small>")
+    src_context_authcontext_useauth_d120e124("useAuth()<br/><small>src/context/AuthContext.tsx</small>")
+    src_context_toastcontext_usetoast_864679dc("useToast()<br/><small>src/context/ToastContext.tsx</small>")
+    src_lib_usepushnotifications_sendpushtostorymemb_88a38ebf("sendPushToStoryMembers()<br/><small>src/lib/usePushNotifications.ts</small>")
+    src_pages_profile_profilescreen_8215990b("ProfileScreen()<br/><small>src/pages/Profile.tsx</small>")
+    src_app_appinner_6d95665a -->|calls| src_context_authcontext_useauth_d120e124
+    src_app_appinner_6d95665a -->|calls| src_context_toastcontext_usetoast_864679dc
+    src_components_sheets_moneysheet_moneysheet_12b50cbb -->|calls| src_context_authcontext_useauth_d120e124
+    src_components_sheets_moneysheet_moneysheet_12b50cbb -->|calls| src_context_currencycontext_usecurrency_9b557b65
+    src_components_sheets_moneysheet_moneysheet_12b50cbb -->|calls| src_context_toastcontext_usetoast_864679dc
+    src_components_sheets_moneysheet_moneysheet_12b50cbb -->|calls| src_lib_usepushnotifications_sendpushtostorymemb_88a38ebf
+    src_components_sheets_newmemorysheet_newmemorysh_0cfa90ff -->|calls| src_context_authcontext_useauth_d120e124
+    src_components_sheets_newmemorysheet_newmemorysh_0cfa90ff -->|calls| src_context_toastcontext_usetoast_864679dc
+    src_components_sheets_newmemorysheet_newmemorysh_0cfa90ff -->|calls| src_lib_usepushnotifications_sendpushtostorymemb_88a38ebf
+    src_components_sheets_newplansheet_newplansheet_11363c80 -->|calls| src_context_authcontext_useauth_d120e124
+    src_components_sheets_newplansheet_newplansheet_11363c80 -->|calls| src_context_toastcontext_usetoast_864679dc
+    src_components_sheets_newplansheet_newplansheet_11363c80 -->|calls| src_lib_usepushnotifications_sendpushtostorymemb_88a38ebf
+    src_components_ui_confirmdialog_useconfirm_f981923d -->|calls| src_pages_gallery_gallery_667bc05a
+    src_components_ui_confirmdialog_useconfirm_f981923d -->|calls| src_pages_profile_profilescreen_8215990b
+    src_context_authcontext_useauth_d120e124 -->|calls| src_context_currencycontext_currencyprovider_949638ac
+    src_context_authcontext_useauth_d120e124 -->|calls| src_pages_finances_finances_82acb090
+    src_context_authcontext_useauth_d120e124 -->|calls| src_pages_gallery_gallery_667bc05a
+    src_context_authcontext_useauth_d120e124 -->|calls| src_pages_profile_profilescreen_8215990b
+    src_context_currencycontext_usecurrency_9b557b65 -->|calls| src_pages_finances_finances_82acb090
+    src_context_currencycontext_usecurrency_9b557b65 -->|calls| src_pages_profile_profilescreen_8215990b
+    src_context_currencycontext_storykey_a069bad4 -->|calls| src_context_currencycontext_currencyprovider_949638ac
+    src_context_toastcontext_usetoast_864679dc -->|calls| src_pages_finances_finances_82acb090
+    src_context_toastcontext_usetoast_864679dc -->|calls| src_pages_gallery_gallery_667bc05a
+    src_context_toastcontext_usetoast_864679dc -->|calls| src_pages_profile_profilescreen_8215990b
+    %% Omitted for readability: 11 nodes, 7 edges
+    class src_context_currencycontext_usecurrency_9b557b65 ui;
+    class src_context_currencycontext_currencyprovider_949638ac ui;
+    class src_context_currencycontext_storykey_a069bad4 ui;
+    class src_pages_finances_finances_82acb090 ui;
+    class src_pages_finances_getperiodbounds_7acca045 ui;
+    class src_pages_finances_inperiod_85ab6935 ui;
+    class src_components_sheets_moneysheet_2640df5b ui;
+    class src_components_sheets_moneysheet_moneysheet_12b50cbb ui;
+    class src_pages_gallery_gallery_667bc05a ui;
+    class src_pages_gallery_usecolcount_7f1921c8 ui;
+    class src_components_sheets_newmemorysheet_newmemorysh_0cfa90ff ui;
+    class src_components_sheets_newplansheet_newplansheet_11363c80 ui;
+    class src_components_ui_confirmdialog_useconfirm_f981923d ui;
+    class src_app_appinner_6d95665a ui;
+    class src_context_authcontext_useauth_d120e124 ui;
+    class src_context_toastcontext_usetoast_864679dc ui;
+    class src_lib_usepushnotifications_sendpushtostorymemb_88a38ebf function;
+    class src_pages_profile_profilescreen_8215990b ui;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>AppInner()</code><br><small style="color:var(--muted)">src/App.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>useAuth()</code><br><small style="color:var(--muted)">src/context/AuthContext.tsx</small><br><code>useToast()</code><br><small style="color:var(--muted)">src/context/ToastContext.tsx</small></td>
+  <td>AppInner() node in src/App.tsx.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>MoneySheet.tsx</code><br><small style="color:var(--muted)">components/sheets/MoneySheet.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>CURRENCIES</code><br><small style="color:var(--muted)">src/context/CurrencyContext.tsx</small><br><code>CurrencyContext.tsx</code><br><small style="color:var(--muted)">src/context/CurrencyContext.tsx</small><br><code>PlanType</code><br><small style="color:var(--muted)">src/lib/supabase.ts</small><br>+4 more</td>
+  <td>Module file in components/sheets/MoneySheet.tsx.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>CATS</code><br><small style="color:var(--muted)">components/sheets/MoneySheet.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>CATS node in components/sheets/MoneySheet.tsx.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>Props</code><br><small style="color:var(--muted)">components/sheets/MoneySheet.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Props node in components/sheets/MoneySheet.tsx.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>MoneySheet()</code><br><small style="color:var(--muted)">components/sheets/MoneySheet.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>sendPushToStoryMembers()</code><br><small style="color:var(--muted)">src/lib/usePushNotifications.ts</small><br><code>useAuth()</code><br><small style="color:var(--muted)">src/context/AuthContext.tsx</small><br><code>useCurrency()</code><br><small style="color:var(--muted)">src/context/CurrencyContext.tsx</small><br>+1 more</td>
+  <td>MoneySheet() node in components/sheets/MoneySheet.tsx.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>NewMemorySheet()</code><br><small style="color:var(--muted)">components/sheets/NewMemorySheet.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>sendPushToStoryMembers()</code><br><small style="color:var(--muted)">src/lib/usePushNotifications.ts</small><br><code>useAuth()</code><br><small style="color:var(--muted)">src/context/AuthContext.tsx</small><br><code>useToast()</code><br><small style="color:var(--muted)">src/context/ToastContext.tsx</small></td>
+  <td>NewMemorySheet() node in components/sheets/NewMemorySheet.tsx.</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>NewPlanSheet()</code><br><small style="color:var(--muted)">components/sheets/NewPlanSheet.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>sendPushToStoryMembers()</code><br><small style="color:var(--muted)">src/lib/usePushNotifications.ts</small><br><code>useAuth()</code><br><small style="color:var(--muted)">src/context/AuthContext.tsx</small><br><code>useToast()</code><br><small style="color:var(--muted)">src/context/ToastContext.tsx</small></td>
+  <td>NewPlanSheet() node in components/sheets/NewPlanSheet.tsx.</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><code>useConfirm()</code><br><small style="color:var(--muted)">components/ui/ConfirmDialog.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>Gallery()</code><br><small style="color:var(--muted)">src/pages/Gallery.tsx</small><br><code>ProfileScreen()</code><br><small style="color:var(--muted)">src/pages/Profile.tsx</small></td>
+  <td>useConfirm() node in components/ui/ConfirmDialog.tsx.</td>
+</tr>
+<tr>
+  <td>9</td>
+  <td><code>useAuth()</code><br><small style="color:var(--muted)">src/context/AuthContext.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>AppInner()</code><br><small style="color:var(--muted)">src/App.tsx</small><br><code>MoneySheet()</code><br><small style="color:var(--muted)">components/sheets/MoneySheet.tsx</small><br><code>MoneySheet.tsx</code><br><small style="color:var(--muted)">components/sheets/MoneySheet.tsx</small><br>+2 more</td>
+  <td><code>CurrencyContext.tsx</code><br><small style="color:var(--muted)">src/context/CurrencyContext.tsx</small><br><code>CurrencyProvider()</code><br><small style="color:var(--muted)">src/context/CurrencyContext.tsx</small><br><code>Finances()</code><br><small style="color:var(--muted)">src/pages/Finances.tsx</small><br>+3 more</td>
+  <td>useAuth() node in src/context/AuthContext.tsx.</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td><code>CurrencyContext.tsx</code><br><small style="color:var(--muted)">src/context/CurrencyContext.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>MoneySheet.tsx</code><br><small style="color:var(--muted)">components/sheets/MoneySheet.tsx</small><br><code>useAuth()</code><br><small style="color:var(--muted)">src/context/AuthContext.tsx</small></td>
+  <td><code>Finances.tsx</code><br><small style="color:var(--muted)">src/pages/Finances.tsx</small></td>
+  <td>Module file in src/context/CurrencyContext.tsx.</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td><code>CurrencyKey</code><br><small style="color:var(--muted)">src/context/CurrencyContext.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>CurrencyKey node in src/context/CurrencyContext.tsx.</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td><code>CURRENCIES</code><br><small style="color:var(--muted)">src/context/CurrencyContext.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>MoneySheet.tsx</code><br><small style="color:var(--muted)">components/sheets/MoneySheet.tsx</small></td>
+  <td>No direct outbound edge</td>
+  <td>CURRENCIES node in src/context/CurrencyContext.tsx.</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td><code>CurrencyCtx</code><br><small style="color:var(--muted)">src/context/CurrencyContext.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>CurrencyCtx node in src/context/CurrencyContext.tsx.</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td><code>Ctx</code><br><small style="color:var(--muted)">src/context/CurrencyContext.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Ctx node in src/context/CurrencyContext.tsx.</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td><code>useCurrency()</code><br><small style="color:var(--muted)">src/context/CurrencyContext.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>MoneySheet()</code><br><small style="color:var(--muted)">components/sheets/MoneySheet.tsx</small><br><code>MoneySheet.tsx</code><br><small style="color:var(--muted)">components/sheets/MoneySheet.tsx</small></td>
+  <td><code>Finances()</code><br><small style="color:var(--muted)">src/pages/Finances.tsx</small><br><code>Finances.tsx</code><br><small style="color:var(--muted)">src/pages/Finances.tsx</small><br><code>ProfileScreen()</code><br><small style="color:var(--muted)">src/pages/Profile.tsx</small></td>
+  <td>useCurrency() node in src/context/CurrencyContext.tsx.</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td><code>storyKey()</code><br><small style="color:var(--muted)">src/context/CurrencyContext.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>CurrencyProvider()</code><br><small style="color:var(--muted)">src/context/CurrencyContext.tsx</small></td>
+  <td>storyKey() node in src/context/CurrencyContext.tsx.</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td><code>CurrencyProvider()</code><br><small style="color:var(--muted)">src/context/CurrencyContext.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>storyKey()</code><br><small style="color:var(--muted)">src/context/CurrencyContext.tsx</small><br><code>useAuth()</code><br><small style="color:var(--muted)">src/context/AuthContext.tsx</small></td>
+  <td>No direct outbound edge</td>
+  <td>CurrencyProvider() node in src/context/CurrencyContext.tsx.</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td><code>useToast()</code><br><small style="color:var(--muted)">src/context/ToastContext.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>AppInner()</code><br><small style="color:var(--muted)">src/App.tsx</small><br><code>MoneySheet()</code><br><small style="color:var(--muted)">components/sheets/MoneySheet.tsx</small><br><code>MoneySheet.tsx</code><br><small style="color:var(--muted)">components/sheets/MoneySheet.tsx</small><br>+2 more</td>
+  <td><code>Finances()</code><br><small style="color:var(--muted)">src/pages/Finances.tsx</small><br><code>Finances.tsx</code><br><small style="color:var(--muted)">src/pages/Finances.tsx</small><br><code>Gallery()</code><br><small style="color:var(--muted)">src/pages/Gallery.tsx</small><br>+1 more</td>
+  <td>useToast() node in src/context/ToastContext.tsx.</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td><code>PlanType</code><br><small style="color:var(--muted)">src/lib/supabase.ts</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td><code>MoneySheet.tsx</code><br><small style="color:var(--muted)">components/sheets/MoneySheet.tsx</small></td>
+  <td><code>Finances.tsx</code><br><small style="color:var(--muted)">src/pages/Finances.tsx</small></td>
+  <td>PlanType node in src/lib/supabase.ts.</td>
+</tr>
+<tr>
+  <td>20</td>
+  <td><code>TransactionType</code><br><small style="color:var(--muted)">src/lib/supabase.ts</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>Finances.tsx</code><br><small style="color:var(--muted)">src/pages/Finances.tsx</small></td>
+  <td>TransactionType node in src/lib/supabase.ts.</td>
+</tr>
+<tr>
+  <td>21</td>
+  <td><code>sendPushToStoryMembers()</code><br><small style="color:var(--muted)">src/lib/usePushNotifications.ts</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>MoneySheet()</code><br><small style="color:var(--muted)">components/sheets/MoneySheet.tsx</small><br><code>MoneySheet.tsx</code><br><small style="color:var(--muted)">components/sheets/MoneySheet.tsx</small><br><code>NewMemorySheet()</code><br><small style="color:var(--muted)">components/sheets/NewMemorySheet.tsx</small><br>+1 more</td>
+  <td>No direct outbound edge</td>
+  <td>sendPushToStoryMembers() node in src/lib/usePushNotifications.ts.</td>
+</tr>
+<tr>
+  <td>22</td>
+  <td><code>Finances.tsx</code><br><small style="color:var(--muted)">src/pages/Finances.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>CurrencyContext.tsx</code><br><small style="color:var(--muted)">src/context/CurrencyContext.tsx</small><br><code>PlanType</code><br><small style="color:var(--muted)">src/lib/supabase.ts</small><br><code>TransactionType</code><br><small style="color:var(--muted)">src/lib/supabase.ts</small><br>+3 more</td>
+  <td>No direct outbound edge</td>
+  <td>Module file in src/pages/Finances.tsx.</td>
+</tr>
+<tr>
+  <td>23</td>
+  <td><code>TYPE_ICONS</code><br><small style="color:var(--muted)">src/pages/Finances.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>TYPE_ICONS node in src/pages/Finances.tsx.</td>
+</tr>
+<tr>
+  <td>24</td>
+  <td><code>getPeriodBounds()</code><br><small style="color:var(--muted)">src/pages/Finances.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>inPeriod()</code><br><small style="color:var(--muted)">src/pages/Finances.tsx</small></td>
+  <td>getPeriodBounds() node in src/pages/Finances.tsx.</td>
+</tr>
+<tr>
+  <td>25</td>
+  <td><code>inPeriod()</code><br><small style="color:var(--muted)">src/pages/Finances.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>getPeriodBounds()</code><br><small style="color:var(--muted)">src/pages/Finances.tsx</small></td>
+  <td><code>Finances()</code><br><small style="color:var(--muted)">src/pages/Finances.tsx</small></td>
+  <td>inPeriod() node in src/pages/Finances.tsx.</td>
+</tr>
+<tr>
+  <td>26</td>
+  <td><code>Finances()</code><br><small style="color:var(--muted)">src/pages/Finances.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>inPeriod()</code><br><small style="color:var(--muted)">src/pages/Finances.tsx</small><br><code>useAuth()</code><br><small style="color:var(--muted)">src/context/AuthContext.tsx</small><br><code>useCurrency()</code><br><small style="color:var(--muted)">src/context/CurrencyContext.tsx</small><br>+1 more</td>
+  <td>No direct outbound edge</td>
+  <td>Finances() node in src/pages/Finances.tsx.</td>
+</tr>
+<tr>
+  <td>27</td>
+  <td><code>useColCount()</code><br><small style="color:var(--muted)">src/pages/Gallery.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>Gallery()</code><br><small style="color:var(--muted)">src/pages/Gallery.tsx</small></td>
+  <td>useColCount() node in src/pages/Gallery.tsx.</td>
+</tr>
+<tr>
+  <td>28</td>
+  <td><code>Gallery()</code><br><small style="color:var(--muted)">src/pages/Gallery.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>useAuth()</code><br><small style="color:var(--muted)">src/context/AuthContext.tsx</small><br><code>useColCount()</code><br><small style="color:var(--muted)">src/pages/Gallery.tsx</small><br><code>useConfirm()</code><br><small style="color:var(--muted)">components/ui/ConfirmDialog.tsx</small><br>+1 more</td>
+  <td>No direct outbound edge</td>
+  <td>Gallery() node in src/pages/Gallery.tsx.</td>
+</tr>
+<tr>
+  <td>29</td>
+  <td><code>ProfileScreen()</code><br><small style="color:var(--muted)">src/pages/Profile.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>useAuth()</code><br><small style="color:var(--muted)">src/context/AuthContext.tsx</small><br><code>useConfirm()</code><br><small style="color:var(--muted)">components/ui/ConfirmDialog.tsx</small><br><code>useCurrency()</code><br><small style="color:var(--muted)">src/context/CurrencyContext.tsx</small><br>+1 more</td>
+  <td>No direct outbound edge</td>
+  <td>ProfileScreen() node in src/pages/Profile.tsx.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>src/context/CurrencyContext.tsx</code></td><td>8 nodes</td></tr>
+<tr><td><code>src/pages/Finances.tsx</code></td><td>5 nodes</td></tr>
+<tr><td><code>components/sheets/MoneySheet.tsx</code></td><td>4 nodes</td></tr>
+<tr><td><code>src/lib/supabase.ts</code></td><td>2 nodes</td></tr>
+<tr><td><code>src/pages/Gallery.tsx</code></td><td>2 nodes</td></tr>
+<tr><td><code>src/App.tsx</code></td><td>1 nodes</td></tr>
+<tr><td><code>components/sheets/NewMemorySheet.tsx</code></td><td>1 nodes</td></tr>
+<tr><td><code>components/sheets/NewPlanSheet.tsx</code></td><td>1 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: calls x27, contains x14, imports x12, imports x2. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 13. AppShell.tsx ====== -->
+<h2 id="appshell-tsx">13. AppShell.tsx</h2>
 <p>AppShell.tsx groups implementation around components, appshelltsx, skeletonstsx, dashboard, mostly in src/components/AppShell.tsx, components/ui/Skeletons.tsx, src/context/AuthContext.tsx. This section covers 28 nodes and 32 internal edges; the diagram shows only representative relationships to stay readable.</p>
 
 <div class="mermaid">
@@ -3666,433 +4022,84 @@ flowchart LR
 </div>
 <hr>
 
-<!-- ====== 13. useAuth ====== -->
-<h2 id="useauth">13. useAuth</h2>
-<p>useAuth groups implementation around components, context, sheets, currencycontexttsx, mostly in src/context/CurrencyContext.tsx, components/sheets/MoneySheet.tsx, components/sheets/NewPlanSheet.tsx. This section covers 28 nodes and 59 internal edges; the diagram shows only representative relationships to stay readable.</p>
-
-<div class="mermaid">
-%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
-flowchart LR
-    %% Section: useAuth (28 nodes, 59 edges)
-    subgraph useauth_components_sheets_MoneySheet_tsx_3bcd1bc6["components/sheets/MoneySheet.tsx"]
-        src_components_sheets_moneysheet_2640df5b("MoneySheet.tsx")
-        src_components_sheets_moneysheet_moneysheet_12b50cbb("MoneySheet()<br/><small>components/sheets/MoneySheet.tsx</small>")
-    end
-    subgraph useauth_components_sheets_NewPlanSheet_tsx_b9104123["components/sheets/NewPlanSheet.tsx"]
-        src_components_sheets_newplansheet_a6140979("NewPlanSheet.tsx")
-        src_components_sheets_newplansheet_newplansheet_11363c80("NewPlanSheet()<br/><small>components/sheets/NewPlanSheet.tsx</small>")
-    end
-    subgraph useauth_src_context_CurrencyContext_tsx_8d7239b0["src/context/CurrencyContext.tsx"]
-        src_context_currencycontext_usecurrency_9b557b65("useCurrency()<br/><small>src/context/CurrencyContext.tsx</small>")
-        src_context_currencycontext_currencyprovider_949638ac("CurrencyProvider()<br/><small>src/context/CurrencyContext.tsx</small>")
-    end
-    subgraph useauth_src_lib_usePushNotifications_ts_382893ce["src/lib/usePushNotifications.ts"]
-        src_lib_usepushnotifications_sendpushtostorymemb_88a38ebf("sendPushToStoryMembers()<br/><small>src/lib/usePushNotifications.ts</small>")
-        src_lib_usepushnotifications_syncplantogooglecal_d4478df3("syncPlanToGoogleCalendar()<br/><small>src/lib/usePushNotifications.ts</small>")
-    end
-    subgraph useauth_src_pages_Profile_tsx_e99f4875["src/pages/Profile.tsx"]
-        src_pages_profile_googlecalendarsection_83fad3e3("GoogleCalendarSection()<br/><small>src/pages/Profile.tsx</small>")
-        src_pages_profile_profilescreen_8215990b("ProfileScreen()<br/><small>src/pages/Profile.tsx</small>")
-    end
-    src_components_sheets_newmemorysheet_newmemorysh_0cfa90ff("NewMemorySheet()<br/><small>components/sheets/NewMemorySheet.tsx</small>")
-    src_app_appinner_6d95665a("AppInner()<br/><small>src/App.tsx</small>")
-    src_components_paywall_paywall_baf8e454("Paywall()<br/><small>src/components/Paywall.tsx</small>")
-    src_context_authcontext_useauth_d120e124("useAuth()<br/><small>src/context/AuthContext.tsx</small>")
-    src_context_toastcontext_usetoast_864679dc("useToast()<br/><small>src/context/ToastContext.tsx</small>")
-    src_lib_paywall_enforcecountgate_88d5cdc1("enforceCountGate()<br/><small>src/lib/paywall.ts</small>")
-    src_lib_useentitlement_useentitlement_dc429d8c("useEntitlement()<br/><small>src/lib/useEntitlement.ts</small>")
-    src_pages_finances_finances_82acb090("Finances()<br/><small>src/pages/Finances.tsx</small>")
-    src_app_appinner_6d95665a -->|calls| src_context_authcontext_useauth_d120e124
-    src_app_appinner_6d95665a -->|calls| src_context_toastcontext_usetoast_864679dc
-    src_components_paywall_paywall_baf8e454 -->|calls| src_context_authcontext_useauth_d120e124
-    src_components_paywall_paywall_baf8e454 -->|calls| src_context_toastcontext_usetoast_864679dc
-    src_components_paywall_paywall_baf8e454 -->|calls| src_lib_useentitlement_useentitlement_dc429d8c
-    src_components_sheets_moneysheet_moneysheet_12b50cbb -->|calls| src_context_authcontext_useauth_d120e124
-    src_components_sheets_moneysheet_moneysheet_12b50cbb -->|calls| src_context_currencycontext_usecurrency_9b557b65
-    src_components_sheets_moneysheet_moneysheet_12b50cbb -->|calls| src_context_toastcontext_usetoast_864679dc
-    src_components_sheets_moneysheet_moneysheet_12b50cbb -->|calls| src_lib_usepushnotifications_sendpushtostorymemb_88a38ebf
-    src_components_sheets_newmemorysheet_newmemorysh_0cfa90ff -->|calls| src_context_authcontext_useauth_d120e124
-    src_components_sheets_newmemorysheet_newmemorysh_0cfa90ff -->|calls| src_context_toastcontext_usetoast_864679dc
-    src_components_sheets_newmemorysheet_newmemorysh_0cfa90ff -->|calls| src_lib_paywall_enforcecountgate_88d5cdc1
-    src_components_sheets_newmemorysheet_newmemorysh_0cfa90ff -->|calls| src_lib_useentitlement_useentitlement_dc429d8c
-    src_components_sheets_newmemorysheet_newmemorysh_0cfa90ff -->|calls| src_lib_usepushnotifications_sendpushtostorymemb_88a38ebf
-    src_components_sheets_newplansheet_newplansheet_11363c80 -->|calls| src_context_authcontext_useauth_d120e124
-    src_components_sheets_newplansheet_newplansheet_11363c80 -->|calls| src_context_toastcontext_usetoast_864679dc
-    src_components_sheets_newplansheet_newplansheet_11363c80 -->|calls| src_lib_paywall_enforcecountgate_88d5cdc1
-    src_components_sheets_newplansheet_newplansheet_11363c80 -->|calls| src_lib_useentitlement_useentitlement_dc429d8c
-    src_components_sheets_newplansheet_newplansheet_11363c80 -->|calls| src_lib_usepushnotifications_sendpushtostorymemb_88a38ebf
-    src_components_sheets_newplansheet_newplansheet_11363c80 -->|calls| src_lib_usepushnotifications_syncplantogooglecal_d4478df3
-    src_context_authcontext_useauth_d120e124 -->|calls| src_context_currencycontext_currencyprovider_949638ac
-    src_context_authcontext_useauth_d120e124 -->|calls| src_lib_useentitlement_useentitlement_dc429d8c
-    src_context_authcontext_useauth_d120e124 -->|calls| src_pages_finances_finances_82acb090
-    src_context_authcontext_useauth_d120e124 -->|calls| src_pages_profile_googlecalendarsection_83fad3e3
-    %% Omitted for readability: 10 nodes, 18 edges
-    class src_components_sheets_moneysheet_2640df5b ui;
-    class src_components_sheets_moneysheet_moneysheet_12b50cbb ui;
-    class src_components_sheets_newplansheet_a6140979 ui;
-    class src_components_sheets_newplansheet_newplansheet_11363c80 ui;
-    class src_context_currencycontext_usecurrency_9b557b65 ui;
-    class src_context_currencycontext_currencyprovider_949638ac ui;
-    class src_lib_usepushnotifications_sendpushtostorymemb_88a38ebf function;
-    class src_lib_usepushnotifications_syncplantogooglecal_d4478df3 function;
-    class src_pages_profile_googlecalendarsection_83fad3e3 ui;
-    class src_pages_profile_profilescreen_8215990b ui;
-    class src_components_sheets_newmemorysheet_newmemorysh_0cfa90ff ui;
-    class src_app_appinner_6d95665a ui;
-    class src_components_paywall_paywall_baf8e454 ui;
-    class src_context_authcontext_useauth_d120e124 ui;
-    class src_context_toastcontext_usetoast_864679dc ui;
-    class src_lib_paywall_enforcecountgate_88d5cdc1 function;
-    class src_lib_useentitlement_useentitlement_dc429d8c ui;
-    class src_pages_finances_finances_82acb090 ui;
-    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
-    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
-    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
-    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
-    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
-    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
-    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
-    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
-    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
-</div>
-
-<h3>Call Details</h3>
-<table class="call-table">
-<tr>
-  <th style="width:5%">#</th>
-  <th style="width:28%">Node</th>
-  <th style="width:10%">Type</th>
-  <th style="width:17%">Caller</th>
-  <th style="width:20%">Callees</th>
-  <th style="width:20%">Description</th>
-</tr>
-<tr>
-  <td>1</td>
-  <td><code>AppInner()</code><br><small style="color:var(--muted)">src/App.tsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>useAuth()</code><br><small style="color:var(--muted)">src/context/AuthContext.tsx</small><br><code>useToast()</code><br><small style="color:var(--muted)">src/context/ToastContext.tsx</small></td>
-  <td>AppInner() node in src/App.tsx.</td>
-</tr>
-<tr>
-  <td>2</td>
-  <td><code>Paywall()</code><br><small style="color:var(--muted)">src/components/Paywall.tsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>useAuth()</code><br><small style="color:var(--muted)">src/context/AuthContext.tsx</small><br><code>useEntitlement()</code><br><small style="color:var(--muted)">src/lib/useEntitlement.ts</small><br><code>useToast()</code><br><small style="color:var(--muted)">src/context/ToastContext.tsx</small></td>
-  <td>Paywall() node in src/components/Paywall.tsx.</td>
-</tr>
-<tr>
-  <td>3</td>
-  <td><code>MoneySheet.tsx</code><br><small style="color:var(--muted)">components/sheets/MoneySheet.tsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>CURRENCIES</code><br><small style="color:var(--muted)">src/context/CurrencyContext.tsx</small><br><code>CurrencyContext.tsx</code><br><small style="color:var(--muted)">src/context/CurrencyContext.tsx</small><br><code>sendPushToStoryMembers()</code><br><small style="color:var(--muted)">src/lib/usePushNotifications.ts</small><br>+3 more</td>
-  <td>Module file in components/sheets/MoneySheet.tsx.</td>
-</tr>
-<tr>
-  <td>4</td>
-  <td><code>CATS</code><br><small style="color:var(--muted)">components/sheets/MoneySheet.tsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>CATS node in components/sheets/MoneySheet.tsx.</td>
-</tr>
-<tr>
-  <td>5</td>
-  <td><code>Props</code><br><small style="color:var(--muted)">components/sheets/MoneySheet.tsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>Props node in components/sheets/MoneySheet.tsx.</td>
-</tr>
-<tr>
-  <td>6</td>
-  <td><code>MoneySheet()</code><br><small style="color:var(--muted)">components/sheets/MoneySheet.tsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>sendPushToStoryMembers()</code><br><small style="color:var(--muted)">src/lib/usePushNotifications.ts</small><br><code>useAuth()</code><br><small style="color:var(--muted)">src/context/AuthContext.tsx</small><br><code>useCurrency()</code><br><small style="color:var(--muted)">src/context/CurrencyContext.tsx</small><br>+1 more</td>
-  <td>MoneySheet() node in components/sheets/MoneySheet.tsx.</td>
-</tr>
-<tr>
-  <td>7</td>
-  <td><code>NewMemorySheet()</code><br><small style="color:var(--muted)">components/sheets/NewMemorySheet.tsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>enforceCountGate()</code><br><small style="color:var(--muted)">src/lib/paywall.ts</small><br><code>sendPushToStoryMembers()</code><br><small style="color:var(--muted)">src/lib/usePushNotifications.ts</small><br><code>useAuth()</code><br><small style="color:var(--muted)">src/context/AuthContext.tsx</small><br>+2 more</td>
-  <td>NewMemorySheet() node in components/sheets/NewMemorySheet.tsx.</td>
-</tr>
-<tr>
-  <td>8</td>
-  <td><code>NewPlanSheet.tsx</code><br><small style="color:var(--muted)">components/sheets/NewPlanSheet.tsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>enforceCountGate()</code><br><small style="color:var(--muted)">src/lib/paywall.ts</small><br><code>sendPushToStoryMembers()</code><br><small style="color:var(--muted)">src/lib/usePushNotifications.ts</small><br><code>syncPlanToGoogleCalendar()</code><br><small style="color:var(--muted)">src/lib/usePushNotifications.ts</small><br>+3 more</td>
-  <td>Module file in components/sheets/NewPlanSheet.tsx.</td>
-</tr>
-<tr>
-  <td>9</td>
-  <td><code>CAT_ICON</code><br><small style="color:var(--muted)">components/sheets/NewPlanSheet.tsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>CAT_ICON node in components/sheets/NewPlanSheet.tsx.</td>
-</tr>
-<tr>
-  <td>10</td>
-  <td><code>Props</code><br><small style="color:var(--muted)">components/sheets/NewPlanSheet.tsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>Props node in components/sheets/NewPlanSheet.tsx.</td>
-</tr>
-<tr>
-  <td>11</td>
-  <td><code>NewPlanSheet()</code><br><small style="color:var(--muted)">components/sheets/NewPlanSheet.tsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>enforceCountGate()</code><br><small style="color:var(--muted)">src/lib/paywall.ts</small><br><code>sendPushToStoryMembers()</code><br><small style="color:var(--muted)">src/lib/usePushNotifications.ts</small><br><code>syncPlanToGoogleCalendar()</code><br><small style="color:var(--muted)">src/lib/usePushNotifications.ts</small><br>+3 more</td>
-  <td>NewPlanSheet() node in components/sheets/NewPlanSheet.tsx.</td>
-</tr>
-<tr>
-  <td>12</td>
-  <td><code>useAuth()</code><br><small style="color:var(--muted)">src/context/AuthContext.tsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td><code>AppInner()</code><br><small style="color:var(--muted)">src/App.tsx</small><br><code>MoneySheet()</code><br><small style="color:var(--muted)">components/sheets/MoneySheet.tsx</small><br><code>MoneySheet.tsx</code><br><small style="color:var(--muted)">components/sheets/MoneySheet.tsx</small><br>+4 more</td>
-  <td><code>CurrencyContext.tsx</code><br><small style="color:var(--muted)">src/context/CurrencyContext.tsx</small><br><code>CurrencyProvider()</code><br><small style="color:var(--muted)">src/context/CurrencyContext.tsx</small><br><code>Finances()</code><br><small style="color:var(--muted)">src/pages/Finances.tsx</small><br>+3 more</td>
-  <td>useAuth() node in src/context/AuthContext.tsx.</td>
-</tr>
-<tr>
-  <td>13</td>
-  <td><code>CurrencyContext.tsx</code><br><small style="color:var(--muted)">src/context/CurrencyContext.tsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td><code>MoneySheet.tsx</code><br><small style="color:var(--muted)">components/sheets/MoneySheet.tsx</small><br><code>useAuth()</code><br><small style="color:var(--muted)">src/context/AuthContext.tsx</small></td>
-  <td>No direct outbound edge</td>
-  <td>Module file in src/context/CurrencyContext.tsx.</td>
-</tr>
-<tr>
-  <td>14</td>
-  <td><code>CurrencyKey</code><br><small style="color:var(--muted)">src/context/CurrencyContext.tsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>CurrencyKey node in src/context/CurrencyContext.tsx.</td>
-</tr>
-<tr>
-  <td>15</td>
-  <td><code>CURRENCIES</code><br><small style="color:var(--muted)">src/context/CurrencyContext.tsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td><code>MoneySheet.tsx</code><br><small style="color:var(--muted)">components/sheets/MoneySheet.tsx</small></td>
-  <td>No direct outbound edge</td>
-  <td>CURRENCIES node in src/context/CurrencyContext.tsx.</td>
-</tr>
-<tr>
-  <td>16</td>
-  <td><code>CurrencyCtx</code><br><small style="color:var(--muted)">src/context/CurrencyContext.tsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>CurrencyCtx node in src/context/CurrencyContext.tsx.</td>
-</tr>
-<tr>
-  <td>17</td>
-  <td><code>Ctx</code><br><small style="color:var(--muted)">src/context/CurrencyContext.tsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>Ctx node in src/context/CurrencyContext.tsx.</td>
-</tr>
-<tr>
-  <td>18</td>
-  <td><code>useCurrency()</code><br><small style="color:var(--muted)">src/context/CurrencyContext.tsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td><code>MoneySheet()</code><br><small style="color:var(--muted)">components/sheets/MoneySheet.tsx</small><br><code>MoneySheet.tsx</code><br><small style="color:var(--muted)">components/sheets/MoneySheet.tsx</small></td>
-  <td><code>Finances()</code><br><small style="color:var(--muted)">src/pages/Finances.tsx</small><br><code>ProfileScreen()</code><br><small style="color:var(--muted)">src/pages/Profile.tsx</small></td>
-  <td>useCurrency() node in src/context/CurrencyContext.tsx.</td>
-</tr>
-<tr>
-  <td>19</td>
-  <td><code>storyKey()</code><br><small style="color:var(--muted)">src/context/CurrencyContext.tsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>CurrencyProvider()</code><br><small style="color:var(--muted)">src/context/CurrencyContext.tsx</small></td>
-  <td>storyKey() node in src/context/CurrencyContext.tsx.</td>
-</tr>
-<tr>
-  <td>20</td>
-  <td><code>CurrencyProvider()</code><br><small style="color:var(--muted)">src/context/CurrencyContext.tsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td><code>storyKey()</code><br><small style="color:var(--muted)">src/context/CurrencyContext.tsx</small><br><code>useAuth()</code><br><small style="color:var(--muted)">src/context/AuthContext.tsx</small></td>
-  <td>No direct outbound edge</td>
-  <td>CurrencyProvider() node in src/context/CurrencyContext.tsx.</td>
-</tr>
-<tr>
-  <td>21</td>
-  <td><code>useToast()</code><br><small style="color:var(--muted)">src/context/ToastContext.tsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td><code>AppInner()</code><br><small style="color:var(--muted)">src/App.tsx</small><br><code>MoneySheet()</code><br><small style="color:var(--muted)">components/sheets/MoneySheet.tsx</small><br><code>MoneySheet.tsx</code><br><small style="color:var(--muted)">components/sheets/MoneySheet.tsx</small><br>+4 more</td>
-  <td><code>Finances()</code><br><small style="color:var(--muted)">src/pages/Finances.tsx</small><br><code>GoogleCalendarSection()</code><br><small style="color:var(--muted)">src/pages/Profile.tsx</small><br><code>ProfileScreen()</code><br><small style="color:var(--muted)">src/pages/Profile.tsx</small></td>
-  <td>useToast() node in src/context/ToastContext.tsx.</td>
-</tr>
-<tr>
-  <td>22</td>
-  <td><code>enforceCountGate()</code><br><small style="color:var(--muted)">src/lib/paywall.ts</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>NewMemorySheet()</code><br><small style="color:var(--muted)">components/sheets/NewMemorySheet.tsx</small><br><code>NewPlanSheet()</code><br><small style="color:var(--muted)">components/sheets/NewPlanSheet.tsx</small><br><code>NewPlanSheet.tsx</code><br><small style="color:var(--muted)">components/sheets/NewPlanSheet.tsx</small></td>
-  <td>No direct outbound edge</td>
-  <td>enforceCountGate() node in src/lib/paywall.ts.</td>
-</tr>
-<tr>
-  <td>23</td>
-  <td><code>useEntitlement()</code><br><small style="color:var(--muted)">src/lib/useEntitlement.ts</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td><code>NewMemorySheet()</code><br><small style="color:var(--muted)">components/sheets/NewMemorySheet.tsx</small><br><code>NewPlanSheet()</code><br><small style="color:var(--muted)">components/sheets/NewPlanSheet.tsx</small><br><code>NewPlanSheet.tsx</code><br><small style="color:var(--muted)">components/sheets/NewPlanSheet.tsx</small><br>+2 more</td>
-  <td><code>GoogleCalendarSection()</code><br><small style="color:var(--muted)">src/pages/Profile.tsx</small><br><code>ProfileScreen()</code><br><small style="color:var(--muted)">src/pages/Profile.tsx</small></td>
-  <td>useEntitlement() node in src/lib/useEntitlement.ts.</td>
-</tr>
-<tr>
-  <td>24</td>
-  <td><code>sendPushToStoryMembers()</code><br><small style="color:var(--muted)">src/lib/usePushNotifications.ts</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>MoneySheet()</code><br><small style="color:var(--muted)">components/sheets/MoneySheet.tsx</small><br><code>MoneySheet.tsx</code><br><small style="color:var(--muted)">components/sheets/MoneySheet.tsx</small><br><code>NewMemorySheet()</code><br><small style="color:var(--muted)">components/sheets/NewMemorySheet.tsx</small><br>+2 more</td>
-  <td>No direct outbound edge</td>
-  <td>sendPushToStoryMembers() node in src/lib/usePushNotifications.ts.</td>
-</tr>
-<tr>
-  <td>25</td>
-  <td><code>syncPlanToGoogleCalendar()</code><br><small style="color:var(--muted)">src/lib/usePushNotifications.ts</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>NewPlanSheet()</code><br><small style="color:var(--muted)">components/sheets/NewPlanSheet.tsx</small><br><code>NewPlanSheet.tsx</code><br><small style="color:var(--muted)">components/sheets/NewPlanSheet.tsx</small></td>
-  <td>No direct outbound edge</td>
-  <td>syncPlanToGoogleCalendar() node in src/lib/usePushNotifications.ts.</td>
-</tr>
-<tr>
-  <td>26</td>
-  <td><code>Finances()</code><br><small style="color:var(--muted)">src/pages/Finances.tsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td><code>useAuth()</code><br><small style="color:var(--muted)">src/context/AuthContext.tsx</small><br><code>useCurrency()</code><br><small style="color:var(--muted)">src/context/CurrencyContext.tsx</small><br><code>useToast()</code><br><small style="color:var(--muted)">src/context/ToastContext.tsx</small></td>
-  <td>No direct outbound edge</td>
-  <td>Finances() node in src/pages/Finances.tsx.</td>
-</tr>
-<tr>
-  <td>27</td>
-  <td><code>ProfileScreen()</code><br><small style="color:var(--muted)">src/pages/Profile.tsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td><code>useAuth()</code><br><small style="color:var(--muted)">src/context/AuthContext.tsx</small><br><code>useCurrency()</code><br><small style="color:var(--muted)">src/context/CurrencyContext.tsx</small><br><code>useEntitlement()</code><br><small style="color:var(--muted)">src/lib/useEntitlement.ts</small><br>+1 more</td>
-  <td>No direct outbound edge</td>
-  <td>ProfileScreen() node in src/pages/Profile.tsx.</td>
-</tr>
-<tr>
-  <td>28</td>
-  <td><code>GoogleCalendarSection()</code><br><small style="color:var(--muted)">src/pages/Profile.tsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td><code>useAuth()</code><br><small style="color:var(--muted)">src/context/AuthContext.tsx</small><br><code>useEntitlement()</code><br><small style="color:var(--muted)">src/lib/useEntitlement.ts</small><br><code>useToast()</code><br><small style="color:var(--muted)">src/context/ToastContext.tsx</small></td>
-  <td>No direct outbound edge</td>
-  <td>GoogleCalendarSection() node in src/pages/Profile.tsx.</td>
-</tr>
-</table>
-
-<div class="grid">
-  <div class="card">
-    <h4>Key Files</h4>
-    <table style="width:100%;font-size:0.85rem;">
-      <tr><th>File</th><th>Coverage</th></tr>
-      <tr><td><code>src/context/CurrencyContext.tsx</code></td><td>8 nodes</td></tr>
-<tr><td><code>components/sheets/MoneySheet.tsx</code></td><td>4 nodes</td></tr>
-<tr><td><code>components/sheets/NewPlanSheet.tsx</code></td><td>4 nodes</td></tr>
-<tr><td><code>src/lib/usePushNotifications.ts</code></td><td>2 nodes</td></tr>
-<tr><td><code>src/pages/Profile.tsx</code></td><td>2 nodes</td></tr>
-<tr><td><code>src/App.tsx</code></td><td>1 nodes</td></tr>
-<tr><td><code>src/components/Paywall.tsx</code></td><td>1 nodes</td></tr>
-<tr><td><code>components/sheets/NewMemorySheet.tsx</code></td><td>1 nodes</td></tr>
-    </table>
-  </div>
-  <div class="card">
-    <h4>Design Notes</h4>
-    <p>This section comes from graphify community clustering. Relationship summary: calls x33, contains x13, imports x12, imports x1. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
-  </div>
-</div>
-<hr>
-
 <!-- ====== 14. AuthContext.tsx ====== -->
 <h2 id="authcontext-tsx">14. AuthContext.tsx</h2>
-<p>AuthContext.tsx groups implementation around supabasets, components, sheets, editstorysheettsx, mostly in src/lib/supabase.ts, components/sheets/EditStorySheet.tsx, src/pages/Finances.tsx. This section covers 25 nodes and 44 internal edges; the diagram shows only representative relationships to stay readable.</p>
+<p>AuthContext.tsx groups implementation around components, sheets, icontsx, confirmdialogtsx, mostly in components/ui/Icon.tsx, components/ui/ConfirmDialog.tsx, src/context/ToastContext.tsx. This section covers 27 nodes and 40 internal edges; the diagram shows only representative relationships to stay readable.</p>
 
 <div class="mermaid">
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: AuthContext.tsx (25 nodes, 44 edges)
-    subgraph authcontext_tsx_src_lib_supabase_ts_5be12961["src/lib/supabase.ts"]
-        src_lib_supabase_6d69975a("supabase.ts")
-        src_lib_supabase_storytype_0227190f("StoryType<br/><small>src/lib/supabase.ts</small>")
-        src_lib_supabase_supabase_4d4ef125("supabase<br/><small>src/lib/supabase.ts</small>")
-        src_lib_supabase_albumtype_9a8f0395("AlbumType<br/><small>src/lib/supabase.ts</small>")
-        src_lib_supabase_plantype_165303cc("PlanType<br/><small>src/lib/supabase.ts</small>")
-        src_lib_supabase_transactiontype_70e0bc51("TransactionType<br/><small>src/lib/supabase.ts</small>")
-    end
+    %% Section: AuthContext.tsx (27 nodes, 40 edges)
     subgraph authcontext_tsx_components_sheets_EditStorySheet_2905209c["components/sheets/EditStorySheet.tsx"]
         src_components_sheets_editstorysheet_610f7cc7("EditStorySheet.tsx")
-        src_components_sheets_editstorysheet_editstorysh_f2d655c3("EditStorySheet()<br/><small>components/sheets/EditStorySheet.tsx</small>")
         src_components_sheets_editstorysheet_cat_options_57f0d758("CAT_OPTIONS<br/><small>components/sheets/EditStorySheet.tsx</small>")
+        src_components_sheets_editstorysheet_props_42c759c5("Props<br/><small>components/sheets/EditStorySheet.tsx</small>")
     end
-    subgraph authcontext_tsx_src_pages_Finances_tsx_eb7ddf32["src/pages/Finances.tsx"]
-        src_pages_finances_getperiodbounds_7acca045("getPeriodBounds()<br/><small>src/pages/Finances.tsx</small>")
-        src_pages_finances_inperiod_85ab6935("inPeriod()<br/><small>src/pages/Finances.tsx</small>")
-        src_pages_finances_3cda917b("Finances.tsx")
+    subgraph authcontext_tsx_components_sheets_GlobalActionSh_df13a91d["components/sheets/GlobalActionSheet.tsx"]
+        src_components_sheets_globalactionsheet_e97f9b1e("GlobalActionSheet.tsx")
+        src_components_sheets_globalactionsheet_globalac_5ae6dd9d("GlobalActionSheet()<br/><small>components/sheets/GlobalActionSheet.tsx</small>")
+        src_components_sheets_globalactionsheet_items_e203f0cc("ITEMS<br/><small>components/sheets/GlobalActionSheet.tsx</small>")
     end
-    subgraph authcontext_tsx_src_lib_capacitorStorageAdapter_0817f7f9["src/lib/capacitorStorageAdapter.ts"]
-        src_lib_capacitorstorageadapter_be760bf8("capacitorStorageAdapter.ts")
-        src_lib_capacitorstorageadapter_capacitorstorage_24d6ad8d("capacitorStorageAdapter<br/><small>src/lib/capacitorStorageAdapter.ts</small>")
+    subgraph authcontext_tsx_components_ui_BottomSheet_tsx_aa377398["components/ui/BottomSheet.tsx"]
+        src_components_ui_bottomsheet_a7d4c468("BottomSheet.tsx")
+        src_components_ui_bottomsheet_bottomsheet_490d62f7("BottomSheet()<br/><small>components/ui/BottomSheet.tsx</small>")
+        src_components_ui_bottomsheet_props_7611f133("Props<br/><small>components/ui/BottomSheet.tsx</small>")
     end
-    subgraph authcontext_tsx_src_lib_imageUtils_ts_8c57abcc["src/lib/imageUtils.ts"]
-        src_lib_imageutils_compresstowebp_499b98f0("compressToWebP()<br/><small>src/lib/imageUtils.ts</small>")
-        src_lib_imageutils_f03886f4("imageUtils.ts")
+    subgraph authcontext_tsx_components_sheets_NewMemorySheet_0a4af093["components/sheets/NewMemorySheet.tsx"]
+        src_components_sheets_newmemorysheet_94a02699("NewMemorySheet.tsx")
+        src_components_sheets_newmemorysheet_props_1e203585("Props<br/><small>components/sheets/NewMemorySheet.tsx</small>")
     end
-    src_components_sheets_newmemorysheet_94a02699("NewMemorySheet.tsx")
-    src_context_authcontext_6aad7e01("AuthContext.tsx")
-    src_components_sheets_editstorysheet_editstorysh_f2d655c3 -->|calls| src_lib_imageutils_compresstowebp_499b98f0
-    src_pages_finances_getperiodbounds_7acca045 -->|calls| src_pages_finances_inperiod_85ab6935
-    src_components_sheets_editstorysheet_610f7cc7 -->|imports| src_context_authcontext_6aad7e01
-    src_components_sheets_editstorysheet_610f7cc7 -->|imports| src_lib_imageutils_f03886f4
-    src_components_sheets_editstorysheet_610f7cc7 -->|imports| src_lib_imageutils_compresstowebp_499b98f0
-    src_components_sheets_editstorysheet_610f7cc7 -->|imports| src_lib_supabase_6d69975a
+    subgraph authcontext_tsx_components_ui_ConfirmDialog_tsx_ecc57a4e["components/ui/ConfirmDialog.tsx"]
+        src_components_ui_confirmdialog_f79a6688("ConfirmDialog.tsx")
+        src_components_ui_confirmdialog_confirmfn_ef59553b("ConfirmFn<br/><small>components/ui/ConfirmDialog.tsx</small>")
+    end
+    subgraph authcontext_tsx_components_ui_Icon_tsx_9927d7ab["components/ui/Icon.tsx"]
+        src_components_ui_icon_527eb4c9("Icon.tsx")
+        src_components_ui_icon_icon_de963ff8("Icon()<br/><small>components/ui/Icon.tsx</small>")
+    end
+    src_components_ui_emptystate_41212d33("EmptyState.tsx")
+    src_context_toastcontext_56bf6eb8("ToastContext.tsx")
+    src_lib_supabase_storytype_0227190f("StoryType<br/><small>src/lib/supabase.ts</small>")
+    src_components_sheets_editstorysheet_610f7cc7 -->|imports| src_components_ui_bottomsheet_a7d4c468
+    src_components_sheets_editstorysheet_610f7cc7 -->|imports| src_components_ui_bottomsheet_bottomsheet_490d62f7
+    src_components_sheets_editstorysheet_610f7cc7 -->|imports| src_components_ui_icon_527eb4c9
+    src_components_sheets_editstorysheet_610f7cc7 -->|imports| src_components_ui_icon_icon_de963ff8
+    src_components_sheets_editstorysheet_610f7cc7 -->|imports| src_context_toastcontext_56bf6eb8
     src_components_sheets_editstorysheet_610f7cc7 -->|imports| src_lib_supabase_storytype_0227190f
-    src_components_sheets_editstorysheet_610f7cc7 -->|imports| src_lib_supabase_supabase_4d4ef125
-    src_components_sheets_newmemorysheet_94a02699 -->|imports| src_context_authcontext_6aad7e01
-    src_components_sheets_newmemorysheet_94a02699 -->|imports| src_lib_imageutils_f03886f4
-    src_components_sheets_newmemorysheet_94a02699 -->|imports| src_lib_imageutils_compresstowebp_499b98f0
-    src_components_sheets_newmemorysheet_94a02699 -->|imports| src_lib_supabase_6d69975a
-    src_components_sheets_newmemorysheet_94a02699 -->|imports| src_lib_supabase_albumtype_9a8f0395
-    src_components_sheets_newmemorysheet_94a02699 -->|imports| src_lib_supabase_plantype_165303cc
-    src_components_sheets_newmemorysheet_94a02699 -->|imports| src_lib_supabase_supabase_4d4ef125
-    src_context_authcontext_6aad7e01 -->|imports| src_lib_supabase_6d69975a
-    src_context_authcontext_6aad7e01 -->|imports| src_lib_supabase_storytype_0227190f
-    src_context_authcontext_6aad7e01 -->|imports| src_lib_supabase_supabase_4d4ef125
-    src_context_authcontext_6aad7e01 -->|imports| src_pages_finances_3cda917b
-    src_lib_capacitorstorageadapter_be760bf8 -->|imports| src_lib_supabase_6d69975a
-    src_lib_capacitorstorageadapter_capacitorstorage_24d6ad8d -->|imports| src_lib_supabase_6d69975a
-    src_lib_supabase_6d69975a -->|imports| src_pages_finances_3cda917b
-    src_lib_supabase_supabase_4d4ef125 -->|imports| src_pages_finances_3cda917b
-    src_lib_supabase_plantype_165303cc -->|imports| src_pages_finances_3cda917b
-    %% Omitted for readability: 7 nodes, 1 edges
-    class src_lib_supabase_6d69975a module;
-    class src_lib_supabase_storytype_0227190f klass;
-    class src_lib_supabase_supabase_4d4ef125 function;
-    class src_lib_supabase_albumtype_9a8f0395 klass;
-    class src_lib_supabase_plantype_165303cc klass;
-    class src_lib_supabase_transactiontype_70e0bc51 klass;
+    src_components_sheets_globalactionsheet_e97f9b1e -->|imports| src_components_ui_bottomsheet_a7d4c468
+    src_components_sheets_globalactionsheet_e97f9b1e -->|imports| src_components_ui_bottomsheet_bottomsheet_490d62f7
+    src_components_sheets_globalactionsheet_e97f9b1e -->|imports| src_components_ui_icon_527eb4c9
+    src_components_sheets_globalactionsheet_e97f9b1e -->|imports| src_components_ui_icon_icon_de963ff8
+    src_components_sheets_newmemorysheet_94a02699 -->|imports| src_components_ui_bottomsheet_a7d4c468
+    src_components_sheets_newmemorysheet_94a02699 -->|imports| src_components_ui_bottomsheet_bottomsheet_490d62f7
+    src_components_sheets_newmemorysheet_94a02699 -->|imports| src_components_ui_icon_527eb4c9
+    src_components_sheets_newmemorysheet_94a02699 -->|imports| src_components_ui_icon_icon_de963ff8
+    src_components_sheets_newmemorysheet_94a02699 -->|imports| src_context_toastcontext_56bf6eb8
+    src_components_ui_confirmdialog_f79a6688 -->|imports| src_components_ui_icon_527eb4c9
+    src_components_ui_confirmdialog_f79a6688 -->|imports| src_components_ui_icon_icon_de963ff8
+    src_components_ui_emptystate_41212d33 -->|imports| src_components_ui_icon_527eb4c9
+    src_components_ui_emptystate_41212d33 -->|imports| src_components_ui_icon_icon_de963ff8
+    src_components_ui_icon_527eb4c9 -->|imports| src_context_toastcontext_56bf6eb8
+    src_components_ui_icon_icon_de963ff8 -->|imports| src_context_toastcontext_56bf6eb8
+    %% Omitted for readability: 9 nodes, 0 edges
     class src_components_sheets_editstorysheet_610f7cc7 ui;
-    class src_components_sheets_editstorysheet_editstorysh_f2d655c3 ui;
     class src_components_sheets_editstorysheet_cat_options_57f0d758 ui;
-    class src_pages_finances_getperiodbounds_7acca045 ui;
-    class src_pages_finances_inperiod_85ab6935 ui;
-    class src_pages_finances_3cda917b ui;
-    class src_lib_capacitorstorageadapter_be760bf8 module;
-    class src_lib_capacitorstorageadapter_capacitorstorage_24d6ad8d function;
-    class src_lib_imageutils_compresstowebp_499b98f0 function;
-    class src_lib_imageutils_f03886f4 module;
+    class src_components_sheets_editstorysheet_props_42c759c5 ui;
+    class src_components_sheets_globalactionsheet_e97f9b1e ui;
+    class src_components_sheets_globalactionsheet_globalac_5ae6dd9d ui;
+    class src_components_sheets_globalactionsheet_items_e203f0cc ui;
+    class src_components_ui_bottomsheet_a7d4c468 ui;
+    class src_components_ui_bottomsheet_bottomsheet_490d62f7 ui;
+    class src_components_ui_bottomsheet_props_7611f133 ui;
     class src_components_sheets_newmemorysheet_94a02699 ui;
-    class src_context_authcontext_6aad7e01 ui;
+    class src_components_sheets_newmemorysheet_props_1e203585 ui;
+    class src_components_ui_confirmdialog_f79a6688 ui;
+    class src_components_ui_confirmdialog_confirmfn_ef59553b ui;
+    class src_components_ui_icon_527eb4c9 ui;
+    class src_components_ui_icon_icon_de963ff8 ui;
+    class src_components_ui_emptystate_41212d33 ui;
+    class src_context_toastcontext_56bf6eb8 ui;
+    class src_lib_supabase_storytype_0227190f klass;
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
     classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
@@ -4119,7 +4126,7 @@ flowchart LR
   <td><code>EditStorySheet.tsx</code><br><small style="color:var(--muted)">components/sheets/EditStorySheet.tsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td>External entry / no inbound edge</td>
-  <td><code>AuthContext.tsx</code><br><small style="color:var(--muted)">src/context/AuthContext.tsx</small><br><code>compressToWebP()</code><br><small style="color:var(--muted)">src/lib/imageUtils.ts</small><br><code>imageUtils.ts</code><br><small style="color:var(--muted)">src/lib/imageUtils.ts</small><br>+3 more</td>
+  <td><code>BottomSheet()</code><br><small style="color:var(--muted)">components/ui/BottomSheet.tsx</small><br><code>BottomSheet.tsx</code><br><small style="color:var(--muted)">components/ui/BottomSheet.tsx</small><br><code>Icon()</code><br><small style="color:var(--muted)">components/ui/Icon.tsx</small><br>+3 more</td>
   <td>Module file in components/sheets/EditStorySheet.tsx.</td>
 </tr>
 <tr>
@@ -4140,22 +4147,38 @@ flowchart LR
 </tr>
 <tr>
   <td>4</td>
-  <td><code>EditStorySheet()</code><br><small style="color:var(--muted)">components/sheets/EditStorySheet.tsx</small></td>
+  <td><code>GlobalActionSheet.tsx</code><br><small style="color:var(--muted)">components/sheets/GlobalActionSheet.tsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td>External entry / no inbound edge</td>
-  <td><code>compressToWebP()</code><br><small style="color:var(--muted)">src/lib/imageUtils.ts</small></td>
-  <td>EditStorySheet() node in components/sheets/EditStorySheet.tsx.</td>
+  <td><code>BottomSheet()</code><br><small style="color:var(--muted)">components/ui/BottomSheet.tsx</small><br><code>BottomSheet.tsx</code><br><small style="color:var(--muted)">components/ui/BottomSheet.tsx</small><br><code>Icon()</code><br><small style="color:var(--muted)">components/ui/Icon.tsx</small><br>+1 more</td>
+  <td>Module file in components/sheets/GlobalActionSheet.tsx.</td>
 </tr>
 <tr>
   <td>5</td>
-  <td><code>NewMemorySheet.tsx</code><br><small style="color:var(--muted)">components/sheets/NewMemorySheet.tsx</small></td>
+  <td><code>ITEMS</code><br><small style="color:var(--muted)">components/sheets/GlobalActionSheet.tsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td>External entry / no inbound edge</td>
-  <td><code>AlbumType</code><br><small style="color:var(--muted)">src/lib/supabase.ts</small><br><code>AuthContext.tsx</code><br><small style="color:var(--muted)">src/context/AuthContext.tsx</small><br><code>compressToWebP()</code><br><small style="color:var(--muted)">src/lib/imageUtils.ts</small><br>+4 more</td>
-  <td>Module file in components/sheets/NewMemorySheet.tsx.</td>
+  <td>No direct outbound edge</td>
+  <td>ITEMS node in components/sheets/GlobalActionSheet.tsx.</td>
 </tr>
 <tr>
   <td>6</td>
+  <td><code>GlobalActionSheet()</code><br><small style="color:var(--muted)">components/sheets/GlobalActionSheet.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>GlobalActionSheet() node in components/sheets/GlobalActionSheet.tsx.</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>NewMemorySheet.tsx</code><br><small style="color:var(--muted)">components/sheets/NewMemorySheet.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>BottomSheet()</code><br><small style="color:var(--muted)">components/ui/BottomSheet.tsx</small><br><code>BottomSheet.tsx</code><br><small style="color:var(--muted)">components/ui/BottomSheet.tsx</small><br><code>Icon()</code><br><small style="color:var(--muted)">components/ui/Icon.tsx</small><br>+2 more</td>
+  <td>Module file in components/sheets/NewMemorySheet.tsx.</td>
+</tr>
+<tr>
+  <td>8</td>
   <td><code>Props</code><br><small style="color:var(--muted)">components/sheets/NewMemorySheet.tsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td>External entry / no inbound edge</td>
@@ -4163,156 +4186,156 @@ flowchart LR
   <td>Props node in components/sheets/NewMemorySheet.tsx.</td>
 </tr>
 <tr>
-  <td>7</td>
-  <td><code>AuthContext.tsx</code><br><small style="color:var(--muted)">src/context/AuthContext.tsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td><code>EditStorySheet.tsx</code><br><small style="color:var(--muted)">components/sheets/EditStorySheet.tsx</small><br><code>NewMemorySheet.tsx</code><br><small style="color:var(--muted)">components/sheets/NewMemorySheet.tsx</small></td>
-  <td><code>Finances.tsx</code><br><small style="color:var(--muted)">src/pages/Finances.tsx</small><br><code>StoryType</code><br><small style="color:var(--muted)">src/lib/supabase.ts</small><br><code>supabase</code><br><small style="color:var(--muted)">src/lib/supabase.ts</small><br>+1 more</td>
-  <td>Module file in src/context/AuthContext.tsx.</td>
-</tr>
-<tr>
-  <td>8</td>
-  <td><code>AuthContextType</code><br><small style="color:var(--muted)">src/context/AuthContext.tsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>AuthContextType node in src/context/AuthContext.tsx.</td>
-</tr>
-<tr>
   <td>9</td>
-  <td><code>AuthContext</code><br><small style="color:var(--muted)">src/context/AuthContext.tsx</small></td>
+  <td><code>BottomSheet.tsx</code><br><small style="color:var(--muted)">components/ui/BottomSheet.tsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
-  <td>External entry / no inbound edge</td>
+  <td><code>EditStorySheet.tsx</code><br><small style="color:var(--muted)">components/sheets/EditStorySheet.tsx</small><br><code>GlobalActionSheet.tsx</code><br><small style="color:var(--muted)">components/sheets/GlobalActionSheet.tsx</small><br><code>NewMemorySheet.tsx</code><br><small style="color:var(--muted)">components/sheets/NewMemorySheet.tsx</small></td>
   <td>No direct outbound edge</td>
-  <td>AuthContext node in src/context/AuthContext.tsx.</td>
+  <td>Module file in components/ui/BottomSheet.tsx.</td>
 </tr>
 <tr>
   <td>10</td>
-  <td><code>capacitorStorageAdapter.ts</code><br><small style="color:var(--muted)">src/lib/capacitorStorageAdapter.ts</small></td>
-  <td><span class="tag tag-class">Module</span></td>
+  <td><code>Props</code><br><small style="color:var(--muted)">components/ui/BottomSheet.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
   <td>External entry / no inbound edge</td>
-  <td><code>supabase.ts</code><br><small style="color:var(--muted)">src/lib/supabase.ts</small></td>
-  <td>Module file in src/lib/capacitorStorageAdapter.ts.</td>
+  <td>No direct outbound edge</td>
+  <td>Props node in components/ui/BottomSheet.tsx.</td>
 </tr>
 <tr>
   <td>11</td>
-  <td><code>capacitorStorageAdapter</code><br><small style="color:var(--muted)">src/lib/capacitorStorageAdapter.ts</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>supabase.ts</code><br><small style="color:var(--muted)">src/lib/supabase.ts</small></td>
-  <td>Supports retrieval-augmented Q&amp;A or streaming chat.</td>
+  <td><code>BottomSheet()</code><br><small style="color:var(--muted)">components/ui/BottomSheet.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>EditStorySheet.tsx</code><br><small style="color:var(--muted)">components/sheets/EditStorySheet.tsx</small><br><code>GlobalActionSheet.tsx</code><br><small style="color:var(--muted)">components/sheets/GlobalActionSheet.tsx</small><br><code>NewMemorySheet.tsx</code><br><small style="color:var(--muted)">components/sheets/NewMemorySheet.tsx</small></td>
+  <td>No direct outbound edge</td>
+  <td>BottomSheet() node in components/ui/BottomSheet.tsx.</td>
 </tr>
 <tr>
   <td>12</td>
-  <td><code>imageUtils.ts</code><br><small style="color:var(--muted)">src/lib/imageUtils.ts</small></td>
-  <td><span class="tag tag-class">Module</span></td>
-  <td><code>EditStorySheet.tsx</code><br><small style="color:var(--muted)">components/sheets/EditStorySheet.tsx</small><br><code>NewMemorySheet.tsx</code><br><small style="color:var(--muted)">components/sheets/NewMemorySheet.tsx</small></td>
-  <td>No direct outbound edge</td>
-  <td>Module file in src/lib/imageUtils.ts.</td>
+  <td><code>ConfirmDialog.tsx</code><br><small style="color:var(--muted)">components/ui/ConfirmDialog.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>Icon()</code><br><small style="color:var(--muted)">components/ui/Icon.tsx</small><br><code>Icon.tsx</code><br><small style="color:var(--muted)">components/ui/Icon.tsx</small></td>
+  <td>Module file in components/ui/ConfirmDialog.tsx.</td>
 </tr>
 <tr>
   <td>13</td>
-  <td><code>compressToWebP()</code><br><small style="color:var(--muted)">src/lib/imageUtils.ts</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>EditStorySheet()</code><br><small style="color:var(--muted)">components/sheets/EditStorySheet.tsx</small><br><code>EditStorySheet.tsx</code><br><small style="color:var(--muted)">components/sheets/EditStorySheet.tsx</small><br><code>NewMemorySheet.tsx</code><br><small style="color:var(--muted)">components/sheets/NewMemorySheet.tsx</small></td>
+  <td><code>ConfirmOpts</code><br><small style="color:var(--muted)">components/ui/ConfirmDialog.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>compressToWebP() node in src/lib/imageUtils.ts.</td>
+  <td>ConfirmOpts node in components/ui/ConfirmDialog.tsx.</td>
 </tr>
 <tr>
   <td>14</td>
-  <td><code>supabase.ts</code><br><small style="color:var(--muted)">src/lib/supabase.ts</small></td>
-  <td><span class="tag tag-class">Module</span></td>
-  <td><code>AuthContext.tsx</code><br><small style="color:var(--muted)">src/context/AuthContext.tsx</small><br><code>capacitorStorageAdapter</code><br><small style="color:var(--muted)">src/lib/capacitorStorageAdapter.ts</small><br><code>capacitorStorageAdapter.ts</code><br><small style="color:var(--muted)">src/lib/capacitorStorageAdapter.ts</small><br>+2 more</td>
-  <td><code>Finances.tsx</code><br><small style="color:var(--muted)">src/pages/Finances.tsx</small></td>
-  <td>Module file in src/lib/supabase.ts.</td>
+  <td><code>ConfirmFn</code><br><small style="color:var(--muted)">components/ui/ConfirmDialog.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>ConfirmFn node in components/ui/ConfirmDialog.tsx.</td>
 </tr>
 <tr>
   <td>15</td>
-  <td><code>isNative</code><br><small style="color:var(--muted)">src/lib/supabase.ts</small></td>
-  <td><span class="tag tag-func">Function</span></td>
+  <td><code>Ctx</code><br><small style="color:var(--muted)">components/ui/ConfirmDialog.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>isNative node in src/lib/supabase.ts.</td>
+  <td>Ctx node in components/ui/ConfirmDialog.tsx.</td>
 </tr>
 <tr>
   <td>16</td>
-  <td><code>supabase</code><br><small style="color:var(--muted)">src/lib/supabase.ts</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>AuthContext.tsx</code><br><small style="color:var(--muted)">src/context/AuthContext.tsx</small><br><code>EditStorySheet.tsx</code><br><small style="color:var(--muted)">components/sheets/EditStorySheet.tsx</small><br><code>NewMemorySheet.tsx</code><br><small style="color:var(--muted)">components/sheets/NewMemorySheet.tsx</small></td>
-  <td><code>Finances.tsx</code><br><small style="color:var(--muted)">src/pages/Finances.tsx</small></td>
-  <td>supabase node in src/lib/supabase.ts.</td>
+  <td><code>EmptyState.tsx</code><br><small style="color:var(--muted)">components/ui/EmptyState.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>Icon()</code><br><small style="color:var(--muted)">components/ui/Icon.tsx</small><br><code>Icon.tsx</code><br><small style="color:var(--muted)">components/ui/Icon.tsx</small></td>
+  <td>Module file in components/ui/EmptyState.tsx.</td>
 </tr>
 <tr>
   <td>17</td>
-  <td><code>StoryType</code><br><small style="color:var(--muted)">src/lib/supabase.ts</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td><code>AuthContext.tsx</code><br><small style="color:var(--muted)">src/context/AuthContext.tsx</small><br><code>EditStorySheet.tsx</code><br><small style="color:var(--muted)">components/sheets/EditStorySheet.tsx</small></td>
+  <td><code>EmptyState()</code><br><small style="color:var(--muted)">components/ui/EmptyState.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>StoryType node in src/lib/supabase.ts.</td>
+  <td>EmptyState() node in components/ui/EmptyState.tsx.</td>
 </tr>
 <tr>
   <td>18</td>
-  <td><code>StoryMemberType</code><br><small style="color:var(--muted)">src/lib/supabase.ts</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>StoryMemberType node in src/lib/supabase.ts.</td>
+  <td><code>Icon.tsx</code><br><small style="color:var(--muted)">components/ui/Icon.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>ConfirmDialog.tsx</code><br><small style="color:var(--muted)">components/ui/ConfirmDialog.tsx</small><br><code>EditStorySheet.tsx</code><br><small style="color:var(--muted)">components/sheets/EditStorySheet.tsx</small><br><code>EmptyState.tsx</code><br><small style="color:var(--muted)">components/ui/EmptyState.tsx</small><br>+2 more</td>
+  <td><code>ToastContext.tsx</code><br><small style="color:var(--muted)">src/context/ToastContext.tsx</small></td>
+  <td>Module file in components/ui/Icon.tsx.</td>
 </tr>
 <tr>
   <td>19</td>
-  <td><code>PlanType</code><br><small style="color:var(--muted)">src/lib/supabase.ts</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td><code>NewMemorySheet.tsx</code><br><small style="color:var(--muted)">components/sheets/NewMemorySheet.tsx</small></td>
-  <td><code>Finances.tsx</code><br><small style="color:var(--muted)">src/pages/Finances.tsx</small></td>
-  <td>PlanType node in src/lib/supabase.ts.</td>
+  <td><code>IconComponent</code><br><small style="color:var(--muted)">components/ui/Icon.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>IconComponent node in components/ui/Icon.tsx.</td>
 </tr>
 <tr>
   <td>20</td>
-  <td><code>AlbumType</code><br><small style="color:var(--muted)">src/lib/supabase.ts</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td><code>NewMemorySheet.tsx</code><br><small style="color:var(--muted)">components/sheets/NewMemorySheet.tsx</small></td>
+  <td><code>ICONS</code><br><small style="color:var(--muted)">components/ui/Icon.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>AlbumType node in src/lib/supabase.ts.</td>
+  <td>ICONS node in components/ui/Icon.tsx.</td>
 </tr>
 <tr>
   <td>21</td>
-  <td><code>TransactionType</code><br><small style="color:var(--muted)">src/lib/supabase.ts</small></td>
-  <td><span class="tag tag-class">Class</span></td>
+  <td><code>GoogleCalIcon()</code><br><small style="color:var(--muted)">components/ui/Icon.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
   <td>External entry / no inbound edge</td>
-  <td><code>Finances.tsx</code><br><small style="color:var(--muted)">src/pages/Finances.tsx</small></td>
-  <td>TransactionType node in src/lib/supabase.ts.</td>
+  <td>No direct outbound edge</td>
+  <td>GoogleCalIcon() node in components/ui/Icon.tsx.</td>
 </tr>
 <tr>
   <td>22</td>
-  <td><code>Finances.tsx</code><br><small style="color:var(--muted)">src/pages/Finances.tsx</small></td>
+  <td><code>Icon()</code><br><small style="color:var(--muted)">components/ui/Icon.tsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
-  <td><code>AuthContext.tsx</code><br><small style="color:var(--muted)">src/context/AuthContext.tsx</small><br><code>PlanType</code><br><small style="color:var(--muted)">src/lib/supabase.ts</small><br><code>supabase</code><br><small style="color:var(--muted)">src/lib/supabase.ts</small><br>+2 more</td>
-  <td>No direct outbound edge</td>
-  <td>Module file in src/pages/Finances.tsx.</td>
+  <td><code>ConfirmDialog.tsx</code><br><small style="color:var(--muted)">components/ui/ConfirmDialog.tsx</small><br><code>EditStorySheet.tsx</code><br><small style="color:var(--muted)">components/sheets/EditStorySheet.tsx</small><br><code>EmptyState.tsx</code><br><small style="color:var(--muted)">components/ui/EmptyState.tsx</small><br>+2 more</td>
+  <td><code>ToastContext.tsx</code><br><small style="color:var(--muted)">src/context/ToastContext.tsx</small></td>
+  <td>Icon() node in components/ui/Icon.tsx.</td>
 </tr>
 <tr>
   <td>23</td>
-  <td><code>TYPE_ICONS</code><br><small style="color:var(--muted)">src/pages/Finances.tsx</small></td>
+  <td><code>ToastContext.tsx</code><br><small style="color:var(--muted)">src/context/ToastContext.tsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
-  <td>External entry / no inbound edge</td>
+  <td><code>EditStorySheet.tsx</code><br><small style="color:var(--muted)">components/sheets/EditStorySheet.tsx</small><br><code>Icon()</code><br><small style="color:var(--muted)">components/ui/Icon.tsx</small><br><code>Icon.tsx</code><br><small style="color:var(--muted)">components/ui/Icon.tsx</small><br>+1 more</td>
   <td>No direct outbound edge</td>
-  <td>TYPE_ICONS node in src/pages/Finances.tsx.</td>
+  <td>Module file in src/context/ToastContext.tsx.</td>
 </tr>
 <tr>
   <td>24</td>
-  <td><code>getPeriodBounds()</code><br><small style="color:var(--muted)">src/pages/Finances.tsx</small></td>
+  <td><code>Toast</code><br><small style="color:var(--muted)">src/context/ToastContext.tsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td>External entry / no inbound edge</td>
-  <td><code>inPeriod()</code><br><small style="color:var(--muted)">src/pages/Finances.tsx</small></td>
-  <td>getPeriodBounds() node in src/pages/Finances.tsx.</td>
+  <td>No direct outbound edge</td>
+  <td>Toast node in src/context/ToastContext.tsx.</td>
 </tr>
 <tr>
   <td>25</td>
-  <td><code>inPeriod()</code><br><small style="color:var(--muted)">src/pages/Finances.tsx</small></td>
+  <td><code>ToastCtx</code><br><small style="color:var(--muted)">src/context/ToastContext.tsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
-  <td><code>getPeriodBounds()</code><br><small style="color:var(--muted)">src/pages/Finances.tsx</small></td>
+  <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>inPeriod() node in src/pages/Finances.tsx.</td>
+  <td>ToastCtx node in src/context/ToastContext.tsx.</td>
+</tr>
+<tr>
+  <td>26</td>
+  <td><code>Ctx</code><br><small style="color:var(--muted)">src/context/ToastContext.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Ctx node in src/context/ToastContext.tsx.</td>
+</tr>
+<tr>
+  <td>27</td>
+  <td><code>StoryType</code><br><small style="color:var(--muted)">src/lib/supabase.ts</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td><code>EditStorySheet.tsx</code><br><small style="color:var(--muted)">components/sheets/EditStorySheet.tsx</small></td>
+  <td>No direct outbound edge</td>
+  <td>StoryType node in src/lib/supabase.ts.</td>
 </tr>
 </table>
 
@@ -4321,45 +4344,50 @@ flowchart LR
     <h4>Key Files</h4>
     <table style="width:100%;font-size:0.85rem;">
       <tr><th>File</th><th>Coverage</th></tr>
-      <tr><td><code>src/lib/supabase.ts</code></td><td>8 nodes</td></tr>
-<tr><td><code>components/sheets/EditStorySheet.tsx</code></td><td>4 nodes</td></tr>
-<tr><td><code>src/pages/Finances.tsx</code></td><td>4 nodes</td></tr>
-<tr><td><code>src/context/AuthContext.tsx</code></td><td>3 nodes</td></tr>
+      <tr><td><code>components/ui/Icon.tsx</code></td><td>5 nodes</td></tr>
+<tr><td><code>components/ui/ConfirmDialog.tsx</code></td><td>4 nodes</td></tr>
+<tr><td><code>src/context/ToastContext.tsx</code></td><td>4 nodes</td></tr>
+<tr><td><code>components/sheets/EditStorySheet.tsx</code></td><td>3 nodes</td></tr>
+<tr><td><code>components/sheets/GlobalActionSheet.tsx</code></td><td>3 nodes</td></tr>
+<tr><td><code>components/ui/BottomSheet.tsx</code></td><td>3 nodes</td></tr>
 <tr><td><code>components/sheets/NewMemorySheet.tsx</code></td><td>2 nodes</td></tr>
-<tr><td><code>src/lib/capacitorStorageAdapter.ts</code></td><td>2 nodes</td></tr>
-<tr><td><code>src/lib/imageUtils.ts</code></td><td>2 nodes</td></tr>
+<tr><td><code>components/ui/EmptyState.tsx</code></td><td>2 nodes</td></tr>
     </table>
   </div>
   <div class="card">
     <h4>Design Notes</h4>
-    <p>This section comes from graphify community clustering. Relationship summary: contains x18, imports x13, imports x10, calls x2. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x18, imports x11, imports x10, references x1. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
   </div>
 </div>
 <hr>
 
 <!-- ====== 15. ErrorBoundary ====== -->
 <h2 id="errorboundary">15. ErrorBoundary</h2>
-<p>ErrorBoundary groups implementation around usepushnotificationsts, profiletsx, pages, components, mostly in src/lib/usePushNotifications.ts, src/pages/Profile.tsx, components/ui/EditAction.tsx. This section covers 22 nodes and 31 internal edges; the diagram shows only representative relationships to stay readable.</p>
+<p>ErrorBoundary groups implementation around usepushnotificationsts, profiletsx, pages, components, mostly in src/lib/usePushNotifications.ts, src/pages/Profile.tsx, components/ui/EditAction.tsx. This section covers 24 nodes and 37 internal edges; the diagram shows only representative relationships to stay readable.</p>
 
 <div class="mermaid">
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: ErrorBoundary (22 nodes, 31 edges)
+    %% Section: ErrorBoundary (24 nodes, 37 edges)
     subgraph errorboundary_src_lib_usePushNotifications_ts_d6c696d4["src/lib/usePushNotifications.ts"]
-        src_lib_usepushnotifications_invokecalendarfunct_269447b6("invokeCalendarFunction()<br/><small>src/lib/usePushNotifications.ts</small>")
-        src_lib_usepushnotifications_sendtestpushnotific_279e7000("sendTestPushNotification()<br/><small>src/lib/usePushNotifications.ts</small>")
-        src_lib_usepushnotifications_deleteplanfromgoogl_449c0eeb("deletePlanFromGoogleCalendar()<br/><small>src/lib/usePushNotifications.ts</small>")
-        src_lib_usepushnotifications_testgooglecalendarc_fa0f27b0("testGoogleCalendarConnection()<br/><small>src/lib/usePushNotifications.ts</small>")
-        src_lib_usepushnotifications_11f809d4("usePushNotifications.ts")
         src_lib_usepushnotifications_connectgooglecalend_580950fa("connectGoogleCalendarWithCode()<br/><small>src/lib/usePushNotifications.ts</small>")
+        src_lib_usepushnotifications_testgooglecalendarc_fa0f27b0("testGoogleCalendarConnection()<br/><small>src/lib/usePushNotifications.ts</small>")
+        src_lib_usepushnotifications_sendtestpushnotific_279e7000("sendTestPushNotification()<br/><small>src/lib/usePushNotifications.ts</small>")
+        src_lib_usepushnotifications_urlbase64touint8arr_6c20385b("urlBase64ToUint8Array()<br/><small>src/lib/usePushNotifications.ts</small>")
+        src_lib_usepushnotifications_usepushnotification_d9da399c("usePushNotifications()<br/><small>src/lib/usePushNotifications.ts</small>")
+        src_lib_usepushnotifications_sameapplicationserv_31e10144("sameApplicationServerKey()<br/><small>src/lib/usePushNotifications.ts</small>")
+        src_lib_usepushnotifications_11f809d4("usePushNotifications.ts")
         src_lib_usepushnotifications_supabase_anon_key_20b04041("SUPABASE_ANON_KEY<br/><small>src/lib/usePushNotifications.ts</small>")
-        src_lib_usepushnotifications_supabase_url_af1b0489("SUPABASE_URL<br/><small>src/lib/usePushNotifications.ts</small>")
-        src_lib_usepushnotifications_vapid_public_key_1f4cd88b("VAPID_PUBLIC_KEY<br/><small>src/lib/usePushNotifications.ts</small>")
     end
     subgraph errorboundary_components_ui_EditAction_tsx_c495761c["components/ui/EditAction.tsx"]
         src_components_ui_editaction_ec8d9152("EditAction.tsx")
         src_components_ui_editaction_editaction_c5d4dd9b("EditAction()<br/><small>components/ui/EditAction.tsx</small>")
         src_components_ui_editaction_props_46a07e1b("Props<br/><small>components/ui/EditAction.tsx</small>")
+    end
+    subgraph errorboundary_src_pages_Profile_tsx_6a97c8eb["src/pages/Profile.tsx"]
+        src_pages_profile_googlecalendarsection_83fad3e3("GoogleCalendarSection()<br/><small>src/pages/Profile.tsx</small>")
+        src_pages_profile_pushnotificationssection_dea8ab53("PushNotificationsSection()<br/><small>src/pages/Profile.tsx</small>")
+        src_pages_profile_8e2ea780("Profile.tsx")
     end
     subgraph errorboundary_components_ui_PresenceDot_tsx_85428fe0["components/ui/PresenceDot.tsx"]
         src_components_ui_presencedot_7390d59b("PresenceDot.tsx")
@@ -4369,15 +4397,14 @@ flowchart LR
         src_lib_native_getnativepushtarget_15142fb4("getNativePushTarget()<br/><small>src/lib/native.ts</small>")
         src_lib_native_shownativenotificationtest_829dfe46("showNativeNotificationTest()<br/><small>src/lib/native.ts</small>")
     end
-    subgraph errorboundary_src_pages_Profile_tsx_6a97c8eb["src/pages/Profile.tsx"]
-        src_pages_profile_pushnotificationssection_dea8ab53("PushNotificationsSection()<br/><small>src/pages/Profile.tsx</small>")
-        src_pages_profile_8e2ea780("Profile.tsx")
-    end
     src_lib_native_getnativepushtarget_15142fb4 -->|calls| src_lib_usepushnotifications_sendtestpushnotific_279e7000
     src_lib_native_shownativenotificationtest_829dfe46 -->|calls| src_lib_usepushnotifications_sendtestpushnotific_279e7000
-    src_lib_usepushnotifications_invokecalendarfunct_269447b6 -->|calls| src_lib_usepushnotifications_deleteplanfromgoogl_449c0eeb
-    src_lib_usepushnotifications_invokecalendarfunct_269447b6 -->|calls| src_lib_usepushnotifications_testgooglecalendarc_fa0f27b0
+    src_lib_usepushnotifications_connectgooglecalend_580950fa -->|calls| src_pages_profile_googlecalendarsection_83fad3e3
+    src_lib_usepushnotifications_urlbase64touint8arr_6c20385b -->|calls| src_lib_usepushnotifications_usepushnotification_d9da399c
+    src_lib_usepushnotifications_sameapplicationserv_31e10144 -->|calls| src_lib_usepushnotifications_usepushnotification_d9da399c
+    src_lib_usepushnotifications_usepushnotification_d9da399c -->|calls| src_pages_profile_pushnotificationssection_dea8ab53
     src_lib_usepushnotifications_sendtestpushnotific_279e7000 -->|calls| src_pages_profile_pushnotificationssection_dea8ab53
+    src_lib_usepushnotifications_testgooglecalendarc_fa0f27b0 -->|calls| src_pages_profile_googlecalendarsection_83fad3e3
     src_components_ui_editaction_ec8d9152 -->|imports| src_pages_profile_8e2ea780
     src_components_ui_editaction_editaction_c5d4dd9b -->|imports| src_pages_profile_8e2ea780
     src_components_ui_presencedot_7390d59b -->|imports| src_pages_profile_8e2ea780
@@ -4386,27 +4413,28 @@ flowchart LR
     src_lib_native_shownativenotificationtest_829dfe46 -->|imports| src_lib_usepushnotifications_11f809d4
     src_lib_usepushnotifications_11f809d4 -->|imports| src_pages_profile_8e2ea780
     src_lib_usepushnotifications_connectgooglecalend_580950fa -->|imports| src_pages_profile_8e2ea780
+    src_lib_usepushnotifications_usepushnotification_d9da399c -->|imports| src_pages_profile_8e2ea780
     src_lib_usepushnotifications_sendtestpushnotific_279e7000 -->|imports| src_pages_profile_8e2ea780
     src_lib_usepushnotifications_testgooglecalendarc_fa0f27b0 -->|imports| src_pages_profile_8e2ea780
-    %% Omitted for readability: 4 nodes, 0 edges
-    class src_lib_usepushnotifications_invokecalendarfunct_269447b6 function;
-    class src_lib_usepushnotifications_sendtestpushnotific_279e7000 function;
-    class src_lib_usepushnotifications_deleteplanfromgoogl_449c0eeb function;
-    class src_lib_usepushnotifications_testgooglecalendarc_fa0f27b0 function;
-    class src_lib_usepushnotifications_11f809d4 ui;
+    %% Omitted for readability: 6 nodes, 0 edges
     class src_lib_usepushnotifications_connectgooglecalend_580950fa function;
+    class src_lib_usepushnotifications_testgooglecalendarc_fa0f27b0 function;
+    class src_lib_usepushnotifications_sendtestpushnotific_279e7000 function;
+    class src_lib_usepushnotifications_urlbase64touint8arr_6c20385b function;
+    class src_lib_usepushnotifications_usepushnotification_d9da399c ui;
+    class src_lib_usepushnotifications_sameapplicationserv_31e10144 function;
+    class src_lib_usepushnotifications_11f809d4 ui;
     class src_lib_usepushnotifications_supabase_anon_key_20b04041 klass;
-    class src_lib_usepushnotifications_supabase_url_af1b0489 klass;
-    class src_lib_usepushnotifications_vapid_public_key_1f4cd88b api;
     class src_components_ui_editaction_ec8d9152 ui;
     class src_components_ui_editaction_editaction_c5d4dd9b ui;
     class src_components_ui_editaction_props_46a07e1b ui;
+    class src_pages_profile_googlecalendarsection_83fad3e3 ui;
+    class src_pages_profile_pushnotificationssection_dea8ab53 async;
+    class src_pages_profile_8e2ea780 ui;
     class src_components_ui_presencedot_7390d59b ui;
     class src_components_ui_presencedot_presencedot_3d7e8671 ui;
     class src_lib_native_getnativepushtarget_15142fb4 function;
     class src_lib_native_shownativenotificationtest_829dfe46 function;
-    class src_pages_profile_pushnotificationssection_dea8ab53 async;
-    class src_pages_profile_8e2ea780 ui;
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
     classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
@@ -4518,22 +4546,38 @@ flowchart LR
 </tr>
 <tr>
   <td>12</td>
-  <td><code>invokeCalendarFunction()</code><br><small style="color:var(--muted)">src/lib/usePushNotifications.ts</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>deletePlanFromGoogleCalendar()</code><br><small style="color:var(--muted)">src/lib/usePushNotifications.ts</small><br><code>testGoogleCalendarConnection()</code><br><small style="color:var(--muted)">src/lib/usePushNotifications.ts</small></td>
-  <td>invokeCalendarFunction() node in src/lib/usePushNotifications.ts.</td>
-</tr>
-<tr>
-  <td>13</td>
   <td><code>connectGoogleCalendarWithCode()</code><br><small style="color:var(--muted)">src/lib/usePushNotifications.ts</small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td>External entry / no inbound edge</td>
-  <td><code>Profile.tsx</code><br><small style="color:var(--muted)">src/pages/Profile.tsx</small></td>
+  <td><code>GoogleCalendarSection()</code><br><small style="color:var(--muted)">src/pages/Profile.tsx</small><br><code>Profile.tsx</code><br><small style="color:var(--muted)">src/pages/Profile.tsx</small></td>
   <td>connectGoogleCalendarWithCode() node in src/lib/usePushNotifications.ts.</td>
 </tr>
 <tr>
+  <td>13</td>
+  <td><code>urlBase64ToUint8Array()</code><br><small style="color:var(--muted)">src/lib/usePushNotifications.ts</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>usePushNotifications()</code><br><small style="color:var(--muted)">src/lib/usePushNotifications.ts</small></td>
+  <td>urlBase64ToUint8Array() node in src/lib/usePushNotifications.ts.</td>
+</tr>
+<tr>
   <td>14</td>
+  <td><code>sameApplicationServerKey()</code><br><small style="color:var(--muted)">src/lib/usePushNotifications.ts</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>usePushNotifications()</code><br><small style="color:var(--muted)">src/lib/usePushNotifications.ts</small></td>
+  <td>sameApplicationServerKey() node in src/lib/usePushNotifications.ts.</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td><code>usePushNotifications()</code><br><small style="color:var(--muted)">src/lib/usePushNotifications.ts</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>sameApplicationServerKey()</code><br><small style="color:var(--muted)">src/lib/usePushNotifications.ts</small><br><code>urlBase64ToUint8Array()</code><br><small style="color:var(--muted)">src/lib/usePushNotifications.ts</small></td>
+  <td><code>Profile.tsx</code><br><small style="color:var(--muted)">src/pages/Profile.tsx</small><br><code>PushNotificationsSection()</code><br><small style="color:var(--muted)">src/pages/Profile.tsx</small></td>
+  <td>usePushNotifications() node in src/lib/usePushNotifications.ts.</td>
+</tr>
+<tr>
+  <td>16</td>
   <td><code>sendTestPushNotification()</code><br><small style="color:var(--muted)">src/lib/usePushNotifications.ts</small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td><code>getNativePushTarget()</code><br><small style="color:var(--muted)">src/lib/native.ts</small><br><code>showNativeNotificationTest()</code><br><small style="color:var(--muted)">src/lib/native.ts</small></td>
@@ -4541,31 +4585,23 @@ flowchart LR
   <td>Verifies imports, entry points, or version behavior.</td>
 </tr>
 <tr>
-  <td>15</td>
-  <td><code>deletePlanFromGoogleCalendar()</code><br><small style="color:var(--muted)">src/lib/usePushNotifications.ts</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>invokeCalendarFunction()</code><br><small style="color:var(--muted)">src/lib/usePushNotifications.ts</small></td>
-  <td>No direct outbound edge</td>
-  <td>deletePlanFromGoogleCalendar() node in src/lib/usePushNotifications.ts.</td>
-</tr>
-<tr>
-  <td>16</td>
+  <td>17</td>
   <td><code>testGoogleCalendarConnection()</code><br><small style="color:var(--muted)">src/lib/usePushNotifications.ts</small></td>
   <td><span class="tag tag-func">Function</span></td>
-  <td><code>invokeCalendarFunction()</code><br><small style="color:var(--muted)">src/lib/usePushNotifications.ts</small></td>
-  <td><code>Profile.tsx</code><br><small style="color:var(--muted)">src/pages/Profile.tsx</small></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>GoogleCalendarSection()</code><br><small style="color:var(--muted)">src/pages/Profile.tsx</small><br><code>Profile.tsx</code><br><small style="color:var(--muted)">src/pages/Profile.tsx</small></td>
   <td>Verifies imports, entry points, or version behavior.</td>
 </tr>
 <tr>
-  <td>17</td>
+  <td>18</td>
   <td><code>Profile.tsx</code><br><small style="color:var(--muted)">src/pages/Profile.tsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
-  <td><code>connectGoogleCalendarWithCode()</code><br><small style="color:var(--muted)">src/lib/usePushNotifications.ts</small><br><code>EditAction()</code><br><small style="color:var(--muted)">components/ui/EditAction.tsx</small><br><code>EditAction.tsx</code><br><small style="color:var(--muted)">components/ui/EditAction.tsx</small><br>+5 more</td>
+  <td><code>connectGoogleCalendarWithCode()</code><br><small style="color:var(--muted)">src/lib/usePushNotifications.ts</small><br><code>EditAction()</code><br><small style="color:var(--muted)">components/ui/EditAction.tsx</small><br><code>EditAction.tsx</code><br><small style="color:var(--muted)">components/ui/EditAction.tsx</small><br>+6 more</td>
   <td>No direct outbound edge</td>
   <td>Module file in src/pages/Profile.tsx.</td>
 </tr>
 <tr>
-  <td>18</td>
+  <td>19</td>
   <td><code>CAT_COLOR</code><br><small style="color:var(--muted)">src/pages/Profile.tsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td>External entry / no inbound edge</td>
@@ -4573,7 +4609,7 @@ flowchart LR
   <td>CAT_COLOR node in src/pages/Profile.tsx.</td>
 </tr>
 <tr>
-  <td>19</td>
+  <td>20</td>
   <td><code>CAT_ICON</code><br><small style="color:var(--muted)">src/pages/Profile.tsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td>External entry / no inbound edge</td>
@@ -4581,7 +4617,7 @@ flowchart LR
   <td>CAT_ICON node in src/pages/Profile.tsx.</td>
 </tr>
 <tr>
-  <td>20</td>
+  <td>21</td>
   <td><code>CAT_LABEL</code><br><small style="color:var(--muted)">src/pages/Profile.tsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td>External entry / no inbound edge</td>
@@ -4589,7 +4625,7 @@ flowchart LR
   <td>CAT_LABEL node in src/pages/Profile.tsx.</td>
 </tr>
 <tr>
-  <td>21</td>
+  <td>22</td>
   <td><code>StoryMember</code><br><small style="color:var(--muted)">src/pages/Profile.tsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td>External entry / no inbound edge</td>
@@ -4597,12 +4633,20 @@ flowchart LR
   <td>StoryMember node in src/pages/Profile.tsx.</td>
 </tr>
 <tr>
-  <td>22</td>
+  <td>23</td>
   <td><code>PushNotificationsSection()</code><br><small style="color:var(--muted)">src/pages/Profile.tsx</small></td>
   <td><span class="tag tag-async">Async</span></td>
-  <td><code>sendTestPushNotification()</code><br><small style="color:var(--muted)">src/lib/usePushNotifications.ts</small></td>
+  <td><code>sendTestPushNotification()</code><br><small style="color:var(--muted)">src/lib/usePushNotifications.ts</small><br><code>usePushNotifications()</code><br><small style="color:var(--muted)">src/lib/usePushNotifications.ts</small></td>
   <td>No direct outbound edge</td>
   <td>PushNotificationsSection() node in src/pages/Profile.tsx.</td>
+</tr>
+<tr>
+  <td>24</td>
+  <td><code>GoogleCalendarSection()</code><br><small style="color:var(--muted)">src/pages/Profile.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>connectGoogleCalendarWithCode()</code><br><small style="color:var(--muted)">src/lib/usePushNotifications.ts</small><br><code>testGoogleCalendarConnection()</code><br><small style="color:var(--muted)">src/lib/usePushNotifications.ts</small></td>
+  <td>No direct outbound edge</td>
+  <td>GoogleCalendarSection() node in src/pages/Profile.tsx.</td>
 </tr>
 </table>
 
@@ -4611,8 +4655,8 @@ flowchart LR
     <h4>Key Files</h4>
     <table style="width:100%;font-size:0.85rem;">
       <tr><th>File</th><th>Coverage</th></tr>
-      <tr><td><code>src/lib/usePushNotifications.ts</code></td><td>9 nodes</td></tr>
-<tr><td><code>src/pages/Profile.tsx</code></td><td>6 nodes</td></tr>
+      <tr><td><code>src/lib/usePushNotifications.ts</code></td><td>10 nodes</td></tr>
+<tr><td><code>src/pages/Profile.tsx</code></td><td>7 nodes</td></tr>
 <tr><td><code>components/ui/EditAction.tsx</code></td><td>3 nodes</td></tr>
 <tr><td><code>components/ui/PresenceDot.tsx</code></td><td>2 nodes</td></tr>
 <tr><td><code>src/lib/native.ts</code></td><td>2 nodes</td></tr>
@@ -4620,19 +4664,19 @@ flowchart LR
   </div>
   <div class="card">
     <h4>Design Notes</h4>
-    <p>This section comes from graphify community clustering. Relationship summary: contains x16, imports x7, calls x5, imports x3. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x18, imports x8, calls x8, imports x3. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
   </div>
 </div>
 <hr>
 
 <!-- ====== 16. Other ====== -->
 <h2 id="other">16. Other</h2>
-<p>Other groups implementation around specify, design, public, git, mostly in dev-dist/workbox-1e60b829.js, stripe-best-practices/references/connect.md, DESIGN.md. This section covers 611 nodes and 656 internal edges; the diagram shows only representative relationships to stay readable.</p>
+<p>Other groups implementation around specify, design, public, git, mostly in dev-dist/workbox-1e60b829.js, stripe-best-practices/references/connect.md, DESIGN.md. This section covers 609 nodes and 682 internal edges; the diagram shows only representative relationships to stay readable.</p>
 
 <div class="mermaid">
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: Other (611 nodes, 656 edges)
+    %% Section: Other (609 nodes, 682 edges)
     subgraph other_scripts_powershell_create_new_feature_ps1_c172fa64["scripts/powershell/create-new-feature.ps1"]
         specify_extensions_git_scripts_powershell_create_1f15a85d("Get-HighestNumberFromSpecs()<br/><small>scripts/powershell/create-new-feature.ps1</small>")
         specify_extensions_git_scripts_powershell_create_246fe560("Get-NextBranchNumber()<br/><small>scripts/powershell/create-new-feature.ps1</small>")
@@ -4642,20 +4686,20 @@ flowchart LR
         specify_extensions_git_scripts_powershell_create_9af7038f("ConvertTo-CleanBranchName()<br/><small>scripts/powershell/create-new-feature.ps1</small>")
         specify_extensions_git_scripts_powershell_create_ef490993("Get-BranchName()<br/><small>scripts/powershell/create-new-feature.ps1</small>")
     end
-    subgraph other_dev_dist_workbox_1e60b829_js_eded20db["dev-dist/workbox-1e60b829.js"]
-        dev_dist_workbox_1e60b829_precachecontroller_4084eba6("PrecacheController<br/><small>dev-dist/workbox-1e60b829.js</small>")
-        dev_dist_workbox_1e60b829_cachetimestampsmodel_4d98bc55("CacheTimestampsModel<br/><small>dev-dist/workbox-1e60b829.js</small>")
-        dev_dist_workbox_1e60b829_expirationplugin_b794870c("ExpirationPlugin<br/><small>dev-dist/workbox-1e60b829.js</small>")
-        dev_dist_workbox_1e60b829_cacheexpiration_34c25bc1("CacheExpiration<br/><small>dev-dist/workbox-1e60b829.js</small>")
-    end
     subgraph other_scripts_bash_create_new_feature_sh_7d682e30["scripts/bash/create-new-feature.sh"]
         specify_extensions_git_scripts_bash_create_new_f_63dfc727("get_highest_from_branches()<br/><small>scripts/bash/create-new-feature.sh</small>")
         specify_extensions_git_scripts_bash_create_new_f_741596ee("_extract_highest_number()<br/><small>scripts/bash/create-new-feature.sh</small>")
         specify_scripts_bash_create_new_feature_get_high_332f73a2("get_highest_from_branches()<br/><small>scripts/bash/create-new-feature.sh</small>")
         specify_scripts_bash_create_new_feature_extract_e188bd86("_extract_highest_number()<br/><small>scripts/bash/create-new-feature.sh</small>")
     end
+    subgraph other_dev_dist_workbox_1e60b829_js_eded20db["dev-dist/workbox-1e60b829.js"]
+        dev_dist_workbox_1e60b829_precachecontroller_4084eba6("PrecacheController<br/><small>dev-dist/workbox-1e60b829.js</small>")
+        dev_dist_workbox_1e60b829_cachetimestampsmodel_4d98bc55("CacheTimestampsModel<br/><small>dev-dist/workbox-1e60b829.js</small>")
+        dev_dist_workbox_1e60b829_expirationplugin_b794870c("ExpirationPlugin<br/><small>dev-dist/workbox-1e60b829.js</small>")
+    end
     android_gradlew_entry_3c46a94f("gradlew script<br/><small>android/gradlew</small>")
-    src_components_appshell_appshell_8277b96a("AppShell()<br/><small>src/components/AppShell.tsx</small>")
+    src_components_sheets_newplansheet_a6140979("NewPlanSheet.tsx")
+    src_components_sheets_newstorysheet_ee7f3046("NewStorySheet.tsx")
     src_components_paywall_5569c721("Paywall.tsx")
     specify_extensions_git_scripts_bash_create_new_f_63dfc727 -->|calls| specify_extensions_git_scripts_bash_create_new_f_741596ee
     specify_extensions_git_scripts_powershell_create_1f15a85d -->|calls| specify_extensions_git_scripts_powershell_create_246fe560
@@ -4665,7 +4709,7 @@ flowchart LR
     specify_extensions_git_scripts_powershell_create_081f3e6d -->|calls| specify_extensions_git_scripts_powershell_create_246fe560
     specify_extensions_git_scripts_powershell_create_9af7038f -->|calls| specify_extensions_git_scripts_powershell_create_ef490993
     specify_scripts_bash_create_new_feature_get_high_332f73a2 -->|calls| specify_scripts_bash_create_new_feature_extract_e188bd86
-    %% Omitted for readability: 593 nodes, 0 edges
+    %% Omitted for readability: 591 nodes, 0 edges
     class specify_extensions_git_scripts_powershell_create_1f15a85d test;
     class specify_extensions_git_scripts_powershell_create_246fe560 test;
     class specify_extensions_git_scripts_powershell_create_bc358742 test;
@@ -4673,16 +4717,16 @@ flowchart LR
     class specify_extensions_git_scripts_powershell_create_081f3e6d test;
     class specify_extensions_git_scripts_powershell_create_9af7038f test;
     class specify_extensions_git_scripts_powershell_create_ef490993 test;
-    class dev_dist_workbox_1e60b829_precachecontroller_4084eba6 klass;
-    class dev_dist_workbox_1e60b829_cachetimestampsmodel_4d98bc55 klass;
-    class dev_dist_workbox_1e60b829_expirationplugin_b794870c klass;
-    class dev_dist_workbox_1e60b829_cacheexpiration_34c25bc1 klass;
     class specify_extensions_git_scripts_bash_create_new_f_63dfc727 test;
     class specify_extensions_git_scripts_bash_create_new_f_741596ee test;
     class specify_scripts_bash_create_new_feature_get_high_332f73a2 test;
     class specify_scripts_bash_create_new_feature_extract_e188bd86 test;
+    class dev_dist_workbox_1e60b829_precachecontroller_4084eba6 klass;
+    class dev_dist_workbox_1e60b829_cachetimestampsmodel_4d98bc55 klass;
+    class dev_dist_workbox_1e60b829_expirationplugin_b794870c klass;
     class android_gradlew_entry_3c46a94f function;
-    class src_components_appshell_appshell_8277b96a ui;
+    class src_components_sheets_newplansheet_a6140979 ui;
+    class src_components_sheets_newstorysheet_ee7f3046 ui;
     class src_components_paywall_5569c721 ui;
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
@@ -4958,13 +5002,13 @@ flowchart LR
 <tr><td><code>src/pages/Landing.tsx</code></td><td>17 nodes</td></tr>
 <tr><td><code>functions/ai-chat/index.ts</code></td><td>16 nodes</td></tr>
 <tr><td><code>.specify/memory/constitution.md</code></td><td>15 nodes</td></tr>
-<tr><td><code>src/lib/color.ts</code></td><td>15 nodes</td></tr>
 <tr><td><code>src/pages/Onboarding.tsx</code></td><td>15 nodes</td></tr>
+<tr><td><code>public/design/data.jsx</code></td><td>14 nodes</td></tr>
     </table>
   </div>
   <div class="card">
     <h4>Design Notes</h4>
-    <p>This section comes from graphify community clustering. Relationship summary: contains x387, calls x99, method x41, imports x38. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x388, calls x92, imports x56, method x41. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
   </div>
 </div>
 <hr>
@@ -4975,17 +5019,17 @@ flowchart LR
   <div class="card">
     <h4>Graph</h4>
     <table style="width:100%;font-size:0.85rem;">
-      <tr><td>Nodes</td><td>1586</td></tr>
-      <tr><td>Edges</td><td>2260</td></tr>
+      <tr><td>Nodes</td><td>1589</td></tr>
+      <tr><td>Edges</td><td>2276</td></tr>
       <tr><td>Hyperedges</td><td>0</td></tr>
-      <tr><td>Communities</td><td>200</td></tr>
+      <tr><td>Communities</td><td>201</td></tr>
       <tr><td>Documented Sections</td><td>15</td></tr>
     </table>
   </div>
   <div class="card">
     <h4>Edge Confidence</h4>
     <table style="width:100%;font-size:0.85rem;">
-      <tr><td>EXTRACTED</td><td>2206</td></tr>
+      <tr><td>EXTRACTED</td><td>2222</td></tr>
       <tr><td>INFERRED</td><td>54</td></tr>
       <tr><td>AMBIGUOUS</td><td>0</td></tr>
     </table>
@@ -4994,7 +5038,7 @@ flowchart LR
 
 <div style="text-align:center; padding:40px 0; color: var(--muted); font-size:0.9rem;">
   <p>OurTime — Architecture Documentation</p>
-  <p>Generated: 2026-07-18 04:50 UTC · graphify callflow-html</p>
+  <p>Generated: 2026-07-18 16:45 UTC · graphify callflow-html</p>
 </div>
 
 </div><!-- .container -->

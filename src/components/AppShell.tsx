@@ -96,7 +96,7 @@ export default function AppShell() {
       if (lightbox) { setLightbox(null); return true }
       if (storySwitcherOpen) { setStorySwitcherOpen(false); return true }
       if (invokeTopBack()) return true
-      if (overlay) { setOverlay(null); return true }
+      if (overlay) { closeOverlay(); return true }
       if (notifsVisible) { setNotifsVisible(false); return true }
       if (tabRef.current === 'chat') {
         scrollPositions.current['chat'] = window.scrollY
@@ -112,6 +112,8 @@ export default function AppShell() {
       }
       return false
     })
+  // closeOverlay es useCallback estable declarado más abajo (TDZ en el array de deps)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lightbox, storySwitcherOpen, overlay, notifsVisible])
 
   // Clear previous story data immediately on story switch to avoid limbo state
@@ -244,7 +246,7 @@ export default function AppShell() {
         return
       }
       historyPushed.current = false
-      if (overlayRef.current !== null) setOverlay(null)
+      if (overlayRef.current !== null) closeOverlay()
       else if (notifsRef.current)      setNotifsVisible(false)
       else if (tabRef.current === 'chat') {
         scrollPositions.current['chat'] = window.scrollY
@@ -255,6 +257,8 @@ export default function AppShell() {
     }
     window.addEventListener('popstate', handlePop)
     return () => window.removeEventListener('popstate', handlePop)
+  // closeOverlay es useCallback estable declarado más abajo (TDZ en el array de deps)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
@@ -265,7 +269,22 @@ export default function AppShell() {
     })
   }, [tab])
 
+  // El perfil abre con sheetUp; su cierre se hace en dos fases para poder
+  // reproducir la animación inversa (sheetDown) antes de desmontar.
+  const [profileClosing, setProfileClosing] = useState(false)
+  const profileClosingRef = useRef(false)
   const closeOverlay = useCallback(() => {
+    if (overlayRef.current?.type === 'profile') {
+      if (profileClosingRef.current) return
+      profileClosingRef.current = true
+      setProfileClosing(true)
+      window.setTimeout(() => {
+        profileClosingRef.current = false
+        setProfileClosing(false)
+        setOverlay(null)
+      }, 340)
+      return
+    }
     setOverlay(null)
   }, [])
 
@@ -589,6 +608,7 @@ export default function AppShell() {
           style={{ position: 'relative', zIndex: 100 }}>
           <ProfileScreen
             plans={plans}
+            closing={profileClosing}
             onClose={closeOverlay}
             onGoToFinance={() => { closeOverlay(); go('finance') }}
             storyCode={storyCode}
@@ -896,7 +916,7 @@ function NavBtn({ icon, label, active, onClick, badge }: { icon: string; label: 
         {badge != null && badge > 0 && (
           <span style={{
             position: 'absolute', top: -4, right: -7,
-            background: 'var(--orange)', color: 'var(--paper)',
+            background: 'var(--accent-ink)', color: 'var(--card)',
             borderRadius: 99, fontSize: 9, fontWeight: 800,
             minWidth: 15, height: 15, display: 'flex', alignItems: 'center', justifyContent: 'center',
             padding: '0 3px', fontFamily: 'var(--font-ui)', lineHeight: 1,

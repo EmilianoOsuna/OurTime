@@ -117,21 +117,23 @@ export default function Calendar({ plans, onOpenPlan }: { plans: CalendarPlan[];
                 <button key={i} onClick={() => setSel(day)} style={{
                   aspectRatio: '1', border: 'none', cursor: 'pointer', borderRadius: 12,
                   background: isSel ? 'var(--orange)' : 'transparent',
-                  color: isSel ? '#fff' : 'var(--ink)',
+                  color: isSel ? 'var(--hero-text)' : 'var(--ink)',
+                  /* sombra: separa el bloque cuando el acento se parece al papel */
+                  boxShadow: isSel ? 'var(--sh-sm)' : 'none',
                   display: 'flex', flexDirection: 'column', alignItems: 'center',
                   justifyContent: 'center', gap: 3, position: 'relative',
                   fontFamily: 'var(--font-ui)', transition: 'background .18s',
                 }}>
                   <span style={{
                     fontSize: 14.5, fontWeight: isToday ? 800 : 500,
-                    color: isToday && !isSel ? 'var(--orange)' : 'inherit',
+                    color: isToday && !isSel ? 'var(--accent-ink)' : 'inherit',
                   }}>{d}</span>
                   <span style={{ display: 'flex', gap: 2, height: 5 }}>
                     {ps.slice(0, 3).map((p, j) => (
                       <span key={j} className="dot" style={{
                         width: 5, height: 5,
                         background: isSel
-                          ? 'rgba(255,255,255,0.8)'
+                          ? 'color-mix(in srgb, var(--hero-text) 78%, transparent)'
                           : (CAT_DOT[p.storyCategory || 'otro'] || '#F17720'),
                       }} />
                     ))}

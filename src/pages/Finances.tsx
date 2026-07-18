@@ -143,7 +143,10 @@ export default function Finances({ onPlanClick, refreshKey = 0 }: { onPlanClick?
   }
 
   return (
-    <div className="ot-scroll page-enter" style={{ paddingBottom: 130, paddingTop: 'var(--page-top)' }}>
+    // Sin .ot-scroll: la página scrollea con la ventana. Un contenedor con
+    // overflow propio pero sin alto fijo se traga el gesto táctil
+    // (overscroll-behavior: contain) y la página parece no scrollear.
+    <div className="page-enter" style={{ paddingBottom: 150, paddingTop: 'var(--page-top)' }}>
       {/* Header - Drenched Block */}
       <div style={{
         margin: 'calc(-1 * var(--page-top)) 0 24px 0',
@@ -183,14 +186,14 @@ export default function Finances({ onPlanClick, refreshKey = 0 }: { onPlanClick?
               <input value={budgetInput} onChange={e => setBudgetInput(e.target.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1'))}
                 placeholder="Importe…" inputMode="decimal" autoFocus
                 style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1.5px solid var(--line)',
-                  background: 'var(--card-2)', color: 'var(--hero-text)', fontSize: 18, boxSizing: 'border-box',
+                  background: 'var(--card-2)', color: 'var(--ink)', fontSize: 18, boxSizing: 'border-box',
                   fontFamily: 'var(--font-ui)', outline: 'none', marginBottom: 10 }} />
               <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
                 {(['mensual', 'semanal'] as const).map(p => (
                   <button key={p} onClick={() => setPeriodInput(p)} style={{
                     flex: 1, border: 'none', borderRadius: 10, padding: '10px',
                     background: periodInput === p ? 'var(--ink)' : 'var(--card-2)',
-                    color: periodInput === p ? 'var(--paper)' : 'var(--hero-text)', fontFamily: 'var(--font-ui)', fontSize: 13, fontWeight: 700,
+                    color: periodInput === p ? 'var(--paper)' : 'var(--ink)', fontFamily: 'var(--font-ui)', fontSize: 13, fontWeight: 700,
                     cursor: 'pointer', transition: 'all .15s',
                   }}>
                     {p === 'mensual' ? 'Mensual' : 'Semanal'}

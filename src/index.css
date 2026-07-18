@@ -350,6 +350,7 @@ input, textarea {
 @keyframes pulse     { 0%,100%{ opacity:1; transform:scale(1);} 50%{opacity:.4; transform:scale(.85);} }
 @keyframes pulseRing { 0%{ transform:scale(0.6); opacity:.6;} 100%{ transform:scale(2.4); opacity:0;} }
 @keyframes sheetUp   { from { transform: translateY(100%); } to { transform:none; } }
+@keyframes sheetDown { from { transform:none; } to { transform: translateY(100%); } }
 @keyframes drawLine  { from { transform: scaleY(0); } to { transform: scaleY(1); } }
 @keyframes pop       { 0%{transform:scale(0);} 60%{transform:scale(1.15);} 100%{transform:scale(1);} }
 @keyframes floatY    { 0%,100%{ transform: translateY(0);} 50%{ transform: translateY(-7px);} }
@@ -496,11 +497,13 @@ html {
 }
 
 @layer base {
+  /* Sin color propio: heredan de la superficie. Sobre papel llega --ink desde
+     body; sobre bloques drenched llega --hero-text (los acentos por historia
+     pueden ser claros u oscuros en cualquiera de los dos temas). */
   h1, h2, h3 {
     font-family: var(--font-display);
     font-weight: 600;
     letter-spacing: -0.035em;
-    color: var(--ink);
     text-wrap: balance;
   }
 }
