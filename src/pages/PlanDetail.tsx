@@ -57,7 +57,7 @@ export function PlanDetail({ plan: initialPlan, onClose, onUpdated }: {
   onClose: () => void
   onUpdated?: () => void
 }) {
-  const { activeStoryId } = useAuth()
+  const { activeStoryId, user } = useAuth()
   const { push } = useToast()
   const [plan, setPlan] = useState(initialPlan)
   const [done, setDone] = useState(initialPlan.status === 'completado')
@@ -301,7 +301,7 @@ export function PlanDetail({ plan: initialPlan, onClose, onUpdated }: {
       if (upErr) throw upErr
       const { data: { publicUrl } } = supabase.storage.from('Fotos').getPublicUrl(path)
       const { data: mem, error: insErr } = await supabase.from('memories')
-        .insert({ story_id: activeStoryId, plan_id: plan.id, image_url: publicUrl, caption: null })
+        .insert({ story_id: activeStoryId, plan_id: plan.id, image_url: publicUrl, caption: null, created_by: user?.id ?? null })
         .select().single()
       if (insErr) throw insErr
       if (mem) setMemories(ms => [mem as Memory, ...ms])

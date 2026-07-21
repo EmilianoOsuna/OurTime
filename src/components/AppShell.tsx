@@ -153,7 +153,7 @@ export default function AppShell() {
         setLoadingPlans(false)
       })
 
-    supabase.from('memories').select('*').eq('story_id', activeStoryId)
+    supabase.from('memories').select('*, profiles(full_name, avatar_url, accessory)').eq('story_id', activeStoryId)
       .order('created_at', { ascending: false })
       .limit(50)
       .then(({ data }) => { if (data) setMemories(data) })
@@ -449,7 +449,7 @@ export default function AppShell() {
   }
   const refreshMemories = () => {
     if (!activeStoryId) return
-    supabase.from('memories').select('*').eq('story_id', activeStoryId)
+    supabase.from('memories').select('*, profiles(full_name, avatar_url, accessory)').eq('story_id', activeStoryId)
       .order('created_at', { ascending: false })
       .limit(50)
       .then(({ data }) => data && setMemories(data))

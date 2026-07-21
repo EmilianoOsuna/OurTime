@@ -14,7 +14,7 @@ import type { PlanType, AlbumType } from '../../lib/supabase'
 interface Props { onClose: () => void; onCreated: () => void; initialAlbumId?: string }
 
 export const NewMemorySheet: React.FC<Props> = ({ onClose, onCreated, initialAlbumId }) => {
-  const { activeStoryId, stories } = useAuth()
+  const { activeStoryId, stories, user } = useAuth()
   const { limits } = useEntitlement(activeStoryId)
   const { push } = useToast()
   const [file, setFile]     = useState<File | null>(null)
@@ -99,10 +99,10 @@ export const NewMemorySheet: React.FC<Props> = ({ onClose, onCreated, initialAlb
         album_id: albumId || null,
         image_url: publicUrl, caption: caption || null,
         position_x: position.x, position_y: position.y,
+        created_by: user?.id ?? null,
       })
       if (insErr) throw insErr
       push({ icon: 'image', eyebrow: 'Recuerdo añadido', title: 'Foto guardada en la galería' })
-      const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         const storyName = stories.find(story => story.id === activeStoryId)?.name ?? 'tu historia'
         sendPushToStoryMembers(

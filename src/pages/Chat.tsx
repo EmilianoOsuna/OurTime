@@ -1,9 +1,13 @@
-import { useState, useEffect, useRef, useCallback, memo } from 'react'
+import { useState, useEffect, useRef, useCallback, memo, type ReactNode } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
+import { useToast } from '../context/ToastContext'
+import { useCurrency } from '../context/CurrencyContext'
+import { sendPushToStoryMembers, syncPlanToGoogleCalendar } from '../lib/usePushNotifications'
 import { Icon } from '../components/ui/Icon'
 import { useConfirm } from '../components/ui/ConfirmDialog'
-import ReactMarkdown, { defaultUrlTransform } from 'react-markdown'
+import ReactMarkdown from 'react-markdown'
+import { encodeCardLinks, cardUrlTransform } from '../lib/chatCards'
 import { getCachedLocation, requestLocationPermission } from '../lib/native'
 import type { MessageType } from '../lib/supabase'
 
@@ -85,17 +89,106 @@ interface MessageItemProps {
   br: string
 }
 
-// Los links map: del modelo traen espacios ("map:Pujol, CDMX") y CommonMark no
-// acepta destinos con espacios, así que el link no se parseaba y salía como
-// texto plano. Se codifica el destino para que ReactMarkdown lo convierta en <a>.
-function encodeMapLinks(text: string): string {
-  return text.replace(/\]\(map:([^)]*)\)/g, (_m, place: string) => `](map:${encodeURIComponent(place.trim())})`)
+// Texto plano de los hijos de un link (para detectar el prefijo "WEB:" con el
+// que el modelo marca sitios que deben renderizarse como tarjeta).
+function nodeText(children: ReactNode): string {
+  if (typeof children === 'string') return children
+  if (Array.isArray(children)) return children.map(nodeText).join('')
+  return ''
 }
 
-// react-markdown descarta protocolos desconocidos como map: por seguridad;
-// se permite explícitamente solo ese y el resto pasa por el filtro estándar.
-function mapUrlTransform(url: string): string {
-  return url.startsWith('map:') ? url : defaultUrlTransform(url)
+const PLAN_TYPES = ['cine', 'cena', 'viaje', 'salida', 'otro', 'cafe', 'regalo', 'noche', 'musica', 'ruta']
+
+// Tarjeta de plan sugerido por la IA: "plan:Título|AAAA-MM-DD|Lugar|Presupuesto|tipo"
+// (campos vacíos permitidos). El botón lo inserta en plans con las mismas reglas
+// que NewPlanSheet: budget_amount cuenta como estimado en Fondo, notificación
+// push a los miembros y sync con Google Calendar.
+function AiPlanCard({ data }: { data: string }) {
+  const { activeStoryId, stories } = useAuth()
+  const { push } = useToast()
+  const { fmt } = useCurrency()
+  const [state, setState] = useState<'idle' | 'saving' | 'added'>('idle')
+
+  const [title = '', date = '', place = '', budget = '', type = ''] = data.split('|').map(s => s.trim())
+  if (!title) return null
+  const validDate = /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : null
+  const amount = budget && !Number.isNaN(+budget) ? +budget : null
+  const meta = [
+    validDate ? new Date(`${validDate}T12:00:00`).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) : null,
+    place || null,
+    amount != null ? `~${fmt(amount)}` : null,
+  ].filter(Boolean).join(' · ')
+
+  const add = async () => {
+    if (!activeStoryId || state !== 'idle') return
+    setState('saving')
+    const { data: { user } } = await supabase.auth.getUser()
+    const { data: newPlan, error } = await supabase.from('plans').insert({
+      story_id: activeStoryId,
+      title,
+      type: PLAN_TYPES.includes(type) ? type : 'otro',
+      plan_date: validDate ?? new Date().toISOString().slice(0, 10),
+      place: place || null,
+      budget_amount: amount,
+      parent_plan_id: null,
+      status: 'pendiente',
+    }).select('id').single()
+    if (error) { setState('idle'); push({ icon: 'x', title: 'Error', body: error.message }); return }
+    setState('added')
+    push({ icon: 'sparkle', eyebrow: 'Momento creado', title: `«${title}»`, body: 'Añadido a tu historia' })
+    if (user) {
+      supabase.from('notifications').insert({
+        story_id: activeStoryId, type: 'plan_created', actor_id: user.id,
+        title: '¡Nuevo momento!', body: `«${title}» fue añadido a la historia`, read: false,
+      }).then(undefined, console.error)
+      const storyName = stories.find(s => s.id === activeStoryId)?.name ?? 'tu historia'
+      sendPushToStoryMembers(
+        activeStoryId, user.id, `Nuevo momento · ${storyName}`, `«${title}» fue añadido`,
+        `/?shortcut=calendar&story=${encodeURIComponent(activeStoryId)}&plan=${encodeURIComponent(newPlan?.id ?? '')}`,
+        { event_type: 'plan_created', target_id: newPlan?.id },
+      ).catch(console.error)
+      if (newPlan?.id) syncPlanToGoogleCalendar(newPlan.id).catch(console.error)
+    }
+  }
+
+  return (
+    <span style={{ display: 'block', marginTop: 12, marginBottom: 8, borderRadius: 16, border: '1px solid var(--line)', background: 'var(--paper)', boxShadow: 'var(--sh-sm)', overflow: 'hidden' }}>
+      <span style={{ padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <span style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--orange)', color: 'var(--hero-text)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <Icon name="calendar" size={20} />
+        </span>
+        <span style={{ flex: 1, minWidth: 0 }}>
+          <span style={{ display: 'block', fontSize: 15, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{title}</span>
+          {meta && <span style={{ display: 'block', fontSize: 13, color: 'var(--ink-soft)', marginTop: 2 }}>{meta}</span>}
+        </span>
+      </span>
+      {state === 'added' ? (
+        <span style={{ display: 'block', borderTop: '1px solid var(--line)', padding: '11px 14px', textAlign: 'center', fontSize: 14, fontWeight: 700, color: 'var(--accent-ink)' }}>
+          ✓ Añadido a sus momentos
+        </span>
+      ) : (
+        <button onClick={add} disabled={state !== 'idle'} style={{ display: 'block', width: '100%', border: 'none', borderTop: '1px solid var(--line)', background: 'var(--orange)', color: 'var(--hero-text)', fontWeight: 700, fontSize: 14, padding: '11px 14px', cursor: 'pointer', fontFamily: 'var(--font-ui)', opacity: state === 'saving' ? 0.7 : 1 }}>
+          {state === 'saving' ? 'Añadiendo…' : 'Añadir momento'}
+        </button>
+      )}
+    </span>
+  )
+}
+
+function CardLink({ href, title, subtitle, icon }: { href: string; title: string; subtitle: string; icon: 'pin' | 'globe' }) {
+  return (
+    <a href={href} target="_blank" rel="noopener noreferrer" style={{ display: 'block', marginTop: 12, marginBottom: 8, borderRadius: 16, border: '1px solid var(--line)', background: 'var(--paper)', textDecoration: 'none', color: 'inherit', boxShadow: 'var(--sh-sm)' }}>
+      <div style={{ padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--orange)', color: 'var(--hero-text)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <Icon name={icon} size={20} />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{title}</div>
+          <div style={{ fontSize: 13, color: 'var(--accent-ink)', marginTop: 2 }}>{subtitle}</div>
+        </div>
+      </div>
+    </a>
+  )
 }
 
 const MemoizedMessageItem = memo(function MessageItem({ msg, isAi, showDate, nextSame, prevSame, br }: MessageItemProps) {
@@ -142,31 +235,28 @@ const MemoizedMessageItem = memo(function MessageItem({ msg, isAi, showDate, nex
             {isAi ? (
               <div className="md-chat-content">
                 <ReactMarkdown
-                  urlTransform={mapUrlTransform}
+                  urlTransform={cardUrlTransform}
                   components={{
                     // eslint-disable-next-line @typescript-eslint/no-unused-vars
                     a: ({ node, ...props }) => {
                       if (props.href?.startsWith('map:')) {
                         const place = decodeURIComponent(props.href.replace('map:', '')).trim()
-                        return (
-                          <a href={`https://maps.google.com/?q=${encodeURIComponent(place)}`} target="_blank" rel="noopener noreferrer" style={{ display: 'block', marginTop: 12, marginBottom: 8, borderRadius: 16, border: '1px solid var(--line)', background: 'var(--paper)', textDecoration: 'none', color: 'inherit', boxShadow: 'var(--sh-sm)' }}>
-                            <div style={{ padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
-                              <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--orange)', color: 'var(--hero-text)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                <Icon name="pin" size={20} />
-                              </div>
-                              <div style={{ flex: 1, minWidth: 0 }}>
-                                <div style={{ fontSize: 15, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{place}</div>
-                                <div style={{ fontSize: 13, color: 'var(--accent-ink)', marginTop: 2 }}>Abrir en Mapas</div>
-                              </div>
-                            </div>
-                          </a>
-                        )
+                        return <CardLink href={`https://maps.google.com/?q=${encodeURIComponent(place)}`} title={place} subtitle="Abrir en Mapas" icon="pin" />
+                      }
+                      if (props.href?.startsWith('plan:')) {
+                        return <AiPlanCard data={decodeURIComponent(props.href.replace('plan:', ''))} />
+                      }
+                      const label = nodeText(props.children)
+                      if (props.href && /^https?:/i.test(props.href) && /^WEB:\s*/i.test(label)) {
+                        let domain = ''
+                        try { domain = new URL(props.href).hostname.replace(/^www\./, '') } catch { /* URL inválida: tarjeta sin dominio */ }
+                        return <CardLink href={props.href} title={label.replace(/^WEB:\s*/i, '')} subtitle={domain ? `Abrir ${domain}` : 'Abrir sitio web'} icon="globe" />
                       }
                       return <a {...props} style={{ color: 'var(--accent-ink)', textDecoration: 'underline' }} target="_blank" rel="noopener noreferrer" />
                     }
                   }}
                 >
-                  {encodeMapLinks(msg.text)}
+                  {encodeCardLinks(msg.text)}
                 </ReactMarkdown>
               </div>
             ) : (

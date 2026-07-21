@@ -80,6 +80,10 @@ export type MemoryType = {
   position_y: number
   caption: string | null
   created_at: string
+  /** Quién subió la foto. Null en fotos anteriores a la migración memory_author. */
+  created_by: string | null
+  /** Join embebido de PostgREST vía created_by → profiles (presente en selects con autor). */
+  profiles?: { full_name: string | null; avatar_url: string | null; accessory: string | null } | null
 }
 
 export type AlbumType = {

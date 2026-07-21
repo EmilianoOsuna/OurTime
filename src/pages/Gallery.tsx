@@ -3,7 +3,7 @@ import { Icon } from '../components/ui/Icon'
 import { Avatar } from '../components/ui/Avatar'
 import { fmtDateShort } from '../lib/chapterUtils'
 import { useAuth } from '../context/AuthContext'
-import { supabase } from '../lib/supabase'
+import { supabase, buildPerson } from '../lib/supabase'
 import type { PersonDisplay, AlbumType, MemoryType } from '../lib/supabase'
 import { useToast } from '../context/ToastContext'
 import { useConfirm } from '../components/ui/ConfirmDialog'
@@ -22,13 +22,17 @@ function CircBtn({ icon, onClick }: { icon: string; onClick: () => void }) {
   )
 }
 
-function MemoryCard({ m, onOpen, delay, me }: { m: Memory; onOpen: () => void; delay: number; me: PersonDisplay }) {
+/* Sin .anim-up aquí: las pestañas quedan montadas con display:none y las
+   animaciones CSS de los hijos se reinician en cada visita — el grid entero
+   "brincaba" en cascada al volver a Recuerdos en vez de deslizar como las
+   demás secciones (la entrada la anima el contenedor de pestaña en AppShell). */
+function MemoryCard({ m, onOpen, author }: { m: Memory; onOpen: () => void; author: PersonDisplay | null }) {
   const ratio = 1.3 + (parseInt(m.id.slice(-1), 16) % 3) * 0.3
   return (
-    <button onClick={onOpen} className="anim-up" style={{
+    <button onClick={onOpen} style={{
       border: 'none', cursor: 'pointer', padding: 0,
       borderRadius: 16, overflow: 'hidden', background: 'var(--card)',
-      boxShadow: 'var(--sh-sm)', animationDelay: delay + 's', display: 'block', width: '100%',
+      boxShadow: 'var(--sh-sm)', display: 'block', width: '100%',
       contentVisibility: 'auto', containIntrinsicSize: 220,
     }}>
       <div style={{ width: '100%', aspectRatio: '1 / ' + ratio.toFixed(1), position: 'relative', overflow: 'hidden' }}>
@@ -43,9 +47,10 @@ function MemoryCard({ m, onOpen, delay, me }: { m: Memory; onOpen: () => void; d
           <div style={{ fontSize: 13.5, fontWeight: 600, lineHeight: 1.25 }}>{m.caption}</div>
         )}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: m.caption ? 6 : 0 }}>
-          <Avatar person={me} size={17} />
-          <span style={{ fontSize: 11.5, color: 'var(--ink-faint)' }}>
-            {fmtDateShort(m.created_at.slice(0, 10))}
+          {author && <Avatar person={author} size={17} />}
+          <span style={{ fontSize: 11.5, color: 'var(--ink-faint)', overflow: 'hidden',
+            textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
+            {author ? `${author.name.split(' ')[0]} · ` : ''}{fmtDateShort(m.created_at.slice(0, 10))}
           </span>
         </div>
       </div>
@@ -57,7 +62,7 @@ function AlbumCard({ album, coverUrl, count, onClick }: {
   album: AlbumType; coverUrl: string | null; count: number; onClick: () => void
 }) {
   return (
-    <button onClick={onClick} className="anim-up" style={{
+    <button onClick={onClick} style={{
       border: 'none', cursor: 'pointer', padding: 0,
       borderRadius: 18, overflow: 'hidden', background: 'var(--card)',
       boxShadow: 'var(--sh-sm)', display: 'block', width: '100%', textAlign: 'left',
@@ -106,8 +111,15 @@ export default function Gallery({ memories, setMemories, onImageClick, me }: {
   onImageClick: (m: Memory) => void
   me: PersonDisplay
 }) {
-  const { activeStoryId } = useAuth()
+  const { activeStoryId, user } = useAuth()
   const { push: toast } = useToast()
+  // Autor real de cada foto: yo mismo, el perfil unido vía created_by, o
+  // null en fotos antiguas sin autor (nunca el avatar de la sesión activa).
+  const authorFor = useCallback((m: Memory): PersonDisplay | null => {
+    if (!m.created_by) return null
+    if (user && m.created_by === user.id) return me
+    return m.profiles ? buildPerson(m.profiles, false) : null
+  }, [user, me])
   const confirm = useConfirm()
   const [view, setView] = useState<'albums' | 'all'>('all')
   const [albums, setAlbums] = useState<AlbumType[]>([])
@@ -235,8 +247,8 @@ export default function Gallery({ memories, setMemories, onImageClick, me }: {
           <div style={{ display: 'flex', gap: 10, padding: '0 18px' }}>
             {cols.map((col, ci) => (
               <div key={ci} style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {col.map((m, i) => (
-                  <MemoryCard key={m.id} m={m} onOpen={() => onImageClick(m)} delay={i * 0.04} me={me} />
+                {col.map(m => (
+                  <MemoryCard key={m.id} m={m} onOpen={() => onImageClick(m)} author={authorFor(m)} />
                 ))}
               </div>
             ))}
@@ -430,8 +442,8 @@ export default function Gallery({ memories, setMemories, onImageClick, me }: {
           <div style={{ display: 'flex', gap: 10, padding: '14px 18px 0' }}>
             {makeCols(filtered).map((col, ci) => (
               <div key={ci} style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {col.map((m, i) => (
-                  <MemoryCard key={m.id} m={m} onOpen={() => onImageClick(m)} delay={i * 0.04} me={me} />
+                {col.map(m => (
+                  <MemoryCard key={m.id} m={m} onOpen={() => onImageClick(m)} author={authorFor(m)} />
                 ))}
               </div>
             ))}

@@ -202,9 +202,9 @@ Deno.serve(async req => {
     const [storyRes, membersRes, plansRes, historyRes] = await Promise.all([
       admin.from('stories').select('name, category').eq('id', story_id).single(),
       admin.from('story_members').select('profiles(full_name)').eq('story_id', story_id),
-      admin.from('plans').select('title, date, place, budget_amount')
+      admin.from('plans').select('title, plan_date, place, budget_amount')
         .eq('story_id', story_id).is('parent_plan_id', null)
-        .gte('date', today).order('date', { ascending: true }).limit(5),
+        .gte('plan_date', today).order('plan_date', { ascending: true }).limit(5),
       admin.from('messages').select('text, role')
         .eq('story_id', story_id).order('created_at', { ascending: false }).limit(HISTORY_LIMIT),
     ])
@@ -214,7 +214,7 @@ Deno.serve(async req => {
       .map((m: { profiles?: { full_name?: string } }) => m.profiles?.full_name)
       .filter(Boolean)
     const upcomingPlans = (plansRes.data ?? [])
-      .map(p => `- ${p.title}${p.date ? ` (${p.date})` : ''}${p.place ? ` en ${p.place}` : ''}`)
+      .map(p => `- ${p.title}${p.plan_date ? ` (${p.plan_date})` : ''}${p.place ? ` en ${p.place}` : ''}`)
       .join('\n')
 
     const system = [
@@ -223,13 +223,15 @@ Deno.serve(async req => {
       memberNames.length ? `Miembros: ${memberNames.join(', ')}.` : '',
       location?.lat && location?.lng ? `📍 ATENCIÓN: El usuario se encuentra AHORA MISMO en las coordenadas GPS: Latitud ${location.lat}, Longitud ${location.lng}. Usa esta ubicación para recomendar restaurantes, parques o actividades locales reales CERCANAS a él.` : '',
       'Tu objetivo es sugerir planes, citas y actividades: ideas creativas para hacer juntos, restaurantes o lugares locales si te dicen dónde están, e ideas de citas virtuales o juegos si están a distancia.',
-      model.includes('compound') ? 'Tienes búsqueda web integrada: úsala cuando recomiendes lugares o eventos para verificar que existen y están abiertos, y para dar datos actuales (horarios, precios aproximados, eventos de esta semana). No inventes lugares.' : '',
+      model.includes('compound') ? 'Tienes búsqueda web integrada: úsala cuando recomiendes lugares, eventos o sitios web para verificar que existen y están activos, y para dar datos actuales (horarios, precios aproximados, eventos de esta semana, URLs correctas). No inventes lugares ni URLs.' : '',
       upcomingPlans ? `Planes próximos que ya tienen (evita repetirlos, puedes complementarlos):\n${upcomingPlans}` : '',
       'Responde siempre en español, con calidez y cercanía. Sé concreto: propón 2 o 3 ideas accionables como máximo.',
       'Formato: usa listas y **negritas** si ayudan, pero NUNCA tablas Markdown (la app no las renderiza).',
-      '✨ INTERFAZ RICA (ARTIFACTS): Nuestra app puede renderizar componentes nativos. SIEMPRE que recomiendes un lugar, restaurante o destino físico específico, DEBES incluir este link especial en tu respuesta para que mostremos un mapa interactivo:',
-      '`[MAP: Nombre exacto del lugar, Ciudad](map:Nombre exacto del lugar, Ciudad)`',
-      'Ejemplo: "Te recomiendo ir a cenar a Pujol. [MAP: Pujol, CDMX](map:Pujol, CDMX)". NO inventes otras URLs, usa exactamente map:Nombre.',
+      '✨ INTERFAZ RICA (TARJETAS): La app renderiza tarjetas nativas a partir de tres formatos de link. Úsalos SIEMPRE que apliquen:',
+      '1. Lugar físico (restaurante, parque, destino): `[MAP: Nombre exacto del lugar, Ciudad](map:Nombre exacto del lugar, Ciudad)`. Ejemplo: "Te recomiendo cenar en Pujol. [MAP: Pujol, CDMX](map:Pujol, CDMX)". Para lugares usa exactamente map:Nombre, no otras URLs.',
+      '2. Página web, juego online o actividad virtual: `[WEB: Nombre del sitio](https://url-del-sitio.com)`. Ejemplo: "Pueden dibujar juntos en [WEB: Skribbl](https://skribbl.io)". Incluye el link SIEMPRE que recomiendes un sitio, juego o herramienta online.',
+      '3. Idea de plan concreta (muestra un botón "Añadir momento" que la guarda en sus planes con presupuesto): `[PLAN: Título](plan:Título|AAAA-MM-DD|Lugar|PresupuestoEstimado|tipo)`. Los 5 campos van separados por | en ese orden; deja vacío lo que no sepas pero conserva los separadores. PresupuestoEstimado es solo un número (moneda local del usuario, para 2 personas salvo que el grupo sea mayor). tipo es uno de: cine, cena, viaje, salida, cafe, regalo, noche, musica, ruta, otro. Ejemplo: "[PLAN: Cena en Pujol](plan:Cena en Pujol|2026-07-25|Pujol, CDMX|3000|cena)". Incluye una tarjeta PLAN por cada idea concreta que propongas, después de describirla.',
+      'Usa solo URLs reales de sitios que conoces bien; si no estás seguro de la URL exacta, recomienda el sitio por nombre sin link antes que inventar una URL.',
     ].filter(Boolean).join('\n\n')
 
     // Historial (viene en orden descendente): invertir y mapear a turnos del modelo.

@@ -4,7 +4,7 @@ import {
   MapPin, Clock, Sparkles, Bell, Share2, Copy, Camera,
   TrendingUp, TrendingDown, Utensils, Plane, Gift, Coffee, Film,
   Moon, Music, Pencil, Trash2, MoreHorizontal, BookOpen, Feather,
-  Route, Tag, Wifi, Users, Settings, LogOut, Star,
+  Route, Tag, Wifi, Users, Settings, LogOut, Star, Globe,
   MessageSquare, Send, ArrowLeft, CalendarCheck, Crown,
   type LucideProps,
 } from 'lucide-react'
@@ -51,6 +51,7 @@ const ICONS: Record<string, IconComponent> = {
   mapRoute:     Route,
   tag:          Tag,
   wifi:         Wifi,
+  globe:        Globe,
   users:        Users,
   settings:     Settings,
   logout:       LogOut,
